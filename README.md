@@ -37,3 +37,8 @@ the 3D engine). It works on computers, phones and tablets.
 | Sound | M | Sound button | |
 
 Low gear is slow and strong for climbing. High gear is faster but loses grip on steep climbs.
+
+### Course view
+Press **C** (or tap the Cam button) until it says **Course**, or pick **Course view** on the menu,
+to see the whole course from above. Drag to spin around it and scroll or pinch to zoom. An orange
+marker shows where the truck is, and you can keep driving in this view.
