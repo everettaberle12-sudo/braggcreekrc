@@ -11,20 +11,19 @@ through the course the club built at the work bee.
 the 3D engine). It works on computers, phones and tablets.
 
 ### Modes
-- **Course run**: 10 gates in order with a timer. Each reset or rollover adds 10 seconds.
-- **Free drive**: no gates or clock. Explore the whole course.
+- **Course run**: collect all 8 flags in any order, just like the real course has no set route.
+  The clock starts when you move. Each reset or rollover adds 10 seconds.
+- **Free drive**: no flags or clock. Explore the whole course.
 
-### The course, gate by gate
-1. Start, by the "RC TRACK" cookies at the gravel path
-2. Corduroy bridge
-3. River rock garden
-4. The skinny (squared timber beside the big log)
-5. Log hop
-6. Log stairs in the wooden frame, down the deck boards
-7. Deck drop
-8. Firewood line
-9. Summit of the rock mound (cookie stepping stones)
-10. Plank climb up onto the crest log (finish)
+### The course (fall 2026 redesign)
+- **Entrance** off the dirt path from the parking lot: the trail sign on the spruce, the RC TRACK
+  cookies, the corduroy bridge, the long pole log, river rocks, and a back row of log rounds and cookies
+- **Middle**: the hydroseed bed ringed with river rocks, two big boulders, a log hop, the log stairs in
+  their wooden frame, the plywood board ramp, and a curved row of firewood rounds
+- **The other side**, starting at the signpost: the rock mound with limestone slabs, two cookie paths,
+  the crest log and the plank ramp, with two big peeled logs in front
+
+Flags: Corduroy Bridge, Pole Log, River Rocks, Log Hop, Log Stairs, Board Ramp, Summit, Plank Ramp.
 
 ### Controls
 | Action | Keyboard | Touch | Gamepad |
