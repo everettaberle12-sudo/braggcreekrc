@@ -109,6 +109,9 @@ body.touch .keys { display: none; }
 .sign-inner { background: var(--paper); border-radius: 3px; padding: 18px 18px 16px; display: grid; gap: 14px; }
 .eyebrow { font-family: var(--font-label); font-weight: 700; font-size: 14px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--kraft-deep); }
 .sign h1 { font-family: var(--font-display); font-weight: 400; font-size: clamp(40px, 11vw, 56px); line-height: 0.92; margin: 4px 0 0; text-wrap: balance; letter-spacing: 0.01em; }
+.head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.head > div { min-width: 0; }
+.club-logo { width: 76px; height: 76px; flex: none; border-radius: 6px; object-fit: cover; border: 2px solid var(--ink); }
 .sign p { margin: 0; font-size: 15px; line-height: 1.45; max-width: 60ch; }
 .rig {
   display: grid; grid-template-columns: auto 1fr; gap: 12px; align-items: center;
@@ -193,9 +196,12 @@ body.touch .keys { display: none; }
 <div class="overlay" id="menu">
   <div class="sign">
     <div class="sign-inner">
-      <div>
-        <div class="eyebrow">Bragg Creek RC Club</div>
-        <h1>Crawler Course</h1>
+      <div class="head">
+        <div>
+          <div class="eyebrow">Bragg Creek RC Club</div>
+          <h1>Crawler Course</h1>
+        </div>
+        <img class="club-logo" alt="RCEV, the Bragg Creek RC Club logo">
       </div>
       <p>Drive the club's permanent course behind the tennis courts at the Bragg Creek Community Centre. Ten gates: corduroy bridge, rock garden, the skinny, log stairs, the deck drop, and the rock mound with the plank climb to finish.</p>
       <div>
@@ -222,9 +228,12 @@ body.touch .keys { display: none; }
 <div class="overlay" id="finish" hidden>
   <div class="sign">
     <div class="sign-inner">
-      <div>
-        <div class="eyebrow">Plank climb cleared</div>
-        <h1>Course Complete</h1>
+      <div class="head">
+        <div>
+          <div class="eyebrow">Plank climb cleared</div>
+          <h1>Course Complete</h1>
+        </div>
+        <img class="club-logo" alt="RCEV, the Bragg Creek RC Club logo">
       </div>
       <div class="results">
         <div><div class="k">Drive time</div><div class="v" id="fDrive">0:00.0</div></div>
@@ -1244,12 +1253,13 @@ const RIG = {};
     g.fillStyle = '#17140f'; g.font = 'bold 40px Impact, Arial Black, sans-serif'; g.textAlign = 'center'; g.fillText('BCRC', w / 2, 84);
     g.fillStyle = '#c4893e'; g.fillRect(14, 96, w - 28, 10); g.fillRect(14, 22, w - 28, 10);
   });
-  // RCEV door stickers (artwork supplied by the truck's owner)
+  // RCEV: the Bragg Creek RC Club logo (RC Everett), on the doors and hood
   const rcevTex = new THREE.TextureLoader().load(RCEV_LOGO); rcevTex.encoding = THREE.sRGBEncoding; rcevTex.anisotropy = 4;
   const rcevMat = MSM({ map: rcevTex, roughness: 0.45 });
+  const hoodDecal = new THREE.Mesh(new THREE.PlaneGeometry(0.072, 0.072), rcevMat);
+  hoodDecal.rotation.set(-Math.PI / 2, 0, -Math.PI / 2); hoodDecal.position.set(0.165, 0.1365, 0); shell.add(hoodDecal);
   [-1, 1].forEach(sd => { const d = new THREE.Mesh(new THREE.PlaneGeometry(0.062, 0.062), rcevMat); d.position.set(-0.07, 0.083, sd * 0.1013); d.rotation.y = sd > 0 ? 0 : Math.PI; shell.add(d); });
-  const hoodDecal = new THREE.Mesh(new THREE.PlaneGeometry(0.05, 0.1), MSM({ map: decalTex, roughness: 0.5 }));
-  hoodDecal.rotation.set(-Math.PI / 2, 0, -Math.PI / 2); hoodDecal.position.set(0.17, 0.1365, 0); shell.add(hoodDecal);
+
   const bannerTex = tex(256, 48, (g, w, h) => {
     g.fillStyle = '#f4e23c'; g.fillRect(0, 0, w, h);
     g.fillStyle = '#17140f'; g.font = 'bold 28px Impact, Arial Black, sans-serif'; g.textAlign = 'center'; g.fillText('BRAGG CREEK RC', w / 2, 35);
@@ -1560,6 +1570,7 @@ try { const b = parseFloat(localStorage.getItem('bcrc-best')); if (b > 0) best =
 const fmt = t => { const m = Math.floor(t / 60), s = t - m * 60; return m + ':' + (s < 10 ? '0' : '') + s.toFixed(1); };
 function refreshBest() { $('#bestTxt').textContent = best ? fmt(best) : 'No run yet'; }
 refreshBest();
+document.querySelectorAll('.club-logo').forEach(img => { img.src = RCEV_LOGO; });
 
 const labelCanvas = document.createElement('canvas'); labelCanvas.width = 384; labelCanvas.height = 96;
 const labelTex = new THREE.CanvasTexture(labelCanvas); labelTex.encoding = THREE.sRGBEncoding;
