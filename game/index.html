@@ -202,8 +202,8 @@ body.touch .keys { display: none; }
         <div class="rig">
           <div class="rig-swatch" aria-hidden="true"></div>
           <div>
-            <div class="rig-name">Traxxas TRX-4 Bronco</div>
-            <div class="rig-spec">1/10 scale trail crawler · Velocity Blue · Portal axles · 2-speed</div>
+            <div class="rig-name">Traxxas TRX-4M Bronco</div>
+            <div class="rig-spec">1/18 scale mini crawler · Velocity Blue · Portal axles</div>
           </div>
         </div>
       </div>
@@ -832,7 +832,7 @@ function addGate(name, x, z, yaw, w = 0.8) {
 
 /* --- corduroy bridge: small logs laid across, stakes at the corners --- */
 {
-  for (let z = 2.2; z >= 1.0; z -= 0.078) addLog(-6.77, z, -6.23, z + rr(-0.01, 0.01), rr(0.03, 0.036), { sink: 0.9 });
+  for (let z = 2.2; z >= 1.0; z -= 0.056) addLog(-6.77, z, -6.23, z + rr(-0.008, 0.008), rr(0.02, 0.025), { sink: 0.9 });
   [[-6.83, 2.25], [-6.17, 2.25], [-6.83, 0.95], [-6.17, 0.95]].forEach(([x, z]) => {
     const b = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.24, 0.05), M.plank);
     b.position.set(x, groundH(x, z) + 0.09, z); shadowy(b); addBlocker(x, z, 0.04);
@@ -845,15 +845,15 @@ function addGate(name, x, z, yaw, w = 0.8) {
 /* --- river rock garden --- */
 {
   const spots = [[-6.45, 0.3], [-6.2, 0.05], [-5.95, -0.25], [-5.95, 0.3], [-5.7, 0.0], [-5.6, -0.4], [-5.45, 0.25], [-5.3, -0.15], [-5.15, 0.1], [-5.05, -0.4], [-4.95, 0.35], [-6.4, -0.3], [-5.8, 0.55]];
-  spots.forEach(([x, z]) => addRock(x + rr(-0.04, 0.04), z + rr(-0.04, 0.04), rr(0.09, 0.15), rr(0.07, 0.12), rr(0.04, 0.085), rnd() * 3, { color: rnd() < 0.5 ? RIVER : RIVER2 }));
+  spots.forEach(([x, z]) => addRock(x + rr(-0.04, 0.04), z + rr(-0.04, 0.04), rr(0.09, 0.15), rr(0.07, 0.12), rr(0.03, 0.055), rnd() * 3, { color: rnd() < 0.5 ? RIVER : RIVER2 }));
   addGate('Rock Garden', -4.68, -0.1, 0);
 }
 
 /* --- the skinny: squared timber beside a big log --- */
 {
-  const z = -0.1, x0 = -4.42, x1 = -2.35, top = 0.09;
-  addSlab(x0 + 0.17, z, 0.34, 0.28, 0, groundH(x0, z) + 0.01, top, { mat: M.peeled }); // entry wedge
-  addSlab((x0 + 0.34 + x1) / 2, z, x1 - x0 - 0.34, 0.28, 0, top, top, { mat: M.peeled });
+  const z = -0.1, x0 = -4.42, x1 = -2.35, top = 0.06;
+  addSlab(x0 + 0.17, z, 0.34, 0.17, 0, groundH(x0, z) + 0.008, top, { mat: M.peeled }); // entry wedge
+  addSlab((x0 + 0.34 + x1) / 2, z, x1 - x0 - 0.34, 0.17, 0, top, top, { mat: M.peeled });
   addLog(-4.5, -0.52, -2.25, -0.52, 0.12, { mat: M.bark });
   // river rocks & old plank behind it
   for (let i = 0; i < 7; i++) addRock(lerp(-4.3, -2.6, i / 6), -0.9 + rr(-0.05, 0.05), rr(0.1, 0.15), rr(0.08, 0.12), rr(0.07, 0.11), rnd() * 3, { color: RIVER2 });
@@ -863,8 +863,8 @@ function addGate(name, x, z, yaw, w = 0.8) {
 
 /* --- log hop: two climbable logs, one skewed for articulation --- */
 {
-  addLog(-1.65, -0.65, -1.62, 0.45, 0.056, { mat: M.peeled, sink: 0.95 });
-  addLog(-1.12, -0.6, -0.86, 0.4, 0.05, { mat: M.bark, sink: 0.95 });
+  addLog(-1.65, -0.65, -1.62, 0.45, 0.032, { mat: M.peeled, sink: 0.95 });
+  addLog(-1.12, -0.6, -0.86, 0.4, 0.028, { mat: M.bark, sink: 0.95 });
   addGate('Log Hop', -0.45, -0.05, 0);
 }
 
@@ -874,13 +874,13 @@ function addGate(name, x, z, yaw, w = 0.8) {
   // blue boards lead in
   addSlab(0.45, z - 0.07, 0.6, 0.11, 0.0, gy + 0.012, gy + 0.03, { mat: M.blueBoard, thick: 0.02 });
   addSlab(0.45, z + 0.07, 0.6, 0.11, 0.0, gy + 0.012, gy + 0.03, { mat: M.blueBoard, thick: 0.02 });
-  const r = 0.05, stepX = [0.85, 0.97, 1.09, 1.21];
+  const r = 0.03, stepX = [0.85, 0.94, 1.03, 1.12, 1.21];
   stepX.forEach((x, i) => {
-    const cy = gy + r + i * 0.045;
-    if (i > 0) addSlab(x, z, 0.12, 0.44, 0, cy, cy, { mat: M.darkWood, bottom: gy - 0.05 });
+    const cy = gy + r * 0.8 + i * 0.026;
+    if (i > 0) addSlab(x, z, 0.09, 0.44, 0, cy, cy, { mat: M.darkWood, bottom: gy - 0.05 });
     addLog(x, z - 0.22, x, z + 0.22, r, { y: cy, mat: M.peeled });
   });
-  const topY = gy + r + 3 * 0.045 + r * 0.9;
+  const topY = gy + r * 0.8 + 4 * 0.026 + r * 0.9;
   addSlab(1.4, z, 0.3, 0.44, 0, topY, topY, { mat: M.plank, bottom: gy - 0.05 });
   addSlab(1.8, z, 0.5, 0.44, 0, topY, groundH(2.05, z) + 0.01, { mat: M.plank, thick: 0.03 });
   // frame sides (on edge) + stakes
@@ -896,8 +896,8 @@ function addGate(name, x, z, yaw, w = 0.8) {
 /* --- deck-board ramp with a drop-off, cookies alongside, boulder --- */
 {
   const x = 2.95, gy = groundH(x, 1.6);
-  addSlab(x, 1.62, 0.42, 0.5, Math.PI / 2, gy + 0.01, gy + 0.11, { mat: M.plank, thick: 0.03 });
-  addSlab(x, 2.03, 0.4, 0.5, Math.PI / 2, gy + 0.11, gy + 0.11, { mat: M.plank, bottom: gy - 0.05 });
+  addSlab(x, 1.62, 0.42, 0.5, Math.PI / 2, gy + 0.008, gy + 0.07, { mat: M.plank, thick: 0.03 });
+  addSlab(x, 2.03, 0.4, 0.5, Math.PI / 2, gy + 0.07, gy + 0.07, { mat: M.plank, bottom: gy - 0.05 });
   [[2.58, 1.85, 0.065], [2.55, 2.12, 0.08], [3.36, 2.25, 0.07], [3.4, 1.55, 0.06]].forEach(([cx, cz, r]) => addDisc(cx, cz, r, 0.022));
   addRock(2.2, 2.35, 0.3, 0.26, 0.3, 0.4, { color: [0.6, 0.58, 0.54], sink: 0.1 }); // big boulder: not climbable
   addGate('Deck Drop', x, 2.48, -Math.PI / 2, 0.75);
@@ -931,6 +931,7 @@ function addGate(name, x, z, yaw, w = 0.8) {
   for (let i = 0; i < 10; i++) { const cx = rr(6.05, 6.5), cz = rr(-2.6, -2.25); addDisc(cx, cz, rr(0.06, 0.085), 0.02, { y: groundH(cx, cz) }); } // summit cookies
   // crest log along the back
   const logTop = addLog(4.75, -3.0, 7.35, -3.0, 0.12, { mat: M.bark, sink: 0.7, noBlock: true });
+  addSegBlocker(4.75, -3.0, 6.76, -3.0, 0.11); // solid except where the plank ramp meets it
   // plank ramp leaning on the log, propped by stakes (the plank climb)
   const rx = 7.02, zA = -0.95, zB = -3.0, h0 = groundH(rx, zA) + 0.012, h1 = logTop + 0.006;
   addSlab(rx, (zA + zB) / 2, zA - zB, 0.34, -Math.PI / 2, h0, h1, { mat: M.plank, thick: 0.03 });
@@ -1154,10 +1155,15 @@ function scatterPoint(minRoute, tries = 30) {
 /* =========================================================
    THE TRUCK — blue TRX-4 Bronco style crawler
    ========================================================= */
-const CAR = { L: 0.324, T: 0.215, r: 0.058, rc: 0.085, maxSteer: 0.6 };
-const WOFF = [[CAR.L / 2, -CAR.T / 2], [CAR.L / 2, CAR.T / 2], [-CAR.L / 2, -CAR.T / 2], [-CAR.L / 2, CAR.T / 2]]; // [forward, right]
-const CORNERS = [[0.25, -0.125], [0.25, 0.125], [-0.26, -0.125], [-0.26, 0.125], [0, -0.13], [0, 0.13], [0.26, 0], [-0.27, 0]];
+// TRX-4M Bronco is 1/18 scale: the model is drawn in MCAR units and shrunk by K
+const K = 0.52;
+const MCAR = { L: 0.324, T: 0.215, r: 0.058 };
+const MWOFF = [[MCAR.L / 2, -MCAR.T / 2], [MCAR.L / 2, MCAR.T / 2], [-MCAR.L / 2, -MCAR.T / 2], [-MCAR.L / 2, MCAR.T / 2]];
+const CAR = { L: MCAR.L * K, T: MCAR.T * K, r: MCAR.r * K, rc: 0.046, maxSteer: 0.62 };
+const WOFF = MWOFF.map(([f, s]) => [f * K, s * K]); // [forward, right] in metres
+const CORNERS = [[0.25, -0.125], [0.25, 0.125], [-0.26, -0.125], [-0.26, 0.125], [0, -0.13], [0, 0.13], [0.26, 0], [-0.27, 0]].map(([f, s]) => [f * K, s * K]);
 const car = new THREE.Group(); car.rotation.order = 'YZX'; scene.add(car);
+const model = new THREE.Group(); model.scale.setScalar(K); car.add(model);
 const wheels = [];
 const RIG = {};
 {
@@ -1176,7 +1182,7 @@ const RIG = {};
   const cyl = (r, len, mat, axis, x, y, z, parent, seg = 12) => { const g = new THREE.CylinderGeometry(r, r, len, seg); if (axis === 'x') g.rotateZ(Math.PI / 2); if (axis === 'z') g.rotateX(Math.PI / 2); return mk(g, mat, x, y, z, parent); };
 
   /* chassis (rides on the four contact points) */
-  const chassis = new THREE.Group(); car.add(chassis);
+  const chassis = new THREE.Group(); model.add(chassis);
   [-0.032, 0.032].forEach(z => box(0.4, 0.03, 0.006, satin, 0, 0.05, z, chassis));        // frame rails
   [0.17, -0.17, 0.0].forEach(x => box(0.012, 0.012, 0.07, satin, x, 0.05, 0, chassis));    // cross members
   box(0.07, 0.045, 0.06, black, 0.0, 0.045, 0, chassis);                                     // transmission
@@ -1186,76 +1192,90 @@ const RIG = {};
   box(0.11, 0.024, 0.045, MSM({ color: 0x2c2c33, roughness: 0.6 }), 0.07, 0.083, 0, chassis); // battery
   [[0.14, -1], [0.14, 1], [-0.14, -1], [-0.14, 1]].forEach(([x, s]) => cyl(0.004, 0.06, alu, 'y', x, 0.085, s * 0.03, chassis, 6)); // body posts
 
-  /* body shell (leans on the suspension) */
-  const shell = new THREE.Group(); car.add(shell);
-  box(0.44, 0.075, 0.2, blue, 0, 0.122, 0, shell);                // tub
-  box(0.17, 0.02, 0.19, blue, 0.137, 0.168, 0, shell);            // hood
-  box(0.12, 0.006, 0.07, blue, 0.14, 0.18, 0, shell);             // hood bulge
-  box(0.016, 0.06, 0.205, blue, 0.218, 0.13, 0, shell);           // nose
-  box(0.255, 0.088, 0.19, glass, -0.062, 0.204, 0, shell);        // cabin glass
-  box(0.27, 0.016, 0.198, black, -0.062, 0.254, 0, shell);        // hardtop roof
-  [-0.02, -0.1].forEach(x => box(0.004, 0.002, 0.198, satin, x, 0.263, 0, shell)); // roof panel seams
-  box(0.012, 0.094, 0.198, black, 0.072, 0.204, 0, shell);        // windshield frame
-  box(0.07, 0.094, 0.2, black, -0.165, 0.204, 0, shell);          // rear quarter of hardtop
-  box(0.006, 0.068, 0.17, blue, -0.221, 0.125, 0, shell);         // tailgate
+  /* body shell (leans on the suspension), shaped after the club's TRX-4M Bronco */
+  const shell = new THREE.Group(); model.add(shell);
+  const WX = MCAR.L / 2, AR = 0.076; // wheel x, wheel-arch radius
+  box(2 * (WX - AR), 0.087, 0.2, blue, 0, 0.083, 0, shell);                        // doors / rockers between the arches
+  box(0.15, 0.047, 0.2, blue, WX + 0.0, 0.103, 0, shell);                          // front fenders over the wheels
+  box(0.15, 0.047, 0.2, blue, -WX - 0.0, 0.103, 0, shell);                         // rear quarters over the wheels
+  box(0.03, 0.07, 0.196, blue, 0.226, 0.092, 0, shell);                            // nose
+  box(0.024, 0.07, 0.196, blue, -0.228, 0.092, 0, shell);                          // tailgate
+  box(0.16, 0.012, 0.196, blue, 0.155, 0.13, 0, shell);                            // hood
+  box(0.11, 0.004, 0.06, blue, 0.15, 0.137, 0, shell);                             // hood bulge
+  box(0.296, 0.064, 0.188, glass, -0.083, 0.158, 0, shell);                        // cabin glass
+  box(0.306, 0.012, 0.196, black, -0.083, 0.196, 0, shell);                        // hardtop roof
+  [[0.068, blue, 0.012], [-0.02, black, 0.014], [-0.12, black, 0.014], [-0.226, black, 0.016]].forEach(([x, m, w]) => box(w, 0.066, 0.192, m, x, 0.158, 0, shell)); // A (blue) to D pillars
   [-1, 1].forEach(sd => {
-    box(0.004, 0.06, 0.003, satin, 0.035, 0.125, sd * 0.1005, shell); // door seams
-    box(0.004, 0.06, 0.003, satin, -0.07, 0.125, sd * 0.1005, shell);
-    box(0.012, 0.004, 0.004, satin, 0.0, 0.142, sd * 0.1015, shell);  // door handles
-    box(0.012, 0.004, 0.004, satin, -0.1, 0.142, sd * 0.1015, shell);
-    box(0.22, 0.012, 0.022, black, -0.005, 0.078, sd * 0.106, shell);   // rock sliders
-    WOFF.forEach(([f]) => box(0.14, 0.02, 0.032, black, f, 0.09, sd * 0.106, shell)); // fender flares
-    box(0.012, 0.012, 0.018, black, 0.06, 0.163, sd * 0.106, shell);  // mirrors
-    box(0.16, 0.006, 0.01, black, -0.06, 0.267, sd * 0.07, shell);     // roof rails
-    // round headlights set in the black grille, amber side markers, tail lights
-    cyl(0.017, 0.008, light, 'x', 0.228, 0.135, sd * 0.066, shell, 16);
-    box(0.004, 0.012, 0.012, amber, 0.212, 0.138, sd * 0.1015, shell);
-    box(0.006, 0.034, 0.016, tail, -0.224, 0.135, sd * 0.088, shell);
+    const flare = new THREE.Mesh(new THREE.TorusGeometry(AR, 0.012, 6, 18, Math.PI), black);
+    // big rounded fender flares
+    [WX, -WX].forEach(x => { const f = flare.clone(); f.position.set(x, 0.0, sd * 0.104); f.scale.set(1, 1, 1.9); f.castShadow = true; shell.add(f); });
+    box(0.004, 0.08, 0.003, satin, -0.012, 0.085, sd * 0.1005, shell);              // door seams
+    box(0.014, 0.004, 0.004, satin, 0.03, 0.115, sd * 0.1015, shell);               // door handles
+    box(0.014, 0.004, 0.004, satin, -0.06, 0.115, sd * 0.1015, shell);
+    box(0.17, 0.012, 0.016, black, 0, 0.037, sd * 0.104, shell);                    // rock sliders
+    const mir = box(0.014, 0.018, 0.02, black, 0.062, 0.142, sd * 0.112, shell);    // mirrors
+    box(0.006, 0.006, 0.012, black, 0.066, 0.132, sd * 0.104, shell);
+    // round headlights with a white ring, amber marker, tall tail lights
+    cyl(0.017, 0.008, glass, 'x', 0.242, 0.1, sd * 0.066, shell, 16);
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(0.0145, 0.0028, 6, 18), light); ring.rotation.y = Math.PI / 2; ring.position.set(0.247, 0.1, sd * 0.066); shell.add(ring);
+    box(0.004, 0.014, 0.01, amber, 0.243, 0.1, sd * 0.088, shell);
+    box(0.006, 0.042, 0.014, tail, -0.241, 0.1, sd * 0.09, shell);
+    box(0.006, 0.006, 0.01, light, 0.258, 0.062, sd * 0.06, shell);                 // LED fog lights in the bumper
+    // roof rack: side rails with legs
+    box(0.27, 0.006, 0.008, black, -0.085, 0.214, sd * 0.084, shell);
+    [0.04, -0.2].forEach(x => box(0.006, 0.016, 0.008, black, x, 0.206, sd * 0.084, shell));
   });
-  box(0.008, 0.05, 0.17, black, 0.227, 0.135, 0, shell);           // grille
-  [-0.03, 0, 0.03].forEach(z => box(0.006, 0.03, 0.008, satin, 0.232, 0.135, z, shell));
-  box(0.03, 0.03, 0.22, black, 0.24, 0.085, 0, shell);             // front bumper
-  [-1, 1].forEach(sd => box(0.012, 0.012, 0.004, chrome, 0.254, 0.09, sd * 0.07, shell)); // tow hooks
-  box(0.028, 0.026, 0.2, black, -0.236, 0.088, 0, shell);          // rear bumper
-  cyl(0.006, 0.02, chrome, 'x', -0.252, 0.08, 0, shell, 8);        // hitch
+  [0.03, -0.19].forEach(x => cyl(0.004, 0.17, black, 'z', x, 0.218, 0, shell, 8));  // rack cross bars
+  box(0.01, 0.05, 0.172, black, 0.244, 0.1, 0, shell);                             // grille
+  [-0.034, -0.012, 0.012, 0.034].forEach(z => box(0.004, 0.034, 0.012, satin, 0.25, 0.1, z, shell));
+  box(0.03, 0.03, 0.214, black, 0.255, 0.06, 0, shell);                            // front bumper
+  [-1, 1].forEach(sd => box(0.012, 0.012, 0.004, chrome, 0.272, 0.064, sd * 0.07, shell)); // tow hooks
+  box(0.026, 0.026, 0.2, black, -0.25, 0.062, 0, shell);                           // rear bumper
+  cyl(0.006, 0.02, chrome, 'x', -0.266, 0.056, 0, shell, 8);                       // hitch
   const spareG = new THREE.CylinderGeometry(0.05, 0.05, 0.034, 20); spareG.rotateZ(Math.PI / 2);
-  mk(spareG, black, -0.247, 0.142, 0, shell);
-  cyl(0.026, 0.036, satin, 'x', -0.247, 0.142, 0, shell, 12);
+  mk(spareG, black, -0.258, 0.118, 0, shell);
+  cyl(0.026, 0.036, satin, 'x', -0.258, 0.118, 0, shell, 12);
   const decalTex = tex(128, 128, (g, w, h) => {
     g.fillStyle = '#ffffff'; g.fillRect(0, 0, w, h);
     g.fillStyle = '#17140f'; g.font = 'bold 40px Impact, Arial Black, sans-serif'; g.textAlign = 'center'; g.fillText('BCRC', w / 2, 84);
     g.fillStyle = '#c4893e'; g.fillRect(14, 96, w - 28, 10); g.fillRect(14, 22, w - 28, 10);
   });
-  [-1, 1].forEach(sd => { const d = new THREE.Mesh(new THREE.PlaneGeometry(0.065, 0.06), MSM({ map: decalTex, roughness: 0.5 })); d.position.set(-0.018, 0.124, sd * 0.1013); d.rotation.y = sd > 0 ? 0 : Math.PI; shell.add(d); });
-  const hoodDecal = new THREE.Mesh(new THREE.PlaneGeometry(0.06, 0.055), MSM({ map: decalTex, roughness: 0.5 }));
-  hoodDecal.rotation.set(-Math.PI / 2, 0, -Math.PI / 2); hoodDecal.position.set(0.14, 0.1785, 0.0); shell.add(hoodDecal);
+  [-1, 1].forEach(sd => { const d = new THREE.Mesh(new THREE.PlaneGeometry(0.058, 0.062), MSM({ map: decalTex, roughness: 0.5 })); d.position.set(-0.07, 0.083, sd * 0.1013); d.rotation.y = sd > 0 ? 0 : Math.PI; shell.add(d); });
+  const hoodDecal = new THREE.Mesh(new THREE.PlaneGeometry(0.05, 0.1), MSM({ map: decalTex, roughness: 0.5 }));
+  hoodDecal.rotation.set(-Math.PI / 2, 0, -Math.PI / 2); hoodDecal.position.set(0.17, 0.1365, 0); shell.add(hoodDecal);
+  const bannerTex = tex(256, 48, (g, w, h) => {
+    g.fillStyle = '#f4e23c'; g.fillRect(0, 0, w, h);
+    g.fillStyle = '#17140f'; g.font = 'bold 28px Impact, Arial Black, sans-serif'; g.textAlign = 'center'; g.fillText('BRAGG CREEK RC', w / 2, 35);
+  });
+  const banner = new THREE.Mesh(new THREE.PlaneGeometry(0.16, 0.026), MSM({ map: bannerTex, roughness: 0.4 }));
+  banner.rotation.y = Math.PI / 2; banner.position.set(0.0745, 0.175, 0); shell.add(banner);
 
   /* solid axles with portal hubs; each tilts on its own as the truck articulates */
   const tireProfile = [];
-  const R = CAR.r, Wd = 0.046;
+  const R = MCAR.r, Wd = 0.046;
   for (let k = 0; k <= 12; k++) { const t = k / 12, y = (t - 0.5) * Wd, bulge = Math.sin(t * Math.PI); tireProfile.push(new THREE.Vector2(0.036 + bulge * 0.004 + (R - 0.04) * Math.pow(bulge, 0.35), y)); }
   const tireG = new THREE.LatheGeometry(tireProfile, 28); tireG.rotateX(Math.PI / 2);
-  const tireM = MSM({ color: 0x101012, roughness: 1 });
+  const tireM = MSM({ color: 0x0b0b0c, roughness: 1, side: THREE.DoubleSide });
   const lugG = new THREE.BoxGeometry(0.013, 0.005, 0.02);
   const rimG = new THREE.CylinderGeometry(0.036, 0.036, 0.044, 16); rimG.rotateX(Math.PI / 2);
   const ringG = new THREE.TorusGeometry(0.033, 0.0035, 6, 20);
   const boltG = new THREE.CylinderGeometry(0.0022, 0.0022, 0.004, 5); boltG.rotateX(Math.PI / 2);
   const spokeG = new THREE.BoxGeometry(0.005, 0.03, 0.004);
   RIG.axles = [];
-  [CAR.L / 2, -CAR.L / 2].forEach((f, ai) => {
-    const axle = new THREE.Group(); axle.position.set(f, 0, 0); car.add(axle);
-    cyl(0.011, CAR.T - 0.07, satin, 'z', 0, 0.006, 0, axle, 10);           // axle tubes
+  [MCAR.L / 2, -MCAR.L / 2].forEach((f, ai) => {
+    const axle = new THREE.Group(); axle.position.set(f, 0, 0); model.add(axle);
+    cyl(0.011, MCAR.T - 0.07, satin, 'z', 0, 0.006, 0, axle, 10);           // axle tubes
     const pumpkin = mk(new THREE.SphereGeometry(0.024, 14, 10), satin, 0, 0.004, 0.012, axle); pumpkin.scale.set(1, 0.9, 1.1);
     cyl(0.01, 0.02, alu, 'x', ai === 0 ? -0.022 : 0.022, 0.006, 0.012, axle, 10); // pinion
     const wheelsOnAxle = [];
     [-1, 1].forEach(sd => {
-      const knuckle = new THREE.Group(); knuckle.position.set(0, 0, sd * CAR.T / 2); axle.add(knuckle);
+      const knuckle = new THREE.Group(); knuckle.position.set(0, 0, sd * MCAR.T / 2); axle.add(knuckle);
       box(0.026, 0.05, 0.016, satin, 0, 0.012, -sd * 0.026, knuckle);      // portal housing
       const spin = new THREE.Group(); knuckle.add(spin);
       mk(tireG, tireM, 0, 0, 0, spin);
       for (let k = 0; k < 18; k++) { // staggered tread blocks
         const a = k / 18 * TAU, off = (k % 2 ? 0.011 : -0.011);
-        const l = new THREE.Mesh(lugG, tireM); l.position.set(Math.cos(a) * (R - 0.0005), Math.sin(a) * (R - 0.0005), off); l.rotation.z = a; spin.add(l);
+        const l = new THREE.Mesh(lugG, tireM); l.position.set(Math.cos(a) * (R - 0.001), Math.sin(a) * (R - 0.001), off); l.rotation.z = a + Math.PI / 2; spin.add(l);
       }
       mk(rimG, black, 0, 0, 0, spin);
       const ring = mk(ringG, satin, 0, 0, sd * 0.0225, spin);
@@ -1269,7 +1289,7 @@ const RIG = {};
   wheels.push(RIG.axles[0].wheels[0], RIG.axles[0].wheels[1], RIG.axles[1].wheels[0], RIG.axles[1].wheels[1]);
 
   /* parts that stretch between chassis and axles: shocks, links, driveshafts, steering link */
-  const unitCyl = (r, mat) => { const g = new THREE.CylinderGeometry(r, r, 1, 8); const m = new THREE.Mesh(g, mat); m.castShadow = true; car.add(m); return m; };
+  const unitCyl = (r, mat) => { const g = new THREE.CylinderGeometry(r, r, 1, 8); const m = new THREE.Mesh(g, mat); m.castShadow = true; model.add(m); return m; };
   const coilTex = tex(16, 64, (g, w, h) => { g.fillStyle = '#c42a22'; g.fillRect(0, 0, w, h); g.fillStyle = 'rgba(0,0,0,0.55)'; for (let y = 0; y < h; y += 8) g.fillRect(0, y, w, 3); });
   coilTex.wrapT = THREE.RepeatWrapping;
   const coilMat = MSM({ map: coilTex, roughness: 0.4, metalness: 0.3 });
@@ -1311,7 +1331,7 @@ let dustI = 0;
 function puff(x, y, z, k) {
   const d = dust[dustI = (dustI + 1) % dust.length];
   d.life = 1; d.sp.visible = true; d.sp.position.set(x, y + 0.02, z);
-  d.vx = rr(-0.15, 0.15) * k; d.vy = rr(0.08, 0.22) * k; d.vz = rr(-0.15, 0.15) * k; d.s0 = rr(0.04, 0.07);
+  d.vx = rr(-0.15, 0.15) * k; d.vy = rr(0.08, 0.22) * k; d.vz = rr(-0.15, 0.15) * k; d.s0 = rr(0.025, 0.045);
 }
 function updateDust(dt) {
   for (const d of dust) {
@@ -1330,7 +1350,7 @@ function updateDust(dt) {
    the body pitches and rolls from the four contact points, and too much lean rolls it over.
    The body and bumpers also collide, so the truck can't pass through logs or boards.
    ========================================================= */
-const GEARS = { low: { vmax: 1.05, acc: 2.4, g0: 44, g1: 72, label: 'Low' }, high: { vmax: 2.4, acc: 3.0, g0: 22, g1: 46, label: 'High' } };
+const GEARS = { low: { vmax: 0.7, acc: 1.8, g0: 44, g1: 72, label: 'Low' }, high: { vmax: 1.6, acc: 2.4, g0: 22, g1: 46, label: 'High' } };
 const S = { x: 0, z: 0, yaw: 0, v: 0, steer: 0, y: 0, vy: 0, pitch: 0, roll: 0, vp: 0, vr: 0, wc: [0, 0, 0, 0], gear: 'low', slip: 0, spin: 0, flipped: 0, flipDir: 1,
   pen: 0, bpen: 0, push: 0, stuckT: 0, hinted: false, lean: 0, leanV: 0, squat: 0, squatV: 0, bob: 0, bobV: 0, lastV: 0 };
 // contact samples spread evenly by angle around the tyre, so ledges are met smoothly
@@ -1342,14 +1362,14 @@ function wheelCenter(px, pz, yaw, i) {
   for (let k = 0; k < WS.length; k++) {
     const d = WS[k][0], lift = WS[k][1];
     for (let l = -1; l <= 1; l++) {
-      const lo = l * 0.017, h = H(wx + fx * d + rx * lo, wz + fz * d + rz * lo) + lift;
+      const lo = l * 0.009, h = H(wx + fx * d + rx * lo, wz + fz * d + rz * lo) + lift;
       if (h > best) best = h;
     }
   }
   return best - (rc - CAR.r);
 }
 // how deep the truck's footprint (a rectangle) overlaps trees, stakes, walls or the course edge (0 = clear)
-const RECT = { f0: -0.27, f1: 0.26, s: 0.125 };
+const RECT = { f0: -0.275 * K, f1: 0.275 * K, s: 0.122 * K };
 function rectCircle(cf, cs, r) {
   const qf = clamp(cf, RECT.f0, RECT.f1), qs = clamp(cs, -RECT.s, RECT.s);
   if (qf === cf && qs === cs) return r + Math.min(cf - RECT.f0, RECT.f1 - cf, RECT.s - cs, cs + RECT.s);
@@ -1379,8 +1399,9 @@ function blockerPen(px, pz, yaw) {
   return pen;
 }
 // body points: [forward, right, height of the underside above the axle line]
-const BODYPTS = [[0.25, 0, 0.058], [0.25, -0.09, 0.058], [0.25, 0.09, 0.058], [-0.25, 0, 0.065], [-0.25, -0.09, 0.065], [-0.25, 0.09, 0.065],
-  [0, 0, 0.042], [0.075, 0, 0.042], [-0.075, 0, 0.042], [0, -0.1, 0.066], [0, 0.1, 0.066], [0.09, -0.1, 0.066], [0.09, 0.1, 0.066], [-0.09, -0.1, 0.066], [-0.09, 0.1, 0.066]];
+const BODYPTS = [[0.26, 0, 0.048], [0.26, -0.09, 0.048], [0.26, 0.09, 0.048], [-0.25, 0, 0.05], [-0.25, -0.09, 0.05], [-0.25, 0.09, 0.05],
+  [0, 0, 0.03], [0.075, 0, 0.03], [-0.075, 0, 0.03], [0, -0.1, 0.034], [0, 0.1, 0.034], [0.08, -0.1, 0.034], [0.08, 0.1, 0.034], [-0.08, -0.1, 0.034], [-0.08, 0.1, 0.034]]
+  .map(([f, s, h]) => [f * K, s * K, h * K]);
 function bodyPen(px, pz, yaw, wc) {
   const c = Math.cos(yaw), s = Math.sin(yaw);
   let pen = -1;
@@ -1392,11 +1413,11 @@ function bodyPen(px, pz, yaw, wc) {
   }
   return pen;
 }
-const STEP_PROBE = 0.006, STEP_MAX = 0.031, BODY_TOL = 0.018;
+const STEP_PROBE = 0.004, STEP_MAX = 0.02, BODY_TOL = 0.01;
 function tooSteep(px, pz, yaw, dir) {
   const c = Math.cos(yaw), s = Math.sin(yaw);
   const qx = px + c * STEP_PROBE * dir, qz = pz - s * STEP_PROBE * dir;
-  const lim = STEP_MAX + Math.min(0.075, S.push * 0.055); // keep pushing and the tyres claw up a ledge, like a real crawler
+  const lim = STEP_MAX + Math.min(0.03, S.push * 0.025); // keep pushing and the tyres claw up a ledge, like a real crawler
   for (let i = 0; i < 4; i++) if (wheelCenter(qx, qz, yaw, i) - S.wc[i] > lim) return true;
   return false;
 }
@@ -1478,7 +1499,7 @@ function physStep(dt) {
   const spring = (x, v, target, k, c) => v + ((target - x) * k - v * c) * dt;
   S.leanV = spring(S.lean, S.leanV, clamp(S.v * yawRate * 0.045, -0.09, 0.09), 160, 9); S.lean += S.leanV * dt;
   S.squatV = spring(S.squat, S.squatV, clamp(acc * 0.012, -0.05, 0.05), 140, 8); S.squat += S.squatV * dt;
-  S.bobV = spring(S.bob, S.bobV, 0, 260, 10); S.bob = clamp(S.bob + S.bobV * dt, -0.02, 0.012);
+  S.bobV = spring(S.bob, S.bobV, 0, 260, 10); S.bob = clamp(S.bob + S.bobV * dt, -0.01, 0.006);
   // dust from spinning or rolling tyres
   if (Math.abs(spinRate) > 0.25 * dt * 60 / 60 && rnd() < Math.min(0.9, Math.abs(S.v) * 0.35 + (S.slip > 0.3 || blocked ? 0.5 : 0))) {
     const i = 2 + (rnd() * 2 | 0), [f, sd] = WOFF[i], c = Math.cos(S.yaw), sn = Math.sin(S.yaw);
@@ -1494,17 +1515,17 @@ function syncCar() {
   car.position.set(S.x, S.y, S.z);
   car.rotation.set(S.vr, S.yaw, S.vp);
   const tp = Math.tan(S.vp), tr = Math.tan(S.vr);
-  const off = S.wc.map((w, i) => S.flipped ? 0 : clamp(w - (S.y + WOFF[i][0] * tp - WOFF[i][1] * tr), -0.045, 0.045));
+  const off = S.wc.map((w, i) => S.flipped ? 0 : clamp(w - (S.y + WOFF[i][0] * tp - WOFF[i][1] * tr), -0.024, 0.024) / K);
   RIG.axles.forEach((A, ai) => {
     const l = off[ai * 2], r = off[ai * 2 + 1];
     A.axle.position.y = (l + r) / 2;
-    A.axle.rotation.x = Math.atan2(l - r, CAR.T);
+    A.axle.rotation.x = Math.atan2(l - r, MCAR.T);
     A.wheels.forEach(w => { w.knuckle.rotation.y = ai === 0 ? S.steer : 0; w.spin.rotation.z = S.spin; });
   });
   // shell sways and settles on the suspension
-  const shell = car.children[1];
+  const shell = model.children[1];
   shell.rotation.set(S.lean, 0, S.squat);
-  shell.position.y = S.bob - Math.abs(S.lean) * 0.03;
+  shell.position.y = (S.bob - Math.abs(S.lean) * 0.015) / K;
   for (const sh of RIG.shocks) {
     axleLocal(sh.A, sh.bot, _a); _b.copy(sh.top);
     _d.subVectors(_b, _a); const len = _d.length(); _d.normalize();
@@ -1516,7 +1537,7 @@ function syncCar() {
   for (const L of RIG.links) { axleLocal(L.A, L.bot, _a); stretch(L.mesh, L.top, _a); }
   // steering link between the front knuckles
   const FA = RIG.axles[0];
-  axleLocal(FA, [-0.03 + Math.sin(S.steer) * 0.0, 0.0, -CAR.T / 2 + 0.03], _a); axleLocal(FA, [-0.03, 0.0, CAR.T / 2 - 0.03], _b);
+  axleLocal(FA, [-0.03, 0.0, -MCAR.T / 2 + 0.03], _a); axleLocal(FA, [-0.03, 0.0, MCAR.T / 2 - 0.03], _b);
   _a.x += Math.sin(S.steer) * 0.02; _b.x += Math.sin(S.steer) * 0.02;
   stretch(RIG.steerLink, _a, _b);
 }
@@ -1722,7 +1743,7 @@ const camPos = new V3(-6.5, 1.2, 4.6), camLook = new V3(-6.5, 0.1, 3);
 const driver = new V3(-6.2, 1.5, 4.2);
 function updateCamera(dt) {
   const fx = Math.cos(S.yaw), fz = -Math.sin(S.yaw);
-  const target = new V3(S.x, S.y + 0.12, S.z);
+  const target = new V3(S.x, S.y + 0.06, S.z);
   if (G.mode === 'menu') {
     G.attract += dt;
     const a = Math.sin(G.attract * 0.06);
@@ -1731,23 +1752,24 @@ function updateCamera(dt) {
   }
   const k = 1 - Math.exp(-dt * 5);
   if (G.camMode === 0) {
-    const want = new V3(S.x - fx * 0.9, S.y + 0.36, S.z - fz * 0.9);
-    want.y = Math.max(want.y, H(want.x, want.z) + 0.15);
+    const want = new V3(S.x - fx * 0.55, S.y + 0.22, S.z - fz * 0.55);
+    want.y = Math.max(want.y, H(want.x, want.z) + 0.1);
     camPos.lerp(want, k); camLook.lerp(target, 1 - Math.exp(-dt * 10));
   } else if (G.camMode === 1) {
     // a club member walking along beside the truck, eyes at ~1.5 m
     const dx = driver.x - S.x, dz = driver.z - S.z, d = Math.hypot(dx, dz) || 1;
-    const want = d > 2.6 ? 2.6 : d < 1.5 ? 1.5 : d;
+    const want = d > 1.9 ? 1.9 : d < 1.1 ? 1.1 : d;
     driver.x = S.x + dx / d * want; driver.z = S.z + dz / d * want;
     driver.y = groundH(driver.x, driver.z) + 1.5;
     camPos.lerp(driver, 1 - Math.exp(-dt * 3)); camLook.lerp(target, 1 - Math.exp(-dt * 8));
   } else {
-    const p = new V3(0.2, 0.2, 0).applyEuler(car.rotation).add(car.position);
-    const l = new V3(1.4, 0.05, 0).applyEuler(car.rotation).add(car.position);
+    const p = new V3(0.1, 0.1, 0).applyEuler(car.rotation).add(car.position);
+    const l = new V3(0.9, 0.02, 0).applyEuler(car.rotation).add(car.position);
     camPos.copy(p); camLook.copy(l);
   }
   camera.position.copy(camPos);
   camera.lookAt(camLook);
+  if (window.__camOverride) { const o = window.__camOverride; camera.position.set(S.x + o[0], S.y + o[1], S.z + o[2]); camera.lookAt(S.x, S.y + 0.04, S.z); }
 }
 
 /* =========================================================
