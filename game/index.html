@@ -317,7 +317,7 @@ function pathZ(x) { // z of path centreline at x
   return PATH[PATH.length - 1][1];
 }
 // the hill: rises from Cedar Crossing at the front up to The Summit by the fence
-const MOUND = { x: 0.6, z: -2.65, rx: 2.6, rz: 1.8, h: 0.8 };
+const MOUND = { x: 0.6, z: -2.65, rx: 2.6, rz: 1.8, h: 0.65 };
 const hillW = v => 0.75 + 0.25 * clamp((1 + v) / 2, 0, 1); // teardrop width
 function moundH(x, z) {
   // the whole course space tilts gently up toward the fence
@@ -325,7 +325,7 @@ function moundH(x, z) {
   let h = 0.1 * smooth(0.4, -4.4, z) * smooth(1.0, 0.85, e);
   const v = (z - MOUND.z) / MOUND.rz, u = (x - MOUND.x) / (MOUND.rx * hillW(v)), q = Math.sqrt(u * u + v * v);
   if (q < 1) {
-    h += MOUND.h * smooth(1.0, -0.8, v) * smooth(1.0, 0.55, q);
+    h += MOUND.h * smooth(1.05, -0.8, v) * smooth(1.08, 0.15, q);
     h -= 0.045 * smooth(0.22, 0.05, distToLine(CREEK, x, z)); // Rocky Creek Bed gully
   }
   return h;
@@ -486,24 +486,40 @@ const courtTex = tex(1024, 1024, (g, w, h) => {
   court(-8.2); court(4.2);
 });
 function signTex() {
-  return tex(256, 384, (g, w, h) => {
-    g.fillStyle = '#c99a5b'; g.fillRect(0, 0, w, h);
-    speckle(g, w, h, 300, ['#b98a4b', '#d6aa6c', '#a47640'], 2, 10);
-    g.fillStyle = '#f6f1e6'; g.fillRect(22, 26, w - 44, h - 52);
-    g.fillStyle = '#17140f'; g.fillRect(30, 34, w - 60, 70);
-    g.fillStyle = '#f6f1e6'; g.textAlign = 'center';
-    g.font = 'bold 30px Impact, Arial Black, sans-serif'; g.fillText('BRAGG CREEK', w / 2, 70);
-    g.font = 'bold 15px Arial, sans-serif'; g.fillText('RC CRAWLER COURSE', w / 2, 93);
-    g.fillStyle = '#c4893e'; g.fillRect(30, 108, w - 60, 86);
-    g.fillStyle = '#17140f'; // little crawler on rocks
-    g.beginPath(); g.moveTo(70, 186); g.lineTo(110, 150); g.lineTo(150, 160); g.lineTo(190, 186); g.fill();
-    g.fillRect(96, 128, 64, 22); g.fillRect(110, 116, 34, 14);
-    [[104, 152], [152, 152]].forEach(([x, y]) => { g.beginPath(); g.arc(x, y, 12, 0, TAU); g.fill(); });
-    g.fillStyle = '#17140f'; g.font = 'bold 18px Arial, sans-serif'; g.fillText('RC VEHICLES ONLY', w / 2, 228);
-    g.font = '12px Arial, sans-serif';
-    ['This course is designed for', 'remote control crawler vehicles.', '', 'Please do not damage, move or', 'remove course features.', 'Take your trash with you.'].forEach((t, i) => g.fillText(t, w / 2, 252 + i * 15));
-    g.fillStyle = '#17140f'; g.fillRect(30, h - 62, w - 60, 28);
-    g.fillStyle = '#f6f1e6'; g.font = 'bold 12px Arial, sans-serif'; g.fillText('Join the Bragg Creek RC Club!', w / 2, h - 43);
+  // the club's rules sign
+  return tex(420, 680, (g, w, h) => {
+    const dg = '#2d4a22', lg = '#5d9c4a';
+    g.fillStyle = dg; g.fillRect(0, 0, w, h);
+    g.fillStyle = '#ffffff'; g.fillRect(8, 8, w - 16, h - 16);
+    g.textAlign = 'center';
+    g.fillStyle = dg; g.font = 'bold 50px "Arial Black", Impact, sans-serif'; g.fillText('BRAGG CREEK', w / 2, 66);
+    g.fillStyle = lg; g.font = 'bold 34px "Arial Black", Impact, sans-serif'; g.fillText('RC CRAWLER COURSE', w / 2, 106);
+    g.fillStyle = dg; g.font = 'bold 17px Arial, sans-serif'; g.fillText('Community Space • Open for Public Use', w / 2, 134);
+    g.fillStyle = '#d4a960'; g.fillRect(8, 148, w - 16, 158);
+    // crawler climbing rocks, with a transmitter
+    g.fillStyle = dg; g.strokeStyle = '#ffffff'; g.lineWidth = 3;
+    [[120, 296, 46], [175, 290, 40], [230, 296, 44], [280, 298, 34], [95, 300, 30]].forEach(([x, y, r]) => { g.beginPath(); g.arc(x, y, r, Math.PI, 0); g.closePath(); g.fill(); g.stroke(); });
+    g.save(); g.translate(190, 215); g.rotate(-0.42);
+    g.fillRect(-85, -18, 170, 40); g.fillRect(-55, -52, 110, 36);
+    g.fillStyle = '#ffffff'; g.fillRect(-45, -45, 36, 24); g.fillRect(2, -45, 40, 24);
+    g.fillStyle = dg; g.fillRect(-90, -100, 4, 70);
+    [[-58, 30], [58, 30]].forEach(([x, y]) => { g.beginPath(); g.arc(x, y, 30, 0, TAU); g.fill(); g.stroke(); g.fillStyle = '#ffffff'; g.beginPath(); g.arc(x, y, 11, 0, TAU); g.fill(); g.fillStyle = dg; });
+    g.restore();
+    g.fillStyle = dg; g.fillRect(338, 262, 18, 34); g.fillRect(343, 232, 4, 30); g.beginPath(); g.arc(362, 274, 11, 0, TAU); g.fill();
+    g.fillStyle = '#222222'; g.font = '15px Arial, sans-serif';
+    g.fillText('This course was built for the community to enjoy.', w / 2, 336);
+    g.fillText('Please help us keep it safe, clean, and usable for everyone.', w / 2, 356);
+    g.fillStyle = dg; g.font = 'bold 28px Arial, sans-serif'; g.fillText('RC VEHICLES ONLY', w / 2, 398);
+    g.fillStyle = '#222222'; g.font = '19px Arial, sans-serif'; g.fillText('This course is designed for', w / 2, 426);
+    g.font = 'bold 19px Arial, sans-serif'; g.fillText('remote-control crawler vehicles only.', w / 2, 450);
+    g.textAlign = 'left'; g.font = 'bold 18px Arial, sans-serif'; g.fillText('Please do not:', 30, 488);
+    g.font = '16px Arial, sans-serif';
+    ['• Damage, move, or remove course features', '• Ride bicycles on the course', '• Climb, jump, dig or alter the course'].forEach((t, i) => g.fillText(t, 34, 512 + i * 22));
+    g.textAlign = 'center'; g.font = 'bold 15px Arial, sans-serif'; g.fillText('Use of this course is at your own risk.', w / 2, 596);
+    g.fillStyle = dg; g.fillRect(8, 612, w - 16, h - 620);
+    g.fillStyle = '#ffffff'; g.font = 'bold 16px Arial, sans-serif'; g.fillText('Interested in joining the Bragg Creek RC Club?', w / 2, 636);
+    g.font = '15px Arial, sans-serif'; g.fillText('✉  rcevreviews@gmail.com', w / 2, 656);
+    g.font = 'italic 11px Arial, sans-serif'; g.fillText('Thank you for helping protect this community space.', w / 2, 672);
   });
 }
 function postSignTex() {
@@ -612,7 +628,6 @@ function addRock(cx, cz, a, b, h, yaw, opt = {}) {
   const f = th => 1 + amp * Math.sin(3 * th + s1) + amp * 0.55 * Math.sin(5 * th + s2);
   const prof = q => h * Math.pow(Math.max(0, 1 - Math.pow(q, p)), 1 / p);
   const R = Math.max(a, b) * (1 + amp * 1.6);
-  if (!opt.visualOnly && !opt.noBlock && h > 0.17) blockers.push({ x: cx, z: cz, r: Math.min(a, b) * 0.8 });
   if (!opt.visualOnly) addObs({
     x0: cx - R, x1: cx + R, z0: cz - R, z1: cz + R,
     h(x, z) {
@@ -853,29 +868,28 @@ function addGate(name, x, z, yaw, w = 0.8) {
    Avalanche Alley and Switchbacks, ringed with boulders, with easy, moderate and hard lines.
    The rules sign stays on its spruce by the entrance, and the RC TRACK cookies stand raised up on a log. */
 function addBridge(cx, cz, len, wid, b) {
-  const Lx = Math.cos(b), Lz = Math.sin(b), Wx = -Lz, Wz = Lx, r = 0.28, hl = len / 2;
-  let top = -1e9, low = 1e9;
-  for (let i = 0; i <= 10; i++) { const t = i / 10 - 0.5; for (const w of [-wid / 2, 0, wid / 2]) { const g = groundH(cx + Lx * len * t + Wx * w, cz + Lz * len * t + Wz * w); top = Math.max(top, g); low = Math.min(low, g); } }
-  top += 0.05;
-  const eA = groundH(cx - Lx * hl, cz - Lz * hl) + 0.004, eB = groundH(cx + Lx * hl, cz + Lz * hl) + 0.004;
-  addSlab(cx - Lx * (hl - r / 2), cz - Lz * (hl - r / 2), r, wid, b, eA, top, { mat: M.plank, thick: 0.025 });
-  addSlab(cx + Lx * (hl - r / 2), cz + Lz * (hl - r / 2), r, wid, b, top, eB, { mat: M.plank, thick: 0.025 });
-  addSlab(cx, cz, len - 2 * r, wid, b, top, top, { mat: M.plank, bottom: low - 0.02 });
-  // slats and side stringers
-  const n = Math.floor((len - 2 * r) / 0.045);
-  for (let i = 0; i <= n; i++) { const t = -(len - 2 * r) / 2 + i * 0.045; const m = new THREE.Mesh(new THREE.BoxGeometry(0.006, 0.004, wid), M.darkWood); m.position.set(cx + Lx * t, top + 0.001, cz + Lz * t); m.rotation.y = -b; scene.add(m); }
+  // the deck follows the slope of the hill, a few cm up, with gentle ramps at both ends
+  const Lx = Math.cos(b), Lz = Math.sin(b), Wx = -Lz, Wz = Lx, r = 0.22, hl = len / 2, dl = len - 2 * r;
+  const gA = groundH(cx - Lx * hl, cz - Lz * hl), gB = groundH(cx + Lx * hl, cz + Lz * hl);
+  let h0 = groundH(cx - Lx * (hl - r), cz - Lz * (hl - r)) + 0.035, h1 = groundH(cx + Lx * (hl - r), cz + Lz * (hl - r)) + 0.035, lift = 0, low = 1e9;
+  for (let i = 0; i <= 12; i++) { const t = i / 12, d = -dl / 2 + dl * t; for (const w of [-wid / 2, 0, wid / 2]) { const g = groundH(cx + Lx * d + Wx * w, cz + Lz * d + Wz * w); lift = Math.max(lift, g + 0.02 - lerp(h0, h1, t)); low = Math.min(low, g); } }
+  h0 += lift; h1 += lift;
+  addSlab(cx - Lx * (hl - r / 2), cz - Lz * (hl - r / 2), r, wid, b, gA + 0.003, h0, { mat: M.plank, thick: 0.025 });
+  addSlab(cx + Lx * (hl - r / 2), cz + Lz * (hl - r / 2), r, wid, b, h1, gB + 0.003, { mat: M.plank, thick: 0.025 });
+  addSlab(cx, cz, dl, wid, b, h0, h1, { mat: M.plank, bottom: low - 0.02 });
+  const n = Math.floor(dl / 0.045);
+  for (let i = 0; i <= n; i++) { const d = -dl / 2 + i * 0.045, t = i / n; const m = new THREE.Mesh(new THREE.BoxGeometry(0.006, 0.004, wid), M.darkWood); m.position.set(cx + Lx * d, lerp(h0, h1, t) + 0.001, cz + Lz * d); m.rotation.y = -b; m.rotation.z = Math.atan2(h1 - h0, dl); scene.add(m); }
   [-1, 1].forEach(sd => {
-    const m = new THREE.Mesh(new THREE.BoxGeometry(len - 2 * r, 0.03, 0.02), M.darkWood);
-    m.position.set(cx + Wx * sd * (wid / 2 + 0.01), top - 0.012, cz + Wz * sd * (wid / 2 + 0.01)); m.rotation.y = -b; m.castShadow = true; scene.add(m);
-    // no invisible side walls: a truck that slips off just drops to the ground
+    const m = new THREE.Mesh(new THREE.BoxGeometry(dl, 0.03, 0.02), M.darkWood);
+    m.position.set(cx + Wx * sd * (wid / 2 + 0.01), (h0 + h1) / 2 - 0.012, cz + Wz * sd * (wid / 2 + 0.01)); m.rotation.set(0, -b, Math.atan2(h1 - h0, dl)); m.rotation.order = 'YZX'; m.castShadow = true; scene.add(m);
   });
-  return top;
+  return (h0 + h1) / 2;
 }
 const BRIDGES = [];
 {
   // the rules sign on its spruce by the entrance (same tree as the real course)
-  const board = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.62, 0.025), [M.darkWood, M.darkWood, M.darkWood, M.darkWood, MSM({ map: signTex() }), M.darkWood]);
-  board.position.set(-3.7, 1.35, -1.0 + 0.25); board.castShadow = true; scene.add(board);
+  const board = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.68, 0.02), [M.darkWood, M.darkWood, M.darkWood, M.darkWood, MSM({ map: signTex(), roughness: 0.5 }), M.darkWood]);
+  board.position.set(-3.7, 1.25, -1.0 + 0.25); board.castShadow = true; scene.add(board);
 
   // RC TRACK cookies, raised up on a peeled log so they stand tall
   const letters = ['R', 'C', '', 'T', 'R', 'A', 'C', 'K'];
@@ -895,7 +909,7 @@ const BRIDGES = [];
   for (let a = 0; a < TAU; a += 0.06) {
     if (gaps.some(([g, w]) => Math.abs(a - g) < w)) continue;
     const vv = 1.04 * Math.sin(a), x = C.x + C.rx * 1.04 * Math.cos(a) * hillW(vv), z = C.z + C.rz * vv;
-    addRock(x, z, rr(0.15, 0.21), rr(0.12, 0.17), rr(0.2, 0.27), a, { color: BOULDER(), sink: 0.1, seg: 10 });
+    addRock(x, z, rr(0.13, 0.19), rr(0.11, 0.16), rr(0.06, 0.09), a, { color: BOULDER(), sink: 0.2, seg: 10, p: 1.6 });
   }
   BRIDGES.push([0.76, -0.8], [-0.8, -3.2], [1.6, -2.56]);
   { // Cedar Crossing: the way in at the bottom, over a little stony creek
@@ -912,7 +926,7 @@ const BRIDGES = [];
   for (let k = 0, n = 0; k < 120 && n < 12; k++) {
     const a = rnd() * TAU, d = rr(0.35, 0.75), x = 0.6 + Math.cos(a) * d, z = -3.7 + Math.sin(a) * d * 0.7;
     if (distToLine(LINES.hard, x, z) < 0.33 || distToLine(LINES.moderate, x, z) < 0.33) continue;
-    addRock(x, z, rr(0.16, 0.24), rr(0.14, 0.2), rr(0.24, 0.32), rnd() * 3, { color: BOULDER(), sink: 0.1, seg: 10 }); n++;
+    addRock(x, z, rr(0.15, 0.22), rr(0.13, 0.19), rr(0.07, 0.1), rnd() * 3, { color: BOULDER(), sink: 0.2, seg: 10, p: 1.6 }); n++;
   }
   addRock(0.6, -3.7, 0.24, 0.2, 0.04, 0.3, { p: 4, seg: 9, amp: 0.12, color: [0.55, 0.52, 0.47], sink: 0.4 });
   addGate('The Summit', 0.6, -3.7, 0, 0.55);
@@ -920,28 +934,37 @@ const BRIDGES = [];
   for (let i = 0; i < 46; i++) {
     const t = rnd(), seg = Math.min(CREEK.length - 2, (t * (CREEK.length - 1)) | 0), f = t * (CREEK.length - 1) - seg;
     const x = lerp(CREEK[seg][0], CREEK[seg + 1][0], f) + rr(-0.14, 0.14), z = lerp(CREEK[seg][1], CREEK[seg + 1][1], f) + rr(-0.14, 0.14);
-    if (Math.hypot(x + 0.8, z + 3.2) < 0.5) continue;
+    if (Math.hypot(x + 0.8, z + 3.2) < 0.5 || Math.hypot(x + 0.5, z + 3.9) < 0.3) continue;
     addRock(x, z, rr(0.05, 0.08), rr(0.04, 0.06), rr(0.02, 0.035), rnd() * 3, { color: riverTint(), sink: 0.3 });
   }
   addGate('Rocky Creek Bed', -0.5, -3.9, -2.62, 0.5);
   // Avalanche Alley: the dirt trail and loose rock spilling down the top right
   for (let i = 0; i < 34; i++) {
     const t = rnd(), x = lerp(3.3, 1.7, t) + rr(-0.15, 0.15), z = lerp(-3.85, -3.65, t) + rr(-0.15, 0.15);
+    if (distToLine(LINES.hard, x, z) < 0.16) continue;
     addRock(x, z, rr(0.04, 0.08), rr(0.03, 0.06), rr(0.015, 0.03), rnd() * 3, { p: 3, seg: 7, color: [0.6, 0.58, 0.53], sink: 0.35 });
   }
   addGate('Avalanche Alley', 1.95, -3.75, -2.65, 0.5);
   // Switchbacks: the hard line's dirt trail curving round the outside right of the ring
   addGate('Switchbacks', 4.4, -2.2, Math.PI / 2, 0.6);
-  // big boulders packed all over the hill, trails winding between them
-  for (let k = 0, placed = 0; k < 900 && placed < 46; k++) {
-    const u = rr(-1, 1), v = rr(-1, 1); if (u * u + v * v > 0.82) continue;
+  const C2G = (x, z) => gates.some(g => Math.hypot(g.x - x, g.z - z) < 0.3);
+  // boulders packed all over the hill, every one drivable; the painted lines stay a bit smoother
+  for (let k = 0, placed = 0; k < 3000 && placed < 140; k++) {
+    const u = rr(-1, 1), v = rr(-1, 1); if (u * u + v * v > 0.9) continue;
     const x = C.x + u * C.rx * hillW(v), z = C.z + v * C.rz;
-    if (Object.values(LINES).some(L => distToLine(L, x, z) < 0.33)) continue;
-    if (BRIDGES.some(([bx, bz]) => Math.hypot(bx - x, bz - z) < 0.6) || Math.hypot(x - 0.6, z + 3.7) < 0.4 || distToLine(CREEK, x, z) < 0.28) continue;
-    addRock(x, z, rr(0.13, 0.22), rr(0.11, 0.18), rr(0.18, 0.28), rnd() * 3, { color: BOULDER(), sink: 0.12, seg: 10 }); placed++;
+    const onLine = Object.values(LINES).some(L => distToLine(L, x, z) < 0.14);
+    if (BRIDGES.some(([bx, bz]) => Math.hypot(bx - x, bz - z) < 0.5) || C2G(x, z) || Math.hypot(x - 0.6, z + 3.7) < 0.3 || distToLine(CREEK, x, z) < 0.22) continue;
+    const big = !onLine && rnd() < 0.6;
+    addRock(x, z, big ? rr(0.12, 0.2) : rr(0.07, 0.12), big ? rr(0.1, 0.16) : rr(0.06, 0.1), big ? rr(0.06, 0.1) : rr(0.03, 0.05), rnd() * 3,
+      { color: BOULDER(), sink: 0.2, seg: big ? 10 : 8, p: big ? 1.6 : 2.5 }); placed++;
   }
+  // stepping logs and cookie paths between the boulders
+  [[1.95, -1.9, 2.25, -2.3], [-1.9, -2.4, -2.15, -2.1], [0.2, -2.75, 0.55, -2.9], [2.5, -2.9, 2.75, -3.3]].forEach(([ax, az, bx, bz]) =>
+    addLog(ax, az, bx, bz, 0.025, { mat: rnd() < 0.5 ? M.peeled : M.bark, sink: 0.9, noBlock: true }));
+  for (let i = 0; i < 7; i++) { const x = lerp(-1.3, -0.5, i / 6) + rr(-0.03, 0.03), z = lerp(-1.45, -1.25, i / 6); addDisc(x, z, rr(0.05, 0.07), 0.018, { y: groundH(x, z) }); }
+  for (let i = 0; i < 6; i++) { const x = lerp(2.6, 3.3, i / 5), z = lerp(-1.45, -1.25, i / 5) + rr(-0.03, 0.03); addDisc(x, z, rr(0.05, 0.07), 0.018, { y: groundH(x, z) }); }
   // the big boulder by the pit
-  addRock(-2.55, -0.25, 0.22, 0.19, 0.26, 0.5, { color: BOULDER(), sink: 0.1, seg: 10 });
+  addRock(-2.55, -0.25, 0.22, 0.19, 0.11, 0.5, { color: BOULDER(), sink: 0.25, seg: 10 });
   // smaller climbable rocks on the moderate and hard lines
   for (let k = 0; k < 60; k++) {
     const L = rnd() < 0.6 ? LINES.hard : LINES.moderate, i = (rnd() * (L.length - 1)) | 0, f = rnd();
@@ -1429,7 +1452,7 @@ function tryMove(nx, nz, nyaw, dir) {
   if (tooSteep(S.x, S.z, nyaw, dir)) return 'step';
   for (let i = 0; i < 4; i++) _wc[i] = wheelCenter(nx, nz, nyaw, i);
   const pen = bodyPen(nx, nz, nyaw, _wc);
-  if (pen > BODY_TOL && pen > S.pen + 0.002) return 'body';
+  if (pen > BODY_TOL + Math.min(0.06, S.push * 0.04) && pen > S.pen + 0.002) return 'body'; // keep pushing and the skid plate scrapes over
   S.x = nx; S.z = nz; S.yaw = nyaw; S.bpen = bp; S.pen = pen;
   for (let i = 0; i < 4; i++) S.wc[i] = _wc[i];
   return null;
@@ -1468,7 +1491,7 @@ function physStep(dt) {
     }
   }
   S.lastBlock = blocked;
-  if (blocked === 'step' && input.thr) S.push += dt; else S.push = Math.max(0, S.push - dt * 2);
+  if ((blocked === 'step' || blocked === 'body') && input.thr) S.push += dt; else S.push = Math.max(0, S.push - dt * 2);
   if (blocked && input.thr) S.stuckT += dt; else S.stuckT = Math.max(0, S.stuckT - dt);
   if (S.stuckT > 2.2 && !S.hinted && G.mode !== 'menu') { S.hinted = true; toast(isTouch ? 'Stuck? Back up and try another line, or tap Reset' : 'Stuck? Back up and try another line, or press R to reset'); }
   if (S.stuckT === 0) S.hinted = false;
