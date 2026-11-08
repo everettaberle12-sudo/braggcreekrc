@@ -1016,40 +1016,52 @@ const BRIDGES = [];
     return best;
   })();
   {
-    const gy = groundH(TREE.x, TREE.z), lean = 0.3, dir = 0; // split faces the front of the course, leaning hard to the side
-    const pivot = new THREE.Group(); pivot.position.set(TREE.x, gy - 0.02, TREE.z); pivot.rotation.y = dir; scene.add(pivot);
+    const gy = groundH(TREE.x, TREE.z), lean = 0.22, dir = 0, SH = 0.42; // stump height
+    const barkM = MSM({ map: barkTex, color: 0xb59a86 }), crackM = MSM({ color: 0x1a120b, side: THREE.DoubleSide });
+    const rawM = MSM({ color: 0x3e2c1c, roughness: 1, flatShading: true });
+    // the stump stays put, with a jagged broken top
+    const stump = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.3, SH, 16), [barkM, rawM, rawM]);
+    stump.position.set(TREE.x, gy + SH / 2 - 0.02, TREE.z); stump.castShadow = stump.receiveShadow = true; scene.add(stump);
+    for (let k = 0; k < 7; k++) {
+      const a = k / 7 * TAU + rr(-0.2, 0.2), sh = new THREE.Mesh(new THREE.ConeGeometry(rr(0.05, 0.08), rr(0.08, 0.18), 4), barkM);
+      sh.position.set(TREE.x + Math.cos(a) * 0.17, gy + SH + 0.04, TREE.z + Math.sin(a) * 0.17); sh.rotation.set(rr(-0.2, 0.2), rnd() * 3, rr(-0.2, 0.2)); sh.castShadow = true; scene.add(sh);
+    }
+    // the trunk snapped off the stump and leans, rocking on the break
+    const pivot = new THREE.Group(); pivot.position.set(TREE.x + 0.22, gy + SH, TREE.z); pivot.rotation.y = dir; scene.add(pivot);
     const tilt = new THREE.Group(); tilt.rotation.z = -lean; pivot.add(tilt);
-    const barkM = MSM({ map: barkTex, color: 0xb59a86 }), woodM = MSM({ color: 0x6e5236, roughness: 1, side: THREE.DoubleSide }), crackM = MSM({ color: 0x1e140c, side: THREE.DoubleSide });
-    // the base is split: two halves for the bottom 1.3 m with a dark crack and pale wood showing, solid trunk above
-    const halves = [];
-    [0, Math.PI].forEach((t0, k) => {
-      const g = new THREE.Group(); tilt.add(g);
-      const half = new THREE.Mesh(new THREE.CylinderGeometry(0.21, 0.27, 1.3, 14, 1, false, t0, Math.PI), [barkM, barkM, barkM]);
-      half.position.y = 0.65; half.castShadow = true; g.add(half);
-      halves.push({ g, s: k ? 1 : -1 });
+    const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.24, 8.4, 16), [barkM, rawM, rawM]);
+    trunk.position.set(-0.22, 4.2 + 0.03, 0); trunk.castShadow = true; tilt.add(trunk);
+    // jagged underside where it broke
+    for (let k = 0; k < 6; k++) {
+      const a = k / 6 * TAU, sh = new THREE.Mesh(new THREE.ConeGeometry(rr(0.05, 0.07), rr(0.08, 0.15), 4), barkM);
+      sh.position.set(-0.22 + Math.cos(a) * 0.15, 0.0, Math.sin(a) * 0.15); sh.rotation.x = Math.PI; sh.castShadow = true; tilt.add(sh);
+    }
+    // a crack running down the middle of the trunk, front and back
+    [-1, 1].forEach(sd => {
+      const crack = new THREE.Mesh(new THREE.PlaneGeometry(0.035, 3.6), crackM);
+      crack.position.set(-0.22, 1.85, sd * 0.215); crack.rotation.set(sd * 0.03, sd > 0 ? 0 : Math.PI, 0); tilt.add(crack);
+      const fork = new THREE.Mesh(new THREE.PlaneGeometry(0.025, 0.9), crackM);
+      fork.position.set(-0.17, 3.5, sd * 0.19); fork.rotation.set(0, sd > 0 ? 0 : Math.PI, 0.25); tilt.add(fork);
     });
-    const crack = new THREE.Mesh(new THREE.BoxGeometry(0.14, 1.25, 0.5), crackM); crack.position.y = 0.62; tilt.add(crack);
-    const upper = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.21, 7.2, 14), barkM); upper.position.y = 1.3 + 3.6; upper.castShadow = true; tilt.add(upper);
-    // jagged split running a little way up the solid trunk
-    [-1, 1].forEach(sd => { const scar = new THREE.Mesh(new THREE.PlaneGeometry(0.05, 0.7), crackM); scar.position.set(0, 1.62, sd * 0.2); scar.rotation.y = sd > 0 ? 0 : Math.PI; tilt.add(scar); });
     const crown = [];
     for (let k = 0; k < 5; k++) {
       const c = new THREE.Mesh(new THREE.ConeGeometry(1.5 - k * 0.25, 1.6, 9), MSM({ color: 0x2f4a2c, flatShading: true }));
-      c.position.y = 4.2 + k * 0.85; c.castShadow = true; tilt.add(c); crown.push(c);
+      c.position.set(-0.22, 4.3 + k * 0.85, 0); c.castShadow = true; tilt.add(c); crown.push(c);
     }
     canopy.push(tilt);
-    // the ground heaved up and cracked open on the side the tree is pulling out of
+    // torn-up dirt and snapped roots around the stump, on the side the tree is pulling out of
     const dirtM = MSM({ color: 0x3a2a1c, roughness: 1, flatShading: true });
     for (let k = 0; k < 14; k++) {
-      const a = rr(1.9, 4.4), d = rr(0.12, 0.5), r = rr(0.06, 0.15);
+      const a = rr(1.9, 4.4), d = rr(0.25, 0.6), r = rr(0.06, 0.15);
       const lump = new THREE.Mesh(new THREE.DodecahedronGeometry(r, 0), dirtM);
-      lump.position.set(TREE.x + Math.cos(a) * d, gy + r * 0.25 + (0.5 - d) * 0.12, TREE.z + Math.sin(a) * d * 1.1); lump.rotation.set(rnd() * 3, rnd() * 3, rnd() * 3); lump.scale.y = 0.6;
+      lump.position.set(TREE.x + Math.cos(a) * d, gy + r * 0.25 + (0.6 - d) * 0.12, TREE.z + Math.sin(a) * d * 1.1); lump.rotation.set(rnd() * 3, rnd() * 3, rnd() * 3); lump.scale.y = 0.6;
       lump.castShadow = lump.receiveShadow = true; scene.add(lump);
     }
-    for (let k = 0; k < 4; k++) { const c = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.01, rr(0.3, 0.55)), crackM); c.position.set(TREE.x - 0.25 - k * 0.07, gy + 0.11 - k * 0.02, TREE.z + rr(-0.15, 0.15)); c.rotation.y = rr(-0.6, 0.6); scene.add(c); }
-    // a couple of thick roots snapped and poking out of the heave
-    for (let k = 0; k < 3; k++) { const r = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.04, 0.35, 6), barkM); r.position.set(TREE.x - 0.35, gy + 0.08, TREE.z + (k - 1) * 0.2); r.rotation.z = 1.1 + rr(-0.2, 0.2); r.rotation.y = rr(-0.4, 0.4); r.castShadow = true; scene.add(r); }
-    addBlocker(TREE.x, TREE.z, 0.3); addBlocker(TREE.x - 0.3, TREE.z, 0.32);
+    for (let k = 0; k < 4; k++) { const c = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.01, rr(0.3, 0.55)), crackM); c.position.set(TREE.x - 0.35 - k * 0.07, gy + 0.11 - k * 0.02, TREE.z + rr(-0.15, 0.15)); c.rotation.y = rr(-0.6, 0.6); scene.add(c); }
+    for (let k = 0; k < 4; k++) { const r = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.045, 0.4, 6), barkM); r.position.set(TREE.x - 0.38, gy + 0.08, TREE.z + (k - 1.5) * 0.18); r.rotation.z = 1.1 + rr(-0.2, 0.2); r.rotation.y = rr(-0.4, 0.4); r.castShadow = true; scene.add(r); }
+    addBlocker(TREE.x - 0.35, TREE.z, 0.3);
+    const halves = [];
+    addBlocker(TREE.x, TREE.z, 0.32);
     TRASH.tree = { pivot, tilt, halves, lean };
   }
   // boulders packed all over the hill, every one drivable; the painted lines stay a bit smoother
@@ -2133,8 +2145,7 @@ function swayTree(now) {
   const lurch = Math.pow(Math.max(0, Math.sin(t * 0.55)), 6) * 0.12; // every so often it lurches like it's going over
   const sw = (Math.sin(t * 0.9) * 0.12 + Math.sin(t * 2.3) * 0.04) * gust - lurch, sw2 = Math.sin(t * 0.63 + 1) * 0.06 * gust;
   T.tilt.rotation.z = -T.lean + sw; T.tilt.rotation.x = sw2;
-  const open = 0.07 + Math.max(0, -sw) * 0.35;
-  T.halves.forEach(h => { h.g.position.x = h.s * open; h.g.rotation.z = -h.s * (0.04 + Math.max(0, -sw) * 0.25); });
+
 }
 function rebuildTruck() {
   WRECK_PARTS.forEach(p => { const xf = p.o.userData.xf; if (xf) { p.o.position.copy(xf.p); p.o.quaternion.copy(xf.q); } });
