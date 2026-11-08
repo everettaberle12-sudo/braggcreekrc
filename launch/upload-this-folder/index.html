@@ -1381,7 +1381,7 @@ function updateDust(dt) {
    the body pitches and rolls from the four contact points, and too much lean rolls it over.
    The body and bumpers also collide, so the truck can't pass through logs or boards.
    ========================================================= */
-const GEARS = { low: { vmax: 0.28, acc: 0.9, g0: 48, g1: 76, label: 'Low' }, high: { vmax: 1.6, acc: 2.4, g0: 22, g1: 46, label: 'High' } };
+const GEARS = { low: { vmax: 0.28, acc: 0.9, g0: 48, g1: 76, label: 'Low' }, high: { vmax: 0.8, acc: 1.5, g0: 26, g1: 50, label: 'High' } };
 const S = { x: 0, z: 0, yaw: 0, v: 0, steer: 0, y: 0, vy: 0, pitch: 0, roll: 0, vp: 0, vr: 0, wc: [0, 0, 0, 0], gear: 'low', slip: 0, spin: 0, flipped: 0, flipDir: 1,
   pen: 0, bpen: 0, push: 0, stuckT: 0, hinted: false, lean: 0, leanV: 0, squat: 0, squatV: 0, bob: 0, bobV: 0, lastV: 0 };
 // contact samples spread evenly by angle around the tyre, so ledges are met smoothly
