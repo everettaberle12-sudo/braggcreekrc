@@ -441,7 +441,7 @@ const camera = new THREE.PerspectiveCamera(62, 1, 0.03, 160);
   sky.renderOrder = -1; scene.add(sky);
   scene.background = new THREE.Color(SKY);
 }
-scene.add(new THREE.HemisphereLight(0xcfe3f5, 0x5a4630, 0.62));
+scene.add(new THREE.HemisphereLight(0xd6e6f2, 0x6b5236, 0.58));
 const sun = new THREE.DirectionalLight(0xffe2b8, 1.75);
 sun.position.set(-7, 12, 9);
 sun.castShadow = true;
@@ -510,10 +510,19 @@ const blueBoardTex = tex(64, 256, (g, w, h) => {
   g.fillStyle = '#6f97a6'; g.fillRect(0, 0, w, h);
   speckle(g, w, h, 140, ['#b49c74', '#88aab5', '#55808f', '#9fb9bf'], 2, 10);
 });
-const soilTex = tex(512, 512, (g, w, h) => {
-  g.fillStyle = '#808080'; g.fillRect(0, 0, w, h);
-  speckle(g, w, h, 10400, ['#5e5e5e', '#9a9a9a', '#6d6d6d', '#b4b4b4', '#4c4c4c'], 1, 3.5);
-}, { repeat: [44, 30] });
+const soilTex = tex(1024, 1024, (g, w, h) => {
+  // pine needles, bits of bark and grit over the dirt (tinted by the ground colour underneath)
+  g.fillStyle = '#c9bfae'; g.fillRect(0, 0, w, h);
+  speckle(g, w, h, 9000, ['#a89c88', '#d8d0c0', '#8e826e', '#e6dccb'], 1, 4);
+  g.lineCap = 'round';
+  for (let i = 0; i < 5200; i++) {
+    const x = rnd() * w, y = rnd() * h, a = rnd() * TAU, L = rr(18, 46);
+    g.strokeStyle = ['#e9c99c', '#d9a874', '#f2dcb4', '#c2905e', '#b88660', '#f6e4c4'][(rnd() * 6) | 0];
+    g.lineWidth = rr(1.2, 2.4);
+    g.beginPath(); g.moveTo(x, y); g.quadraticCurveTo(x + Math.cos(a + 0.2) * L * 0.5, y + Math.sin(a + 0.2) * L * 0.5, x + Math.cos(a) * L, y + Math.sin(a) * L); g.stroke();
+  }
+  for (let i = 0; i < 260; i++) { g.fillStyle = ['#6e5a46', '#857059', '#5a4836'][(rnd() * 3) | 0]; g.save(); g.translate(rnd() * w, rnd() * h); g.rotate(rnd() * TAU); g.fillRect(-rr(3, 9), -rr(2, 5), rr(6, 18), rr(4, 10)); g.restore(); }
+}, { repeat: [24, 16] });
 const chainTex = tex(64, 64, (g, w, h) => {
   g.clearRect(0, 0, w, h); g.strokeStyle = '#a7b0b2'; g.lineWidth = 3;
   g.beginPath(); g.moveTo(0, 0); g.lineTo(w, h); g.moveTo(w, 0); g.lineTo(0, h); g.stroke();
@@ -596,7 +605,7 @@ const M = {
   blueBoard: MSM({ map: blueBoardTex }),
   stake: MSM({ color: 0x9c7a50 }),
   darkWood: MSM({ color: 0x5c4a39 }),
-  rock: MSM({ vertexColors: true, flatShading: true, roughness: 0.95 }),
+  rock: MSM({ vertexColors: true, flatShading: false, roughness: 0.92 }),
   metal: MSM({ color: 0x4a4744, roughness: 0.55, metalness: 0.5 }),
   fencePost: MSM({ color: 0x9aa2a4, roughness: 0.5, metalness: 0.6 }),
 };
@@ -696,17 +705,21 @@ function addRock(cx, cz, a, b, h, yaw, opt = {}) {
       return q < 1 ? base + prof(q) : -1e9;
     }
   });
-  const RINGS = 8, SEG = (opt.seg ?? 11) + 4, posA = [], col = [], idx = [];
-  const tint = (opt.color || [0.7, 0.68, 0.63]).map(c => c * 0.4); // vertex colours are linear: keep rocks a natural grey
+  const RINGS = 10, SEG = (opt.seg ?? 11) + 10, posA = [], col = [], idx = [];
+  const tint = (opt.color || [0.7, 0.68, 0.63]).map(c => c * 0.68); // vertex colours are linear: keep rocks a natural grey
   const vert = (q, th, y) => {
     const fq = q * f(th), u = fq * Math.cos(th) * a, v = fq * Math.sin(th) * b;
     posA.push(cx + u * c - v * s, y, cz + u * s + v * c);
-    const k = rr(0.86, 1.08) * (0.82 + 0.18 * clamp((y - base) / Math.max(h, 0.01), 0, 1));
-    col.push(tint[0] * k, tint[1] * k, tint[2] * k);
+    // darker low down and in the cracks, lighter on top, with patches of lichen
+    const hf = clamp((y - base) / Math.max(h, 0.01), 0, 1);
+    const grain = 0.9 + 0.1 * Math.sin(th * 13 + s2) * Math.cos(q * 11 + s1) + 0.06 * Math.sin(th * 31 + q * 17 + s1);
+    let k = grain * (0.62 + 0.38 * hf), cr = tint[0] * k, cg = tint[1] * k, cb = tint[2] * k;
+    if (Math.sin(th * 5 + s1 * 3) * Math.sin(q * 6 + s2 * 2) > 0.8 && hf > 0.3) { cr = cr * 0.5 + 0.17; cg = cg * 0.5 + 0.18; cb = cb * 0.5 + 0.08; }
+    col.push(cr, cg, cb);
   };
   vert(0, 0, base + prof(0));
   const ths = []; for (let j = 0; j < SEG; j++) ths.push((j + rr(-0.25, 0.25)) / SEG * TAU);
-  for (let k = 1; k <= RINGS; k++) for (let j = 0; j < SEG; j++) { const q = k / RINGS; vert(q, ths[j], base + prof(q) + (k < RINGS ? rr(-0.08, 0.04) * h : 0)); }
+  for (let k = 1; k <= RINGS; k++) for (let j = 0; j < SEG; j++) { const q = k / RINGS; vert(q, ths[j], base + prof(q) + (k < RINGS ? (Math.sin(ths[j] * 7 + s1) * Math.sin(q * 9 + s2) * 0.06 - 0.015) * h : 0)); }
   for (let j = 0; j < SEG; j++) vert(1.05, ths[j], base - 0.05);
   for (let j = 0; j < SEG; j++) idx.push(0, 1 + (j + 1) % SEG, 1 + j);
   for (let k = 0; k < RINGS; k++) for (let j = 0; j < SEG; j++) {
@@ -762,7 +775,7 @@ function groundColor(x, z) {
   return c.map(v => v * k);
 }
 {
-  const W = 20, D = 13.6, nx = 340, nz = 232;
+  const W = 20, D = 13.6, nx = 500, nz = 340;
   const geo = new THREE.PlaneGeometry(W, D, nx, nz);
   geo.rotateX(-Math.PI / 2);
   geo.translate(0, 0, 1.5);
@@ -836,17 +849,17 @@ for (let i = 0; i < 260; i++) {
   const trunkGeo = new THREE.CylinderGeometry(0.5, 1, 1, 16); trunkGeo.translate(0, 0.5, 0);
   const coneGeo = new THREE.ConeGeometry(1, 1, 14); coneGeo.translate(0, 0.5, 0);
   const trunks = new THREE.InstancedMesh(trunkGeo, MSM({ map: barkTex, color: 0xb59a86 }), spruces.length);
-  const cones = new THREE.InstancedMesh(coneGeo, MSM({ color: 0xffffff, roughness: 1, flatShading: true }), spruces.length * 6);
+  const cones = new THREE.InstancedMesh(coneGeo, MSM({ color: 0xffffff, roughness: 1, flatShading: true }), spruces.length * 10);
   const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), sc = new V3(), p = new V3(), col = new THREE.Color();
   const e = new THREE.Euler();
   let ci = 0;
   spruces.forEach((t, i) => {
     p.set(t.x, t.y - 0.05, t.z); sc.set(t.r, t.h, t.r); m4.compose(p, q, sc); trunks.setMatrixAt(i, m4);
-    const crownBase = t.h * rr(0.3, 0.42), layers = 6;
+    const crownBase = t.h * rr(0.3, 0.42), layers = 10;
     for (let k = 0; k < layers; k++) {
       const f = k / (layers - 1);
-      const rad = (2.0 - f * 1.55) * (t.h / 16) * rr(0.85, 1.12), hh = (t.h - crownBase) * 0.3;
-      p.set(t.x + rr(-0.1, 0.1), t.y + crownBase + f * (t.h - crownBase) * 0.78, t.z + rr(-0.1, 0.1));
+      const rad = (1.9 - f * 1.6) * (t.h / 16) * rr(0.85, 1.1) * (k % 2 ? 0.86 : 1), hh = (t.h - crownBase) * 0.2;
+      p.set(t.x + rr(-0.08, 0.08), t.y + crownBase + f * (t.h - crownBase) * 0.84, t.z + rr(-0.08, 0.08));
       e.set(rr(-0.05, 0.05), rnd() * TAU, rr(-0.05, 0.05)); q.setFromEuler(e);
       sc.set(rad, hh, rad); m4.compose(p, q, sc); cones.setMatrixAt(ci, m4);
       col.setHSL(0.35 + rr(-0.04, 0.03), rr(0.38, 0.5), rr(0.12, 0.19) + f * 0.04); cones.setColorAt(ci, col); ci++;
@@ -1155,7 +1168,7 @@ function scatterPoint(minRoute, tries = 30) {
     tuftGeo.setAttribute('uv', new THREE.Float32BufferAttribute(U, 2));
     tuftGeo.setIndex(I); tuftGeo.computeVertexNormals();
   }
-  const TUFTS = 700;
+  const TUFTS = 1300;
   const tufts = new THREE.InstancedMesh(tuftGeo, new THREE.MeshLambertMaterial({ map: bladeTex, alphaTest: 0.45, side: THREE.DoubleSide }), TUFTS);
   let ti = 0;
   for (let k = 0; k < TUFTS * 3 && ti < TUFTS; k++) {
