@@ -70,6 +70,7 @@ button:focus-visible { outline: 2px solid var(--gate); outline-offset: 2px; }
 }
 #toast.show { opacity: 1; }
 #alert {
+  pointer-events: none;
   position: fixed; z-index: 6; left: 50%; transform: translateX(-50%); top: calc(env(safe-area-inset-top, 0px) + 74px);
   background: #b3261e; color: #fff; font-family: var(--font-label); font-weight: 700; font-size: 20px; letter-spacing: 0.06em;
   text-transform: uppercase; padding: 8px 16px; border-radius: 6px; box-shadow: 0 6px 20px rgba(0,0,0,.35); white-space: nowrap;
@@ -585,6 +586,8 @@ const M = {
 const V3 = THREE.Vector3, UP = new V3(0, 1, 0);
 function shadowy(m) { m.castShadow = true; m.receiveShadow = true; scene.add(m); return m; }
 
+// every rock, log and cookie on the course; the Trashers can tear any of them out
+const WRECKABLE = [];
 function addLog(ax, az, bx, bz, r, opt = {}) {
   const dx = bx - ax, dz = bz - az, len = Math.hypot(dx, dz), L2 = len * len;
   let cy = opt.y;
@@ -593,7 +596,7 @@ function addLog(ax, az, bx, bz, r, opt = {}) {
     for (let i = 0; i <= 8; i++) m = Math.max(m, H(ax + dx * i / 8, az + dz * i / 8));
     cy = m + r * (opt.sink ?? 0.85);
   }
-  addObs({
+  const logObs = {
     x0: Math.min(ax, bx) - r, x1: Math.max(ax, bx) + r, z0: Math.min(az, bz) - r, z1: Math.max(az, bz) + r,
     h(x, z) {
       const t = ((x - ax) * dx + (z - az) * dz) / L2;
@@ -601,7 +604,8 @@ function addLog(ax, az, bx, bz, r, opt = {}) {
       const px = ax + dx * t - x, pz = az + dz * t - z, d2 = px * px + pz * pz;
       return d2 < r * r ? cy + Math.sqrt(r * r - d2) : -1e9;
     }
-  });
+  };
+  addObs(logObs);
   if (r >= 0.09 && !opt.noBlock) addSegBlocker(ax, az, bx, bz, r * 0.92);
   const geo = new THREE.CylinderGeometry(r, r * 0.96, len, 24, 1);
   const mesh = new THREE.Mesh(geo, [opt.mat || (rnd() < 0.5 ? M.bark : M.peeled), M.cookie, M.cookie]);
@@ -609,6 +613,7 @@ function addLog(ax, az, bx, bz, r, opt = {}) {
   mesh.rotateY(rnd() * TAU);
   mesh.position.set(ax + dx / 2, cy, az + dz / 2);
   shadowy(mesh);
+  WRECKABLE.push({ mesh, obs: logObs, x: ax + dx / 2, z: az + dz / 2, kind: 'log' });
   return cy + r;
 }
 
@@ -642,11 +647,13 @@ function addSlab(cx, cz, len, wid, yaw, h0, h1, opt = {}) {
 
 function addDisc(cx, cz, r, thick, opt = {}) {
   const top = (opt.y ?? H(cx, cz)) + thick;
-  addObs({ x0: cx - r, x1: cx + r, z0: cz - r, z1: cz + r, h(x, z) { const dx = x - cx, dz = z - cz; return dx * dx + dz * dz < r * r ? top : -1e9; } });
+  const discObs = { x0: cx - r, x1: cx + r, z0: cz - r, z1: cz + r, h(x, z) { const dx = x - cx, dz = z - cz; return dx * dx + dz * dz < r * r ? top : -1e9; } };
+  addObs(discObs);
   const deep = thick + 0.12;
   const mesh = new THREE.Mesh(new THREE.CylinderGeometry(r, r * 0.98, deep, 28), [M.bark, opt.mat || M.cookie, M.cookie]);
   mesh.position.set(cx, top - deep / 2, cz);
   mesh.rotation.y = rnd() * TAU;
+  WRECKABLE.push({ mesh, obs: discObs, x: cx, z: cz, kind: 'disc' });
   return shadowy(mesh);
 }
 
@@ -658,7 +665,8 @@ function addRock(cx, cz, a, b, h, yaw, opt = {}) {
   const f = th => 1 + amp * Math.sin(3 * th + s1) + amp * 0.55 * Math.sin(5 * th + s2);
   const prof = q => h * Math.pow(Math.max(0, 1 - Math.pow(q, p)), 1 / p);
   const R = Math.max(a, b) * (1 + amp * 1.6);
-  if (!opt.visualOnly) addObs({
+  let rockObs = null;
+  if (!opt.visualOnly) addObs(rockObs = {
     x0: cx - R, x1: cx + R, z0: cz - R, z1: cz + R,
     h(x, z) {
       const px = x - cx, pz = z - cz, u = (px * c + pz * s) / a, v = (-px * s + pz * c) / b;
@@ -688,7 +696,11 @@ function addRock(cx, cz, a, b, h, yaw, opt = {}) {
   geo.setAttribute('position', new THREE.Float32BufferAttribute(posA, 3));
   geo.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
   geo.setIndex(idx); geo.computeVertexNormals();
-  return shadowy(new THREE.Mesh(geo, M.rock));
+  // keep the mesh centred on the rock so it can be picked up and thrown
+  geo.translate(-cx, -base, -cz);
+  const rock = new THREE.Mesh(geo, M.rock); rock.position.set(cx, base, cz);
+  WRECKABLE.push({ mesh: rock, obs: rockObs, x: cx, z: cz, kind: 'rock' });
+  return shadowy(rock);
 }
 
 function addBlocker(x, z, r) { blockers.push({ x, z, r }); }
@@ -1728,10 +1740,12 @@ function resetPose() {
   else placeCar(g.x + g.fx * 0.22 * G.lastDir, g.z + g.fz * 0.22 * G.lastDir, G.lastDir > 0 ? g.yaw : g.yaw + Math.PI);
 }
 function doReset(manual) {
+  if (G.mode === 'menu') return;
+  if (G.wreck) rebuildTruck();
   if (G.mode === 'run' && G.running) { G.resets++; $('#pen').textContent = G.resets + (G.resets === 1 ? ' reset' : ' resets') + ' · +' + G.resets * PENALTY + 's'; }
-  if (G.mode === 'free') { const fx = S.x, fz = S.z, fy = S.yaw; placeCar(fx, fz, fy); if (S.flipped || Math.abs(S.roll) > 0.6) resetFree(); return; }
-  resetPose();
-  if (manual) toast(G.mode === 'run' && G.running ? 'Reset · +' + PENALTY + ' s' : 'Back on the trail');
+  if (G.mode === 'free') resetFree(); else resetPose();
+  TR.chaseCool = Math.max(TR.chaseCool || 0, 6);
+  if (manual) toast(G.mode === 'run' && G.running ? 'Reset · +' + PENALTY + ' s' : G.mode === 'free' ? 'Back at the start' : 'Back on the trail');
 }
 function resetFree() { placeCar(SPAWN[0], SPAWN[1], SPAWN[2]); }
 let flipTimer = 0;
@@ -1903,7 +1917,7 @@ function updateCamera(dt) {
   if (TR.cine && TR.cine.t > 0 && !G.wreck) {
     TR.cine.t -= dt;
     camera.position.set(TR.cine.x + 2.0, H(TR.cine.x + 2, TR.cine.z + 2.6) + 1.7, TR.cine.z + 2.9);
-    camera.lookAt(TR.cine.x, 1.0, TR.cine.z);
+    camera.lookAt(TR.cine.x, TR.cine.t > 5 ? 1.0 : 0.3, TR.cine.z + (TR.cine.t > 5 ? 0 : 0.3));
     camPos.copy(camera.position);
   }
   if (window.__camOverride) { const o = window.__camOverride; camera.position.set(S.x + o[0], S.y + o[1], S.z + o[2]); camera.lookAt(S.x, S.y + 0.04, S.z); }
@@ -1914,8 +1928,8 @@ function updateCamera(dt) {
    Get away from them for 30 seconds. If they catch the truck they stomp it apart.
    The course stays wrecked until you restart.
    ========================================================= */
-const TR = { next: 120, phase: 'idle', t: 0, chaseT: 0, gang: [], debris: [], broken: false, warned: false };
-const TRASH_EVERY = 120, ESCAPE_TIME = 30;
+const TR = { next: 120, phase: 'idle', t: 0, chaseT: 0, chaseCool: 0, gang: [], debris: [], broken: false, warned: false };
+const TRASH_EVERY = 120, ESCAPE_TIME = 30, RAID_TIME = 120; // a raid lasts 2 minutes
 function makePerson(color) {
   const g = new THREE.Group(), cloth = MSM({ color, roughness: 0.8 }), dark = MSM({ color: 0x1b1d22, roughness: 0.7 });
   const helmet = MSM({ color: [0xe8402a, 0xf2f2f2, 0x2b2f36, 0x3a7bd5][(rnd() * 4) | 0], roughness: 0.3, metalness: 0.2 });
@@ -1963,16 +1977,65 @@ function placeBroken(target) {
     if (target.kind === 'post' && o === target.parts[2]) q.multiply(new THREE.Quaternion().setFromEuler(new THREE.Euler(0, 0, 0)));
     o.userData.to = { p, q }; o.userData.k = 0;
   });
-  // a torn half of the rules sign
-  if (target.kind === 'board' && !target.torn) {
-    const half = target.parts[0].clone(); half.scale.set(1, 0.5, 1); scene.add(half); target.torn = half;
-  }
-  if (target.torn) { const t = target.torn; t.visible = true; t.position.set(target.x + rr(-0.6, 0.6), groundH(target.x, target.z + 0.9) + 0.012, target.z + rr(0.6, 1.0)); t.rotation.set(-Math.PI / 2, rr(-1, 1), 0); }
   if (target.kind === 'bridge') target.parts.forEach(o => { if (o.userData.obs) o.userData.obs.off = true; });
   for (let i = 0; i < 6; i++) puff(target.x + rr(-0.2, 0.2), groundH(target.x, target.z), target.z + rr(-0.2, 0.2), 2.5);
   target.broken = true; TR.broken = true;
 }
+const ANIM = new Set();
+function ripSign(target) {
+  // tear the fallen rules sign into two halves and fling them apart
+  const board = target.parts[0];
+  if (!target.halves) {
+    const map = board.material[4].map;
+    target.halves = [0.5, 0].map(off => {
+      const t = map.clone(); t.needsUpdate = true; t.repeat.set(1, 0.5); t.offset.set(0, off);
+      const h = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.34, 0.02), [M.darkWood, M.darkWood, M.darkWood, M.darkWood, MSM({ map: t, roughness: 0.5 }), M.darkWood]);
+      h.castShadow = true; scene.add(h); return h;
+    });
+  }
+  board.visible = false;
+  const bp = board.position, bq = board.quaternion;
+  target.halves.forEach((h, i) => {
+    h.visible = true; h.position.copy(bp); h.quaternion.copy(bq); h.userData.xf = null; saveXf(h);
+    const sd = i ? 1 : -1, nx = bp.x + sd * rr(0.55, 0.9), nz = bp.z + rr(0.45, 0.9);
+    _e.set(-Math.PI / 2 + rr(-0.3, 0.3), rr(-1.2, 1.2), sd * rr(0.1, 0.4));
+    h.userData.to = { p: new V3(nx, groundH(nx, nz) + 0.015, nz), q: new THREE.Quaternion().setFromEuler(_e) }; h.userData.k = 0; ANIM.add(h);
+  });
+  for (let i = 0; i < 6; i++) puff(bp.x + rr(-0.2, 0.2), groundH(bp.x, bp.z), bp.z + rr(-0.2, 0.2), 2);
+  toast('They kicked the sign down and ripped it in half!');
+}
+function throwItem(it, fromX, fromZ) {
+  const o = it.mesh; saveXf(o);
+  const a = Math.atan2(it.z - fromZ, it.x - fromX) + rr(-0.7, 0.7), d = rr(0.4, 1.3);
+  const nx = it.x + Math.cos(a) * d, nz = it.z + Math.sin(a) * d, xf = o.userData.xf;
+  const p = new V3(nx, xf.p.y + (groundH(nx, nz) - groundH(it.x, it.z)) + (it.kind === 'rock' ? 0.01 : 0.02), nz);
+  let q;
+  if (it.kind === 'log') q = new THREE.Quaternion().setFromAxisAngle(UP, rr(-1.5, 1.5)).multiply(xf.q);
+  else { _e.set(rr(-1.3, 1.3), rnd() * TAU, rr(-1.3, 1.3)); q = new THREE.Quaternion().setFromEuler(_e); }
+  o.userData.to = { p, q }; o.userData.k = 0; ANIM.add(o);
+  if (it.obs) it.obs.off = true;
+  it.wrecked = true; TR.broken = true;
+  for (let i = 0; i < 3; i++) puff(it.x + rr(-0.08, 0.08), groundH(it.x, it.z), it.z + rr(-0.08, 0.08), 1.6);
+}
+const HOLES = [];
+function digHole(x, z) {
+  let h = HOLES.find(o => !o.g.visible);
+  if (!h) {
+    if (HOLES.length >= 40) return;
+    const g = new THREE.Group(), dirt = MSM({ color: 0x4a3524, roughness: 1, flatShading: true });
+    const pit = new THREE.Mesh(new THREE.CircleGeometry(0.17, 16), MSM({ color: 0x1c130b, roughness: 1 })); pit.rotation.x = -Math.PI / 2; g.add(pit);
+    for (let k = 0; k < 6; k++) { const l = new THREE.Mesh(new THREE.DodecahedronGeometry(rr(0.05, 0.09), 0), dirt); const a = k / 6 * TAU + rr(-0.3, 0.3); l.position.set(Math.cos(a) * 0.24, 0.02, Math.sin(a) * 0.24); l.scale.y = 0.55; l.castShadow = true; g.add(l); }
+    scene.add(g); h = { g }; HOLES.push(h);
+  }
+  h.g.position.set(x, H(x, z) + 0.004, z); h.g.rotation.y = rnd() * TAU; h.g.visible = true;
+  for (let i = 0; i < 5; i++) puff(x + rr(-0.1, 0.1), H(x, z), z + rr(-0.1, 0.1), 2.2);
+  TR.broken = true;
+}
 function repairCourse() {
+  WRECKABLE.forEach(it => { if (!it.wrecked && !it.claimed) return; const o = it.mesh, xf = o.userData.xf; if (xf) { o.position.copy(xf.p); o.quaternion.copy(xf.q); } o.userData.to = null; if (it.obs) it.obs.off = false; it.wrecked = false; it.claimed = null; });
+  HOLES.forEach(h => { h.g.visible = false; });
+  ANIM.clear();
+  TRASH.signs.forEach(t => { if (t.halves) t.halves.forEach(h => { h.visible = false; }); t.parts.forEach(o => { o.visible = true; }); });
   [...TRASH.signs, ...TRASH.bridges].forEach(t => {
     t.parts.forEach(o => { const xf = o.userData.xf; if (xf) { o.position.copy(xf.p); o.quaternion.copy(xf.q); o.scale.copy(xf.s); } o.userData.to = null; if (o.userData.obs) o.userData.obs.off = false; });
     if (t.torn) t.torn.visible = false; t.broken = false;
@@ -1983,13 +2046,13 @@ function repairCourse() {
 }
 TRASH.bridges.forEach(b => { b.kind = 'bridge'; });
 function animateBroken(dt) {
-  [...TRASH.signs, ...TRASH.bridges].forEach(t => t.parts.forEach(o => {
+  [...TRASH.signs.flatMap(t => t.parts), ...TRASH.bridges.flatMap(t => t.parts), ...ANIM].forEach(o => {
     const to = o.userData.to; if (!to || o.userData.k >= 1) return;
     o.userData.k = Math.min(1, o.userData.k + dt * 2.2);
     const k = smooth(0, 1, o.userData.k), xf = o.userData.xf;
     o.position.lerpVectors(xf.p, to.p, k); o.position.y += Math.sin(k * Math.PI) * 0.25;
     o.quaternion.copy(xf.q).slerp(to.q, k);
-  }));
+  });
 }
 function gangStart() {
   const plan = trashPlan();
@@ -2000,7 +2063,8 @@ function gangStart() {
     m.x = m.sx; m.z = m.sz; m.yaw = 0; m.walk = 0; m.g.visible = m.bike.g.visible = true; m.lost = 0; m.slot = i / 4 * TAU + 0.4;
   });
   TR.phase = 'raid'; TR.t = 0; TR.chaseT = 0; TR.caught = false; TR.cineDone = false; TR.cine = null;
-  $('#alert').hidden = false; $('#alert').textContent = 'The Trashers are here! Get away from them';
+  TR.chaseCool = 8;
+  $('#alert').hidden = false; $('#alert').textContent = 'The Trashers are here!';
   beep(220); beep(180);
 }
 function knockFlags() {
@@ -2010,7 +2074,7 @@ function knockFlags() {
 function gangLeave() {
   if (TR.phase === 'raid') knockFlags();
   TR.phase = 'leave';
-  TR.gang.forEach(m => { m.state = m.state === 'ride' ? 'rideOut' : 'toBike'; });
+  TR.gang.forEach(m => { if (m.item) { m.item.claimed = null; m.item = null; } m.state = m.state === 'ride' ? 'rideOut' : 'toBike'; m.g.rotation.z = 0; });
   $('#alert').hidden = true;
 }
 function moveTo(m, tx, tz, speed, dt) {
@@ -2032,13 +2096,33 @@ function poseGang(dt) {
       m.g.position.set(m.x - Math.cos(m.yaw) * 0.12, gy + 0.32, m.z + Math.sin(m.yaw) * 0.12); m.g.rotation.set(0, m.yaw, 0);
       m.legs.forEach(l => { l.rotation.z = 1.2; }); m.arms.forEach(a => { a.rotation.z = 1.1; });
     } else {
-      m.g.position.set(m.x, gy, m.z); m.g.rotation.set(0, m.yaw, 0);
-      const sw = Math.sin(m.walk) * 0.6, stomp = (m.state === 'stomp' || (m.state === 'smash' && m.plan[0] && m.plan[0].kind !== 'board')) ? Math.abs(Math.sin(TR.t * 9 + m.slot * 3)) * 1.1 : 0;
-      m.legs[0].rotation.z = sw + stomp; m.legs[1].rotation.z = -sw; m.arms[0].rotation.z = -sw * 0.8; m.arms[1].rotation.z = sw * 0.8 + (m.state === 'smash' ? Math.sin(TR.t * 12) * 1.4 : 0);
-      if (m.state === 'lift') { m.arms[0].rotation.z = m.arms[1].rotation.z = 2.7; }
+      m.g.position.set(m.x, gy, m.z);
+      const st = m.state, T = TR.t + m.slot * 2, bend = st === 'tear' || st === 'dig' || st === 'rip' ? -0.45 : 0;
+      m.g.rotation.set(0, m.yaw, bend);
+      const sw = Math.sin(m.walk) * 0.6;
+      m.legs[0].rotation.z = sw; m.legs[1].rotation.z = -sw; m.arms[0].rotation.z = -sw * 0.8; m.arms[1].rotation.z = sw * 0.8;
+      if (st === 'stomp' || (st === 'smash' && m.plan[0] && m.plan[0].kind !== 'board')) {
+        // big stomps: knee up high, then slam the boot down
+        const up = Math.max(0, Math.sin(T * 6)); m.legs[0].rotation.z = 0.4 + up * 1.0; m.legs[1].rotation.z = -0.1;
+        m.arms[0].rotation.z = -0.5 + up * 0.6; m.arms[1].rotation.z = 0.5 - up * 0.6;
+      } else if (st === 'smash') { // kicking the sign
+        const k = Math.max(0, Math.sin(T * 7)); m.legs[0].rotation.z = 0.2 + k * 1.6; m.arms[0].rotation.z = -1.0; m.arms[1].rotation.z = 0.8;
+      } else if (st === 'rip' || st === 'tear') { m.arms[0].rotation.z = m.arms[1].rotation.z = 1.1 + Math.sin(T * 11) * 0.5; }
+      else if (st === 'dig') { m.arms[0].rotation.z = m.arms[1].rotation.z = 0.6 + Math.sin(T * 8) * 0.9; }
+      if (st === 'lift') { m.arms[0].rotation.z = m.arms[1].rotation.z = 2.7; }
       if (!m.bikeDown) { m.bikeDown = true; m.bike.g.rotation.set(Math.PI / 2 - 0.15, m.yaw, 0); m.bike.g.position.set(m.bx, H(m.bx, m.bz) + 0.12, m.bz); }
     }
   });
+}
+function pickLoot(m) {
+  let best = null, bd = 1e9;
+  for (const it of WRECKABLE) {
+    if (it.wrecked || it.claimed || !insideEdge(it.x, it.z, -0.25)) continue;
+    const d = Math.hypot(it.x - m.x, it.z - m.z) + rnd() * 0.8;
+    if (d < bd) { bd = d; best = it; }
+  }
+  if (best) best.claimed = m;
+  return best;
 }
 function updateTrashers(dt) {
   animateBroken(dt);
@@ -2049,55 +2133,90 @@ function updateTrashers(dt) {
     if (TR.next <= 0) gangStart();
     return;
   }
-  TR.t += dt;
+  TR.t += dt; TR.chaseCool = Math.max(0, TR.chaseCool - dt);
   let anyChasing = false;
+  const raid = TR.phase === 'raid';
   TR.gang.forEach(m => {
     const dTruck = Math.hypot(S.x - m.x, S.z - m.z);
+    const canChase = raid && !G.wreck && TR.chaseCool <= 0 && dTruck < 1.8;
     switch (m.state) {
       case 'ride':
         if (moveTo(m, m.dx, m.dz, 2.4, dt)) { m.state = 'walk'; m.bx = m.x; m.bz = m.z; m.bikeDown = false; }
         break;
-      case 'walk': case 'smash': {
-        if (!G.wreck && dTruck < 1.8 && TR.phase === 'raid') { m.state = 'chase'; m.lost = 0; break; }
+      case 'walk': {
+        if (canChase) { m.state = 'chase'; m.lost = 0; break; }
         const t = m.plan[0];
-        if (!t) { m.state = 'toBike'; break; }
-        if (m.state === 'walk') { if (moveTo(m, t.x + (t.kind === 'board' ? 0 : -0.25), t.z + (t.kind === 'board' ? 0.45 : 0.25), 1.1, dt)) { m.state = 'smash'; m.smashT = 0; } }
-        else {
-          m.smashT += dt;
-          const dur = t.kind === 'board' ? 2.6 : 1.4;
-          if (t.kind === 'board' && !t.broken) {
-            const b = t.parts[0]; saveXf(b); b.rotation.set(0, 0, Math.sin(m.smashT * 22) * 0.06 * m.smashT); b.position.x = b.userData.xf.p.x + Math.sin(m.smashT * 31) * 0.02;
-            if (!TR.cineDone) { TR.cineDone = true; TR.cine = { t: 4.2, x: t.x, z: t.z }; toast('One of them is smashing the rules sign!'); }
-          }
-          if (m.smashT > dur) { if (!t.broken) placeBroken(t); m.plan.shift(); m.state = 'walk'; }
+        if (!t) { m.item = pickLoot(m); m.state = m.item ? 'loot' : 'walk'; break; }
+        if (moveTo(m, t.x + (t.kind === 'board' ? 0 : -0.25), t.z + (t.kind === 'board' ? 0.45 : 0.25), 1.0, dt)) { m.state = 'smash'; m.smashT = 0; }
+        break; }
+      case 'smash': {
+        const t = m.plan[0]; m.smashT += dt;
+        if (t.kind === 'board') {
+          // kicking the rules sign off its tree
+          const b = t.parts[0]; saveXf(b);
+          if (!t.broken) { const k = Math.min(1, m.smashT / 4); b.rotation.set(0, 0, Math.sin(m.smashT * 20) * 0.08 * k); b.position.x = b.userData.xf.p.x + Math.sin(m.smashT * 29) * 0.025 * k; }
+          if (!TR.cineDone) { TR.cineDone = true; TR.cine = { t: 9, x: t.x, z: t.z }; toast('One of them is kicking the rules sign!'); }
+          if (m.smashT > 4 && !t.broken) { b.rotation.set(0, 0, 0); placeBroken(t); m.state = 'rip'; m.ripT = 0; }
+        } else if (m.smashT > 2.2) { if (!t.broken) placeBroken(t); m.plan.shift(); m.state = 'walk'; }
+        break; }
+      case 'rip': {
+        // walks over to the fallen sign and tears it in half
+        const t = m.plan[0], to = t.parts[0].userData.to;
+        const there = moveTo(m, to.p.x - 0.3, to.p.z, 0.8, dt);
+        if (there) { m.ripT += dt; m.yaw = lerpAngle(m.yaw, 0, dt * 6); }
+        if (m.ripT > 2.2) { ripSign(t); m.plan.shift(); m.state = 'walk'; }
+        break; }
+      case 'loot': {
+        if (canChase) { if (m.item) m.item.claimed = null; m.item = null; m.state = 'chase'; m.lost = 0; break; }
+        const it = m.item; if (!it || it.wrecked) { m.state = 'walk'; break; }
+        const dx = it.x - m.x, dz = it.z - m.z, d = Math.hypot(dx, dz) || 1;
+        if (moveTo(m, it.x - dx / d * 0.28, it.z - dz / d * 0.28, 1.0, dt)) { m.state = 'tear'; m.tearT = 0; m.yaw = Math.atan2(-dz, dx); }
+        break; }
+      case 'tear': {
+        m.tearT += dt;
+        if (m.tearT > 1.6) {
+          const it = m.item; throwItem(it, m.x, m.z); it.claimed = null; m.item = null;
+          if (rnd() < 0.35) { m.state = 'dig'; m.digT = 0; } else m.state = 'walk';
         }
+        break; }
+      case 'dig': {
+        m.digT += dt;
+        if (m.digT > 1.8) { digHole(m.x + Math.cos(m.yaw) * 0.35, m.z - Math.sin(m.yaw) * 0.35); m.state = 'walk'; }
         break; }
       case 'chase': {
         anyChasing = true;
-        // humans are slower climbing the hill and over rocks, so a crawler can get away
+        // people are slower climbing the hill and over rocks, so a crawler can get away
         const slope = H(m.x + Math.cos(m.yaw) * 0.2, m.z - Math.sin(m.yaw) * 0.2) - H(m.x, m.z);
-        const sp = 0.62 * (slope > 0.03 ? 0.55 : 1);
-        moveTo(m, S.x, S.z, sp, dt);
+        moveTo(m, S.x, S.z, 0.62 * (slope > 0.03 ? 0.55 : 1), dt);
         if (dTruck < 0.24 && !G.wreck) { TR.caught = true; wreckTruck(); }
         if (dTruck > 3.0) { m.lost += dt; if (m.lost > 3) m.state = 'walk'; } else m.lost = 0;
         break; }
       case 'stomp': {
         const W = G.wreck;
-        if (W && (W.stage === 'stomp')) { const a = m.slot; moveTo(m, S.x + Math.cos(a) * 0.3, S.z + Math.sin(a) * 0.3, 1.4, dt); m.yaw = Math.atan2(-(S.z - m.z), S.x - m.x); }
+        if (W && W.stage === 'stomp') { const a = m.slot; moveTo(m, S.x + Math.cos(a) * 0.32, S.z + Math.sin(a) * 0.32, 1.4, dt); m.yaw = Math.atan2(-(S.z - m.z), S.x - m.x); }
+        else if (!W || W.stage === 'burn') m.state = 'walk';
         m.walk += dt * 4; break; }
-      case 'lift': if (G.wreck) { m.x = S.x - Math.cos(m.yaw) * 0.25; m.z = S.z + Math.sin(m.yaw) * 0.25; } break;
+      case 'lift': if (G.wreck) { m.x = S.x - Math.cos(m.yaw) * 0.25; m.z = S.z + Math.sin(m.yaw) * 0.25; } else m.state = 'walk'; break;
       case 'toBike': if (moveTo(m, m.bx, m.bz, 1.2, dt)) { m.state = 'rideOut'; } break;
       case 'rideOut': if (moveTo(m, -13, m.sz, 2.6, dt)) { m.g.visible = m.bike.g.visible = false; m.state = 'gone'; } break;
     }
   });
-  if (anyChasing && TR.phase === 'raid' && !G.wreck) {
-    TR.chaseT += dt;
-    const left = Math.max(0, Math.ceil(ESCAPE_TIME - TR.chaseT));
-    $('#alert').hidden = false; $('#alert').textContent = 'Get away! Survive ' + left + 's';
-    if (TR.chaseT >= ESCAPE_TIME) { toast('You got away! The Trashers gave up.'); gangLeave(); }
+  if (raid) {
+    const left = Math.max(0, RAID_TIME - TR.t);
+    if (anyChasing && !G.wreck) {
+      TR.chaseT += dt;
+      $('#alert').hidden = false; $('#alert').textContent = 'Get away! Survive ' + Math.max(0, Math.ceil(ESCAPE_TIME - TR.chaseT)) + 's';
+      if (TR.chaseT >= ESCAPE_TIME) {
+        toast('You lost them. They went back to wrecking the course.');
+        TR.gang.forEach(m => { if (m.state === 'chase') m.state = 'walk'; });
+        TR.chaseT = 0; TR.chaseCool = 20;
+      }
+    } else if (!G.wreck) {
+      $('#alert').hidden = false; $('#alert').textContent = 'Trashers wrecking the course · ' + fmt(left).replace(/\.\d$/, '');
+    }
+    const busyWreck = G.wreck && G.wreck.stage !== 'burn';
+    if (left <= 0 && !busyWreck) gangLeave();
   }
-  if (TR.phase === 'raid' && TR.gang.every(m => m.state === 'toBike' || m.state === 'rideOut' || m.state === 'gone' || (m.state === 'walk' && !m.plan.length))) gangLeave();
-  if (TR.caught && TR.phase === 'raid' && G.wreck && G.wreck.stage === 'burn' && G.wreck.st > 1.5) gangLeave();
   if (TR.phase === 'leave' && TR.gang.every(m => m.state === 'gone')) {
     TR.phase = 'idle'; TR.next = TRASH_EVERY; TR.warned = false;
     if (TR.broken) toast('The Trashers rode off. The course stays wrecked until you restart.');
@@ -2138,7 +2257,7 @@ function wreckTruck() {
   G.wreck = { t: 0, stage: 'stomp', st: 0, crush: 0, aim, nextPop: 0.4, cam };
   S.v = 0; input.thr = input.steer = 0; $('#alert').hidden = true;
   rigLinks().forEach(m => { m.visible = false; });
-  TR.gang.forEach(m => { if (m.g.visible && m.state !== 'ride' && m.state !== 'rideOut' && m.state !== 'gone') m.state = 'stomp'; });
+  TR.gang.forEach(m => { if (m.g.visible && m.state !== 'ride' && m.state !== 'rideOut' && m.state !== 'gone' && m.state !== 'toBike') { if (m.item) { m.item.claimed = null; m.item = null; } if (m.state === 'rip' || m.state === 'smash') return; m.state = 'stomp'; } });
   toast('They caught you! They\'re stomping your truck!');
 }
 function updateWreck(dt) {
@@ -2147,10 +2266,10 @@ function updateWreck(dt) {
   const shell = TRUCK_SHELL;
   if (W.stage === 'stomp') {
     // crushed under their boots, panels popping off
-    W.crush = Math.min(1, W.crush + dt * 0.4);
+    W.crush = Math.min(1, W.crush + dt * 0.16);
     shell.scale.set(1, 1 - W.crush * 0.45, 1 + W.crush * 0.08); shell.rotation.set(rr(-0.08, 0.08) * W.crush, 0, rr(-0.08, 0.08) * W.crush);
-    if (W.t > W.nextPop) { W.nextPop = W.t + 0.35; const kids = shell.children.filter(o => o.parent === shell); if (kids.length > 6) launchPart(kids[(rnd() * kids.length) | 0], 0.8); for (let i = 0; i < 3; i++) puff(S.x + rr(-0.15, 0.15), S.y, S.z + rr(-0.15, 0.15), 2.5); }
-    if (W.st > 2.6) {
+    if (W.t > W.nextPop) { W.nextPop = W.t + 0.55; const kids = shell.children.filter(o => o.parent === shell); if (kids.length > 6) launchPart(kids[(rnd() * kids.length) | 0], 0.8); for (let i = 0; i < 3; i++) puff(S.x + rr(-0.15, 0.15), S.y, S.z + rr(-0.15, 0.15), 2.5); }
+    if (W.st > 7) {
       W.stage = 'lift'; W.st = 0;
       const m = TR.gang.filter(g => g.state === 'stomp').sort((a, b) => Math.hypot(a.x - S.x, a.z - S.z) - Math.hypot(b.x - S.x, b.z - S.z))[0];
       if (m) { m.state = 'lift'; m.yaw = Math.atan2(-(W.aim.z - m.z), W.aim.x - m.x); W.thrower = m; }
@@ -2217,6 +2336,7 @@ function rebuildTruck() {
   rigLinks().forEach(m => { m.visible = true; });
   FIRE.concat(SMOKE).forEach(f => { f.life = 0; f.sp.visible = false; }); fireLight.intensity = 0;
   G.wreck = null; $('#wrecked').hidden = true;
+  TR.chaseCool = Math.max(TR.chaseCool || 0, 10);
 }
 $('#bRebuild').onclick = () => {
   rebuildTruck();
