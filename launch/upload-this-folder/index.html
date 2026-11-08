@@ -1,0 +1,1902 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="description" content="Drive the Bragg Creek RC Club crawler course in your browser. Take the club TRX-4M Bronco up The Summit, across Timber Pass Bridge and down Avalanche Alley. Free, no download.">
+<meta name="theme-color" content="#2d4a22">
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Bragg Creek RC Club">
+<meta property="og:title" content="Bragg Creek RC Crawler Course: Play Online">
+<meta property="og:description" content="Drive the Bragg Creek RC Club crawler course in your browser. Take the club TRX-4M Bronco up The Summit, across Timber Pass Bridge and down Avalanche Alley. Free, no download.">
+<meta property="og:url" content="https://braggcreekrc.netlify.app/">
+<meta property="og:image" content="https://braggcreekrc.netlify.app/preview.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Bragg Creek RC Crawler Course: Play Online">
+<meta name="twitter:description" content="Drive the Bragg Creek RC Club crawler course in your browser. Take the club TRX-4M Bronco up The Summit, across Timber Pass Bridge and down Avalanche Alley. Free, no download.">
+<meta name="twitter:image" content="https://braggcreekrc.netlify.app/preview.jpg">
+<title>Bragg Creek RC Crawler Course</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik+Dirt&family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+/* Layout: full-screen 3D course; a kraft-board trail sign as the menu; small dark field panels for the HUD. */
+:root {
+  --ink: #17140f;
+  --kraft: #c99a5b;
+  --kraft-deep: #8f6532;
+  --paper: #f4eee2;
+  --bronco: #2463e0;
+  --gate: #f39a2b;
+  --field: rgba(20, 27, 22, 0.78);
+  --field-line: rgba(244, 238, 226, 0.16);
+  --muted: #a39b8c;
+  --sky: #c9d1d3;
+  --font-display: "Rubik Dirt", "Impact", "Arial Black", sans-serif;
+  --font-label: "Barlow Condensed", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+  --font-body: "Barlow", "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  color-scheme: dark;
+}
+[hidden] { display: none !important; }
+html, body { height: 100%; }
+body {
+  margin: 0; overflow: hidden; background: var(--sky); color: var(--paper);
+  font-family: var(--font-body); -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none; user-select: none;
+}
+#c { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible { outline: 2px solid var(--gate); outline-offset: 2px; }
+
+/* ---------- HUD ---------- */
+.hud-tl {
+  position: fixed; z-index: 5; display: flex; gap: 8px; align-items: stretch;
+  top: calc(env(safe-area-inset-top, 0px) + 12px); left: calc(env(safe-area-inset-left, 0px) + 12px);
+}
+.panel {
+  background: var(--field); border: 1px solid var(--field-line); border-radius: 6px;
+  padding: 7px 12px 8px; min-width: 84px; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+}
+.lbl { font-family: var(--font-label); font-weight: 600; font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+.big { font-family: var(--font-mono); font-weight: 600; font-size: 24px; line-height: 1.15; font-variant-numeric: tabular-nums; }
+.big small { font-size: 14px; color: var(--muted); }
+.sub { font-family: var(--font-label); font-size: 14px; font-weight: 500; letter-spacing: 0.02em; white-space: nowrap; }
+.hud-tr {
+  position: fixed; z-index: 5; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; max-width: 60vw;
+  top: calc(env(safe-area-inset-top, 0px) + 12px); right: calc(env(safe-area-inset-right, 0px) + 12px);
+}
+.hbtn {
+  background: var(--field); border: 1px solid var(--field-line); border-radius: 6px; padding: 8px 11px;
+  font-family: var(--font-label); font-weight: 600; font-size: 14px; letter-spacing: 0.06em; text-transform: uppercase;
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+}
+.hbtn b { color: var(--gate); font-weight: 700; }
+.hbtn:hover { border-color: rgba(244, 238, 226, 0.4); }
+#toast {
+  position: fixed; z-index: 6; left: 50%; top: 22%; transform: translate(-50%, 0);
+  background: var(--ink); color: var(--paper); border-left: 4px solid var(--gate);
+  font-family: var(--font-label); font-weight: 600; font-size: 20px; letter-spacing: 0.03em;
+  padding: 10px 16px; border-radius: 4px; max-width: calc(100% - 32px); text-align: center;
+  opacity: 0; transition: opacity 0.25s; pointer-events: none;
+}
+#toast.show { opacity: 1; }
+.keys {
+  position: fixed; z-index: 4; left: 50%; transform: translateX(-50%);
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 12px);
+  font-family: var(--font-label); font-size: 14px; letter-spacing: 0.06em; color: var(--paper);
+  background: var(--field); border-radius: 999px; padding: 6px 14px; white-space: nowrap;
+}
+.keys kbd { font-family: var(--font-mono); font-size: 12px; border: 1px solid var(--field-line); border-radius: 3px; padding: 0 4px; }
+
+/* touch controls */
+#touch { display: none; }
+body.touch #touch { display: block; }
+body.touch .keys { display: none; }
+.pad {
+  position: fixed; z-index: 5; display: flex; gap: 12px;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 18px);
+}
+.pad.left { left: calc(env(safe-area-inset-left, 0px) + 16px); }
+.pad.right { right: calc(env(safe-area-inset-right, 0px) + 16px); flex-direction: column-reverse; }
+.tbtn {
+  width: 76px; height: 76px; border-radius: 50%; border: 2px solid rgba(244, 238, 226, 0.35);
+  background: var(--field); font-family: var(--font-label); font-weight: 700; font-size: 17px; letter-spacing: 0.08em;
+  display: grid; place-items: center; touch-action: none;
+}
+.tbtn.on { background: var(--gate); color: var(--ink); border-color: var(--gate); }
+.tbtn svg { width: 30px; height: 30px; fill: currentColor; }
+
+/* ---------- Menu (trail sign) ---------- */
+.overlay {
+  position: fixed; inset: 0; z-index: 10; display: flex; align-items: center;
+  padding-block: calc(env(safe-area-inset-top, 0px) + 16px) calc(env(safe-area-inset-bottom, 0px) + 16px);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  background: linear-gradient(90deg, rgba(14, 20, 16, 0.72) 0%, rgba(14, 20, 16, 0.3) 55%, rgba(14, 20, 16, 0) 100%);
+  overflow-y: auto;
+}
+.sign {
+  width: min(430px, 100%); margin-left: clamp(0px, 5vw, 64px);
+  background: var(--kraft); border-radius: 10px 14px 9px 12px; padding: 14px;
+  box-shadow: inset 0 0 0 3px var(--kraft-deep), inset 0 0 28px rgba(80, 48, 12, 0.55), 0 18px 50px rgba(0, 0, 0, 0.45);
+  color: var(--ink);
+}
+.sign-inner { background: var(--paper); border-radius: 3px; padding: 18px 18px 16px; display: grid; gap: 14px; }
+.eyebrow { font-family: var(--font-label); font-weight: 700; font-size: 14px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--kraft-deep); }
+.sign h1 { font-family: var(--font-display); font-weight: 400; font-size: clamp(40px, 11vw, 56px); line-height: 0.92; margin: 4px 0 0; text-wrap: balance; letter-spacing: 0.01em; }
+.head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.head > div { min-width: 0; }
+.club-logo { width: 76px; height: 76px; flex: none; border-radius: 6px; object-fit: cover; border: 2px solid var(--ink); }
+.sign p { margin: 0; font-size: 15px; line-height: 1.45; max-width: 60ch; }
+.rig {
+  display: grid; grid-template-columns: auto 1fr; gap: 12px; align-items: center;
+  border: 2px solid var(--ink); border-radius: 6px; padding: 10px 12px; background: #fff;
+}
+.rig-swatch { width: 44px; height: 30px; border-radius: 5px 9px 4px 4px; background: var(--bronco); box-shadow: inset 0 -8px 0 #15171a, inset 0 9px 0 #15171a; }
+.rig-name { font-family: var(--font-label); font-weight: 700; font-size: 20px; line-height: 1.1; }
+.rig-spec { font-family: var(--font-label); font-size: 14px; color: #5b5346; letter-spacing: 0.03em; }
+.rig-label { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.rig-label span:last-child { font-family: var(--font-label); font-size: 13px; color: #7a705f; }
+.actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.btn {
+  border: 2px solid var(--ink); border-radius: 6px; padding: 12px 10px; background: transparent; color: var(--ink);
+  font-family: var(--font-label); font-weight: 700; font-size: 18px; letter-spacing: 0.08em; text-transform: uppercase;
+}
+.btn.primary { background: var(--ink); color: var(--paper); }
+.btn.wide { grid-column: 1 / -1; font-size: 16px; padding: 10px; }
+.btn.primary:hover { background: #2c261d; }
+.btn:not(.primary):hover { background: rgba(23, 20, 15, 0.07); }
+.fine { font-family: var(--font-label); font-size: 14px; color: #5b5346; letter-spacing: 0.02em; display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.fine strong { font-family: var(--font-mono); font-size: 13px; color: var(--ink); }
+.sign-foot { font-family: var(--font-label); font-weight: 600; font-size: 13px; letter-spacing: 0.12em; text-transform: uppercase; padding: 10px 4px 0; color: #3a2a14; display: flex; justify-content: space-between; gap: 8px; }
+
+/* finish card */
+.results { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.results div { border-top: 2px solid var(--ink); padding-top: 6px; }
+.results .v { font-family: var(--font-mono); font-weight: 600; font-size: 20px; font-variant-numeric: tabular-nums; }
+.results .k { font-family: var(--font-label); font-size: 13px; letter-spacing: 0.12em; text-transform: uppercase; color: #5b5346; }
+.newbest { font-family: var(--font-label); font-weight: 700; color: #b5560f; letter-spacing: 0.08em; text-transform: uppercase; }
+
+#err { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; background: var(--ink); color: var(--paper); font-family: var(--font-body); padding: 24px; text-align: center; }
+
+@media (max-width: 560px) {
+  .overlay { align-items: flex-end; background: linear-gradient(0deg, rgba(14, 20, 16, 0.75) 0%, rgba(14, 20, 16, 0.25) 60%, rgba(14, 20, 16, 0) 100%); }
+  .sign { margin: 0 auto; }
+  .hud-tr { max-width: 46vw; gap: 4px; }
+  .hbtn { font-size: 12px; padding: 6px 8px; }
+  #toast { top: 34%; font-size: 17px; }
+  .big { font-size: 20px; }
+  .panel { padding: 6px 9px; min-width: 70px; }
+  .tbtn { width: 68px; height: 68px; }
+}
+@media (prefers-reduced-motion: reduce) { #toast { transition: none; } }
+</style>
+<style>body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<canvas id="c" aria-label="3D view of the Bragg Creek RC crawler course"></canvas>
+
+<div id="hud" hidden>
+  <div class="hud-tl">
+    <div class="panel" id="pGate">
+      <div class="lbl">Flags</div>
+      <div class="big" id="gateNum">0<small>/6</small></div>
+      <div class="sub" id="gateName">Any order</div>
+    </div>
+    <div class="panel" id="pTime">
+      <div class="lbl" id="timeLbl">Time</div>
+      <div class="big" id="timer">0:00.0</div>
+      <div class="sub" id="pen">0 resets</div>
+    </div>
+  </div>
+  <div class="hud-tr">
+    <button class="hbtn" id="bGear" title="Two-speed transmission (G)">Gear <b id="gearTxt">Low</b></button>
+    <button class="hbtn" id="bCam" title="Change camera (C)">Cam <b id="camTxt">Chase</b></button>
+    <button class="hbtn" id="bReset" title="Put the truck back at the last gate (R)">Reset</button>
+    <button class="hbtn" id="bSound" title="Motor sound (M)">Sound <b id="sndTxt">Off</b></button>
+    <button class="hbtn" id="bMenu" title="Back to the menu (Esc)">Menu</button>
+  </div>
+  <div id="toast" role="status" aria-live="polite"></div>
+  <div class="keys"><kbd>W</kbd><kbd>S</kbd> throttle &nbsp;·&nbsp; <kbd>A</kbd><kbd>D</kbd> steer &nbsp;·&nbsp; <kbd>G</kbd> gear &nbsp;·&nbsp; <kbd>C</kbd> camera / course view &nbsp;·&nbsp; <kbd>R</kbd> reset</div>
+  <div id="touch">
+    <div class="pad left">
+      <button class="tbtn" data-k="left" aria-label="Steer left"><svg viewBox="0 0 24 24"><path d="M15.5 4 7 12l8.5 8z"/></svg></button>
+      <button class="tbtn" data-k="right" aria-label="Steer right"><svg viewBox="0 0 24 24"><path d="M8.5 4 17 12l-8.5 8z"/></svg></button>
+    </div>
+    <div class="pad right">
+      <button class="tbtn" data-k="rev" aria-label="Reverse">REV</button>
+      <button class="tbtn" data-k="gas" aria-label="Throttle">GAS</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="menu">
+  <div class="sign">
+    <div class="sign-inner">
+      <div class="head">
+        <div>
+          <div class="eyebrow">Bragg Creek RC Club</div>
+          <h1>Crawler Course</h1>
+        </div>
+        <img class="club-logo" alt="RCEV, the Bragg Creek RC Club logo">
+      </div>
+      <p>The club's blueprint course: a boulder hill with The Summit on top, Timber Pass Bridge, Cedar Crossing, Rocky Creek Bed, Avalanche Alley and the Switchbacks. Follow the painted lines: green is easy, blue is moderate, black is hard. Course Run times you collecting every flag in any order.</p>
+      <div>
+        <div class="rig-label"><span class="lbl" style="color:#5b5346">Your rig</span><span>More rigs coming soon</span></div>
+        <div class="rig">
+          <div class="rig-swatch" aria-hidden="true"></div>
+          <div>
+            <div class="rig-name">Traxxas TRX-4M Bronco</div>
+            <div class="rig-spec">1/18 scale mini crawler · Velocity Blue · Portal axles</div>
+          </div>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="btn primary" id="bRun">Course run</button>
+        <button class="btn" id="bFree">Free drive</button>
+        <button class="btn wide" id="bView">Course view</button>
+      </div>
+      <div class="fine"><span>Best course time</span><strong id="bestTxt">No run yet</strong></div>
+    </div>
+    <div class="sign-foot"><span>RC vehicles only</span><span>Tread lightly</span></div>
+  </div>
+</div>
+
+<div class="overlay" id="finish" hidden>
+  <div class="sign">
+    <div class="sign-inner">
+      <div class="head">
+        <div>
+          <div class="eyebrow">All flags collected</div>
+          <h1>Course Complete</h1>
+        </div>
+        <img class="club-logo" alt="RCEV, the Bragg Creek RC Club logo">
+      </div>
+      <div class="results">
+        <div><div class="k">Drive time</div><div class="v" id="fDrive">0:00.0</div></div>
+        <div><div class="k">Resets</div><div class="v" id="fRes">0</div></div>
+        <div><div class="k">Total</div><div class="v" id="fTotal">0:00.0</div></div>
+      </div>
+      <div class="fine"><span id="fBestLbl">Best course time</span><strong id="fBest">—</strong></div>
+      <p style="font-size:14px;color:#5b5346">Each reset or rollover adds 10 seconds to the total.</p>
+      <div class="actions">
+        <button class="btn primary" id="bAgain">Run again</button>
+        <button class="btn" id="bFinFree">Free drive</button>
+      </div>
+    </div>
+    <div class="sign-foot"><span>Bragg Creek RC Club</span><span>Nice driving</span></div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(() => {
+'use strict';
+if (typeof THREE === 'undefined') {
+  const e = document.createElement('div'); e.id = 'err';
+  e.textContent = "The 3D engine didn't load. Check your internet connection and reload the page.";
+  document.body.appendChild(e); return;
+}
+const $ = s => document.querySelector(s);
+const RCEV_LOGO = 'data:image/jpeg;base64,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';
+const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
+const lerp = (a, b, t) => a + (b - a) * t;
+const smooth = (e0, e1, x) => { const t = clamp((x - e0) / (e1 - e0), 0, 1); return t * t * (3 - 2 * t); };
+const TAU = Math.PI * 2;
+let seed = 1234567;
+const rnd = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
+const rr = (a, b) => a + (b - a) * rnd();
+const isTouch = matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window;
+if (isTouch) document.body.classList.add('touch');
+
+/* =========================================================
+   WORLD HEIGHT: ground + every obstacle. The truck drives on H().
+   Units are metres. +x east, +z toward the gravel path, -z toward the tennis fence.
+   ========================================================= */
+const PATH = [[-12, 1.75], [-4, 1.8], [1, 1.85], [3.8, 1.6], [5.8, 0.6], [6.8, -1.2], [7.0, -3.0], [7.1, -4.7]];
+const SPAWN = [-3.15, -0.85, 0];
+// blueprint layout: the black edging wraps the whole course; one entrance by the sign tree
+const EDGE = { x: 0.3, z: -2.0, rx: 5.3, rz: 2.6, gap: [2.35, 2.85] };
+const insideEdge = (x, z, m = 0) => ((x - EDGE.x) / (EDGE.rx - m)) ** 2 + ((z - EDGE.z) / (EDGE.rz - m)) ** 2 < 1;
+// suggested lines painted on the course, like the club blueprint
+const LINES = {
+  easy: [[0.76, -0.4], [0.76, -1.3], [1.4, -1.7], [1.5, -2.2], [0.6, -2.4], [-0.4, -2.1], [-0.6, -1.6], [-1.71, -1.69], [-2.4, -1.3], [-1.0, -0.4], [0.76, -0.4]],
+  moderate: [[0.76, -0.4], [0.76, -1.3], [1.3, -1.9], [1.6, -2.56], [1.2, -3.2], [0.45, -3.3], [-0.45, -3.05], [-0.8, -3.2], [-1.35, -2.75], [-1.71, -1.69], [-2.4, -1.3], [-1.0, -0.4], [0.76, -0.4]],
+  hard: [[2.4, -0.6], [3.9, -1.2], [4.4, -2.2], [4.2, -3.2], [3.3, -3.85], [2.35, -4.0], [1.7, -3.65], [0.6, -3.7], [-0.1, -4.1], [-0.8, -3.7], [-1.3, -3.0], [-1.55, -2.3], [-1.71, -1.69], [-2.6, -1.0], [-1.0, -0.5], [2.4, -0.6]],
+};
+const CREEK = [[-0.1, -4.1], [-0.8, -3.7], [-1.3, -3.0], [-1.55, -2.3]];
+function distToLine(pts, x, z) {
+  let best = 1e9;
+  for (let i = 0; i < pts.length - 1; i++) {
+    const [ax, az] = pts[i], [bx, bz] = pts[i + 1], dx = bx - ax, dz = bz - az;
+    const t = clamp(((x - ax) * dx + (z - az) * dz) / (dx * dx + dz * dz), 0, 1);
+    best = Math.min(best, Math.hypot(ax + dx * t - x, az + dz * t - z));
+  }
+  return best;
+}
+const PATH_HALF = 1.15;
+function distToPath(x, z) {
+  let best = 1e9;
+  for (let i = 0; i < PATH.length - 1; i++) {
+    const [ax, az] = PATH[i], [bx, bz] = PATH[i + 1];
+    const dx = bx - ax, dz = bz - az;
+    const t = clamp(((x - ax) * dx + (z - az) * dz) / (dx * dx + dz * dz), 0, 1);
+    const d = Math.hypot(ax + dx * t - x, az + dz * t - z);
+    if (d < best) best = d;
+  }
+  return best;
+}
+function pathZ(x) { // z of path centreline at x
+  for (let i = 0; i < PATH.length - 1; i++) {
+    const [ax, az] = PATH[i], [bx, bz] = PATH[i + 1];
+    if (x >= ax && x <= bx) return lerp(az, bz, (x - ax) / (bx - ax));
+  }
+  return PATH[PATH.length - 1][1];
+}
+// the hill: rises from Cedar Crossing at the front up to The Summit by the fence
+const MOUND = { x: 0.6, z: -2.55, rx: 3.3, rz: 2.15, h: 1.0 };
+const hillW = v => 0.75 + 0.25 * clamp((1 + v) / 2, 0, 1); // teardrop width
+function moundH(x, z) {
+  // the whole course space tilts gently up toward the fence
+  const e = Math.sqrt(((x - EDGE.x) / EDGE.rx) ** 2 + ((z - EDGE.z) / EDGE.rz) ** 2);
+  let h = 0.1 * smooth(0.4, -4.4, z) * smooth(1.0, 0.85, e);
+  const v = (z - MOUND.z) / MOUND.rz, u = (x - MOUND.x) / (MOUND.rx * hillW(v)), q = Math.sqrt(u * u + v * v);
+  if (q < 1) {
+    h += MOUND.h * smooth(1.05, -0.8, v) * smooth(1.08, 0.15, q);
+    h -= 0.045 * smooth(0.22, 0.05, distToLine(CREEK, x, z)); // Rocky Creek Bed gully
+  }
+  return h;
+}
+function groundH(x, z) {
+  let h = 0.011 * (Math.sin(x * 3.4 + Math.sin(z * 2.6)) * 0.6 + Math.sin(z * 4.6 + x * 1.4) * 0.4)
+        + 0.004 * Math.sin(x * 17.3) * Math.sin(z * 15.1);
+  const onPath = smooth(PATH_HALF + 0.2, PATH_HALF - 0.1, distToPath(x, z));
+  h = lerp(h, 0.002 * Math.sin(x * 9) * Math.sin(z * 7) - 0.012, onPath);
+  return h + moundH(x, z);
+}
+
+const CELL = 0.5, GX0 = -12, GZ0 = -6, GW = 48, GD = 30;
+const grid = Array.from({ length: GW * GD }, () => []);
+const obstacles = [], blockers = [];
+function addObs(o) {
+  const i0 = clamp(Math.floor((o.x0 - GX0) / CELL), 0, GW - 1), i1 = clamp(Math.floor((o.x1 - GX0) / CELL), 0, GW - 1);
+  const j0 = clamp(Math.floor((o.z0 - GZ0) / CELL), 0, GD - 1), j1 = clamp(Math.floor((o.z1 - GZ0) / CELL), 0, GD - 1);
+  for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) grid[j * GW + i].push(o);
+  obstacles.push(o);
+}
+function H(x, z) {
+  let h = groundH(x, z);
+  const i = Math.floor((x - GX0) / CELL), j = Math.floor((z - GZ0) / CELL);
+  if (i < 0 || j < 0 || i >= GW || j >= GD) return h;
+  const cell = grid[j * GW + i];
+  for (let k = 0; k < cell.length; k++) {
+    const o = cell[k];
+    if (x < o.x0 || x > o.x1 || z < o.z0 || z > o.z1) continue;
+    const v = o.h(x, z);
+    if (v > h) h = v;
+  }
+  return h;
+}
+
+/* =========================================================
+   RENDERER + SCENE
+   ========================================================= */
+const canvas = $('#c');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isTouch ? 1.5 : 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.outputEncoding = THREE.sRGBEncoding;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.0;
+const scene = new THREE.Scene();
+// sunny fall afternoon, like the wide shots of the course
+const SKY = 0xbfd6e6;
+scene.fog = new THREE.Fog(0xc8dbe6, 14, 70);
+const camera = new THREE.PerspectiveCamera(62, 1, 0.03, 160);
+{
+  const skyGeo = new THREE.SphereGeometry(120, 24, 16);
+  const cols = [], top = new THREE.Color(0x4f8fd6), mid = new THREE.Color(0x9cc3e6), hor = new THREE.Color(0xe3edf0);
+  const pos = skyGeo.attributes.position, c = new THREE.Color();
+  for (let i = 0; i < pos.count; i++) {
+    const t = Math.max(0, pos.getY(i) / 120);
+    c.copy(hor).lerp(mid, Math.min(1, t * 4)).lerp(top, Math.max(0, t * 1.4 - 0.25));
+    cols.push(c.r, c.g, c.b);
+  }
+  skyGeo.setAttribute('color', new THREE.Float32BufferAttribute(cols, 3));
+  const sky = new THREE.Mesh(skyGeo, new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.BackSide, fog: false, depthWrite: false }));
+  sky.renderOrder = -1; scene.add(sky);
+  scene.background = new THREE.Color(SKY);
+}
+scene.add(new THREE.HemisphereLight(0xcfe3f5, 0x5a4630, 0.62));
+const sun = new THREE.DirectionalLight(0xffe2b8, 1.75);
+sun.position.set(-7, 12, 9);
+sun.castShadow = true;
+sun.shadow.mapSize.set(isTouch ? 1024 : 2048, isTouch ? 1024 : 2048);
+Object.assign(sun.shadow.camera, { left: -11, right: 11, top: 8, bottom: -8, near: 1, far: 40 });
+sun.shadow.bias = -0.0004;
+sun.shadow.normalBias = 0.01;
+scene.add(sun); scene.add(sun.target);
+
+const MSM = (o) => new THREE.MeshStandardMaterial(Object.assign({ roughness: 0.9, metalness: 0 }, o));
+function tex(w, h, draw, opt = {}) {
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  draw(c.getContext('2d'), w, h);
+  const t = new THREE.CanvasTexture(c);
+  if (opt.srgb !== false) t.encoding = THREE.sRGBEncoding;
+  t.anisotropy = 4;
+  if (opt.repeat) { t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(opt.repeat[0], opt.repeat[1]); }
+  return t;
+}
+function speckle(g, w, h, n, cols, smin, smax) {
+  for (let i = 0; i < n; i++) {
+    g.fillStyle = cols[(rnd() * cols.length) | 0];
+    const s = rr(smin, smax);
+    g.fillRect(rnd() * w, rnd() * h, s, s);
+  }
+}
+
+/* ---------- textures ---------- */
+const barkTex = tex(128, 256, (g, w, h) => {
+  // spruce bark: grey-brown with reddish plates
+  g.fillStyle = '#5e4a3c'; g.fillRect(0, 0, w, h);
+  for (let i = 0; i < 320; i++) {
+    g.fillStyle = ['#3a2c22', '#7a5f4b', '#8c6d55', '#4a382c', '#6d6158', '#9a7a5e'][(rnd() * 6) | 0];
+    g.fillRect(rnd() * w, rnd() * h, rr(2, 9), rr(6, 34));
+  }
+}, { repeat: [2, 1] });
+const peeledTex = tex(128, 256, (g, w, h) => {
+  // freshly peeled pine log: golden, with darker streaks
+  g.fillStyle = '#d0a668'; g.fillRect(0, 0, w, h);
+  for (let i = 0; i < 180; i++) {
+    g.fillStyle = ['#b98a4c', '#e3c088', '#9a7044', '#c99a5c', '#f0d39c'][(rnd() * 5) | 0];
+    g.fillRect(rnd() * w, rnd() * h, rr(1, 3), rr(20, 120));
+  }
+  speckle(g, w, h, 70, ['#5a4128', '#6e5236'], 2, 6);
+}, { repeat: [2, 1] });
+function drawCookie(g, w, h) {
+  const cx = w / 2, cy = h / 2, R = w / 2;
+  g.fillStyle = '#5a3f2a'; g.fillRect(0, 0, w, h);
+  const grd = g.createRadialGradient(cx, cy, 2, cx, cy, R * 0.9);
+  grd.addColorStop(0, '#f6dfac'); grd.addColorStop(0.7, '#ecca8e'); grd.addColorStop(1, '#d9a866');
+  g.fillStyle = grd; g.beginPath(); g.arc(cx, cy, R * 0.9, 0, TAU); g.fill();
+  g.strokeStyle = 'rgba(150,98,48,0.3)'; g.lineWidth = 1.2;
+  for (let r = 5; r < R * 0.88; r += rr(3, 7)) { g.beginPath(); g.arc(cx + rr(-1, 1), cy + rr(-1, 1), r, 0, TAU); g.stroke(); }
+  g.strokeStyle = 'rgba(120,80,40,0.35)'; g.lineWidth = 1; // checking cracks
+  for (let i = 0; i < 3; i++) { const a = rnd() * TAU; g.beginPath(); g.moveTo(cx + Math.cos(a) * R * 0.85, cy + Math.sin(a) * R * 0.85); g.lineTo(cx + Math.cos(a) * R * 0.3, cy + Math.sin(a) * R * 0.3); g.stroke(); }
+  for (let i = 0; i < 10; i++) { g.fillStyle = 'rgba(80,58,38,0.32)'; g.beginPath(); g.arc(rnd() * w, rnd() * h, rr(4, 14), 0, TAU); g.fill(); }
+}
+const cookieTex = tex(128, 128, drawCookie);
+const plankTex = tex(64, 256, (g, w, h) => {
+  g.fillStyle = '#c9ab7a'; g.fillRect(0, 0, w, h);
+  g.strokeStyle = 'rgba(120,86,48,0.35)'; g.lineWidth = 1;
+  for (let i = 0; i < 14; i++) { g.beginPath(); let x = rnd() * w; g.moveTo(x, 0); for (let y = 0; y <= h; y += 16) g.lineTo(x + Math.sin(y * 0.05 + i) * 3, y); g.stroke(); }
+  speckle(g, w, h, 60, ['rgba(60,48,34,0.5)', 'rgba(90,70,48,0.4)'], 2, 9);
+});
+const blueBoardTex = tex(64, 256, (g, w, h) => {
+  g.fillStyle = '#6f97a6'; g.fillRect(0, 0, w, h);
+  speckle(g, w, h, 140, ['#b49c74', '#88aab5', '#55808f', '#9fb9bf'], 2, 10);
+});
+const soilTex = tex(256, 256, (g, w, h) => {
+  g.fillStyle = '#808080'; g.fillRect(0, 0, w, h);
+  speckle(g, w, h, 2600, ['#5e5e5e', '#9a9a9a', '#6d6d6d', '#b4b4b4', '#4c4c4c'], 1, 3.5);
+}, { repeat: [44, 30] });
+const chainTex = tex(64, 64, (g, w, h) => {
+  g.clearRect(0, 0, w, h); g.strokeStyle = '#a7b0b2'; g.lineWidth = 3;
+  g.beginPath(); g.moveTo(0, 0); g.lineTo(w, h); g.moveTo(w, 0); g.lineTo(0, h); g.stroke();
+}, { repeat: [240, 25] });
+const courtTex = tex(1024, 1024, (g, w, h) => {
+  // covers x -16..12 (28 m) and z -5.25..-33.25 (28 m): 36.6 px per metre
+  const S = w / 28, X = x => (x + 16) * S, Z = z => (-5.25 - z) * S;
+  g.fillStyle = '#c9554b'; g.fillRect(0, 0, w, h);
+  const court = (cx) => {
+    g.fillStyle = '#2f7468'; g.fillRect(X(cx - 5.5), Z(-8), 11 * S, 23.8 * S);
+    g.strokeStyle = '#f3f1ea'; g.lineWidth = 3;
+    g.strokeRect(X(cx - 5.5), Z(-8), 11 * S, 23.8 * S);
+    g.strokeRect(X(cx - 4.1), Z(-8), 8.2 * S, 23.8 * S);
+    g.beginPath(); g.moveTo(X(cx - 4.1), Z(-13.5)); g.lineTo(X(cx + 4.1), Z(-13.5));
+    g.moveTo(X(cx - 4.1), Z(-26.3)); g.lineTo(X(cx + 4.1), Z(-26.3));
+    g.moveTo(X(cx), Z(-13.5)); g.lineTo(X(cx), Z(-26.3)); g.stroke();
+    g.strokeStyle = '#e8c24a'; g.lineWidth = 2; // pickleball lines
+    g.strokeRect(X(cx - 3), Z(-13), 6 * S, 13.4 * S);
+  };
+  court(-8.2); court(4.2);
+});
+function signTex() {
+  // the club's rules sign
+  return tex(420, 680, (g, w, h) => {
+    const dg = '#2d4a22', lg = '#5d9c4a';
+    g.fillStyle = dg; g.fillRect(0, 0, w, h);
+    g.fillStyle = '#ffffff'; g.fillRect(8, 8, w - 16, h - 16);
+    g.textAlign = 'center';
+    g.fillStyle = dg; g.font = 'bold 50px "Arial Black", Impact, sans-serif'; g.fillText('BRAGG CREEK', w / 2, 66);
+    g.fillStyle = lg; g.font = 'bold 34px "Arial Black", Impact, sans-serif'; g.fillText('RC CRAWLER COURSE', w / 2, 106);
+    g.fillStyle = dg; g.font = 'bold 17px Arial, sans-serif'; g.fillText('Community Space • Open for Public Use', w / 2, 134);
+    g.fillStyle = '#d4a960'; g.fillRect(8, 148, w - 16, 158);
+    // crawler climbing rocks, with a transmitter
+    g.fillStyle = dg; g.strokeStyle = '#ffffff'; g.lineWidth = 3;
+    [[120, 296, 46], [175, 290, 40], [230, 296, 44], [280, 298, 34], [95, 300, 30]].forEach(([x, y, r]) => { g.beginPath(); g.arc(x, y, r, Math.PI, 0); g.closePath(); g.fill(); g.stroke(); });
+    g.save(); g.translate(190, 215); g.rotate(-0.42);
+    g.fillRect(-85, -18, 170, 40); g.fillRect(-55, -52, 110, 36);
+    g.fillStyle = '#ffffff'; g.fillRect(-45, -45, 36, 24); g.fillRect(2, -45, 40, 24);
+    g.fillStyle = dg; g.fillRect(-90, -100, 4, 70);
+    [[-58, 30], [58, 30]].forEach(([x, y]) => { g.beginPath(); g.arc(x, y, 30, 0, TAU); g.fill(); g.stroke(); g.fillStyle = '#ffffff'; g.beginPath(); g.arc(x, y, 11, 0, TAU); g.fill(); g.fillStyle = dg; });
+    g.restore();
+    g.fillStyle = dg; g.fillRect(338, 262, 18, 34); g.fillRect(343, 232, 4, 30); g.beginPath(); g.arc(362, 274, 11, 0, TAU); g.fill();
+    g.fillStyle = '#222222'; g.font = '15px Arial, sans-serif';
+    g.fillText('This course was built for the community to enjoy.', w / 2, 336);
+    g.fillText('Please help us keep it safe, clean, and usable for everyone.', w / 2, 356);
+    g.fillStyle = dg; g.font = 'bold 28px Arial, sans-serif'; g.fillText('RC VEHICLES ONLY', w / 2, 398);
+    g.fillStyle = '#222222'; g.font = '19px Arial, sans-serif'; g.fillText('This course is designed for', w / 2, 426);
+    g.font = 'bold 19px Arial, sans-serif'; g.fillText('remote-control crawler vehicles only.', w / 2, 450);
+    g.textAlign = 'left'; g.font = 'bold 18px Arial, sans-serif'; g.fillText('Please do not:', 30, 488);
+    g.font = '16px Arial, sans-serif';
+    ['• Damage, move, or remove course features', '• Ride bicycles on the course', '• Climb, jump, dig or alter the course'].forEach((t, i) => g.fillText(t, 34, 512 + i * 22));
+    g.textAlign = 'center'; g.font = 'bold 15px Arial, sans-serif'; g.fillText('Use of this course is at your own risk.', w / 2, 596);
+    g.fillStyle = dg; g.fillRect(8, 612, w - 16, h - 620);
+    g.fillStyle = '#ffffff'; g.font = 'bold 16px Arial, sans-serif'; g.fillText('Interested in joining the Bragg Creek RC Club?', w / 2, 636);
+    g.font = '15px Arial, sans-serif'; g.fillText('✉  rcevreviews@gmail.com', w / 2, 656);
+    g.font = 'italic 11px Arial, sans-serif'; g.fillText('Thank you for helping protect this community space.', w / 2, 672);
+  });
+}
+function postSignTex() {
+  return tex(256, 96, (g, w, h) => {
+    g.fillStyle = '#5c4a39'; g.fillRect(0, 0, w, h);
+    speckle(g, w, h, 200, ['#4b3b2d', '#6d5a46', '#3e3125'], 2, 14);
+    g.fillStyle = '#d9cbb4'; g.textAlign = 'center'; g.font = 'italic bold 30px Georgia, serif';
+    g.fillText('RC Crawler', w / 2, 42); g.font = 'italic bold 26px Georgia, serif'; g.fillText('Course', w / 2, 76);
+  });
+}
+function letterTex(ch) {
+  return tex(128, 128, (g, w, h) => {
+    drawCookie(g, w, h);
+    if (ch) { g.translate(w / 2, h / 2); g.rotate(-Math.PI / 2); g.translate(-w / 2, -h / 2); g.fillStyle = '#7fb6ea'; g.font = 'bold 74px Arial, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(ch, w / 2, h / 2 + 4); }
+  });
+}
+
+/* ---------- materials ---------- */
+const M = {
+  bark: MSM({ map: barkTex }),
+  peeled: MSM({ map: peeledTex }),
+  cookie: MSM({ map: cookieTex }),
+  plank: MSM({ map: plankTex }),
+  blueBoard: MSM({ map: blueBoardTex }),
+  stake: MSM({ color: 0x9c7a50 }),
+  darkWood: MSM({ color: 0x5c4a39 }),
+  rock: MSM({ vertexColors: true, flatShading: true, roughness: 0.95 }),
+  metal: MSM({ color: 0x4a4744, roughness: 0.55, metalness: 0.5 }),
+  fencePost: MSM({ color: 0x9aa2a4, roughness: 0.5, metalness: 0.6 }),
+};
+
+/* =========================================================
+   OBSTACLE PRIMITIVES (each adds collision height + a mesh)
+   ========================================================= */
+const V3 = THREE.Vector3, UP = new V3(0, 1, 0);
+function shadowy(m) { m.castShadow = true; m.receiveShadow = true; scene.add(m); return m; }
+
+function addLog(ax, az, bx, bz, r, opt = {}) {
+  const dx = bx - ax, dz = bz - az, len = Math.hypot(dx, dz), L2 = len * len;
+  let cy = opt.y;
+  if (cy === undefined) {
+    let m = -1e9;
+    for (let i = 0; i <= 8; i++) m = Math.max(m, H(ax + dx * i / 8, az + dz * i / 8));
+    cy = m + r * (opt.sink ?? 0.85);
+  }
+  addObs({
+    x0: Math.min(ax, bx) - r, x1: Math.max(ax, bx) + r, z0: Math.min(az, bz) - r, z1: Math.max(az, bz) + r,
+    h(x, z) {
+      const t = ((x - ax) * dx + (z - az) * dz) / L2;
+      if (t < 0 || t > 1) return -1e9;
+      const px = ax + dx * t - x, pz = az + dz * t - z, d2 = px * px + pz * pz;
+      return d2 < r * r ? cy + Math.sqrt(r * r - d2) : -1e9;
+    }
+  });
+  if (r >= 0.09 && !opt.noBlock) addSegBlocker(ax, az, bx, bz, r * 0.92);
+  const geo = new THREE.CylinderGeometry(r, r * 0.96, len, 16, 1);
+  const mesh = new THREE.Mesh(geo, [opt.mat || (rnd() < 0.5 ? M.bark : M.peeled), M.cookie, M.cookie]);
+  mesh.quaternion.setFromUnitVectors(UP, new V3(dx, 0, dz).normalize());
+  mesh.rotateY(rnd() * TAU);
+  mesh.position.set(ax + dx / 2, cy, az + dz / 2);
+  shadowy(mesh);
+  return cy + r;
+}
+
+// Rectangular slab / plank / ramp. Length runs along heading `yaw` (x,z) = (cos, sin).
+function addSlab(cx, cz, len, wid, yaw, h0, h1, opt = {}) {
+  const Lx = Math.cos(yaw), Lz = Math.sin(yaw), Wx = -Lz, Wz = Lx, hl = len / 2, hw = wid / 2;
+  const ext = hl * Math.abs(Lx) + hw * Math.abs(Wx), extz = hl * Math.abs(Lz) + hw * Math.abs(Wz);
+  if (!opt.visualOnly) addObs({
+    x0: cx - ext, x1: cx + ext, z0: cz - extz, z1: cz + extz,
+    h(x, z) {
+      const px = x - cx, pz = z - cz, v = px * Lx + pz * Lz, u = px * Wx + pz * Wz;
+      if (v < -hl || v > hl || u < -hw || u > hw) return -1e9;
+      return lerp(h0, h1, (v + hl) / len);
+    }
+  });
+  const geo = new THREE.BoxGeometry(len, 1, wid);
+  const pos = geo.attributes.position;
+  const bottom = opt.bottom ?? (Math.min(h0, h1) - 0.06);
+  for (let i = 0; i < pos.count; i++) {
+    const top = lerp(h0, h1, pos.getX(i) / len + 0.5);
+    pos.setY(i, pos.getY(i) > 0 ? top : (opt.thick ? top - opt.thick : bottom));
+  }
+  geo.computeVertexNormals();
+  const mesh = new THREE.Mesh(geo, opt.mat || M.plank);
+  mesh.rotation.y = -yaw;
+  mesh.position.set(cx, 0, cz);
+  return shadowy(mesh);
+}
+
+function addDisc(cx, cz, r, thick, opt = {}) {
+  const top = (opt.y ?? H(cx, cz)) + thick;
+  addObs({ x0: cx - r, x1: cx + r, z0: cz - r, z1: cz + r, h(x, z) { const dx = x - cx, dz = z - cz; return dx * dx + dz * dz < r * r ? top : -1e9; } });
+  const deep = thick + 0.12;
+  const mesh = new THREE.Mesh(new THREE.CylinderGeometry(r, r * 0.98, deep, 18), [M.bark, opt.mat || M.cookie, M.cookie]);
+  mesh.position.set(cx, top - deep / 2, cz);
+  mesh.rotation.y = rnd() * TAU;
+  return shadowy(mesh);
+}
+
+// Irregular rock. p=2 rounded river rock, p≈4 flat-topped limestone slab.
+function addRock(cx, cz, a, b, h, yaw, opt = {}) {
+  const p = opt.p ?? 2, s1 = rnd() * TAU, s2 = rnd() * TAU, amp = opt.amp ?? 0.14;
+  const base = opt.base ?? (groundH(cx, cz) - (opt.sink ?? 0.15) * h);
+  const c = Math.cos(yaw), s = Math.sin(yaw);
+  const f = th => 1 + amp * Math.sin(3 * th + s1) + amp * 0.55 * Math.sin(5 * th + s2);
+  const prof = q => h * Math.pow(Math.max(0, 1 - Math.pow(q, p)), 1 / p);
+  const R = Math.max(a, b) * (1 + amp * 1.6);
+  if (!opt.visualOnly) addObs({
+    x0: cx - R, x1: cx + R, z0: cz - R, z1: cz + R,
+    h(x, z) {
+      const px = x - cx, pz = z - cz, u = (px * c + pz * s) / a, v = (-px * s + pz * c) / b;
+      const rr2 = Math.sqrt(u * u + v * v); if (rr2 > 1.4) return -1e9;
+      const q = rr2 / f(Math.atan2(v, u));
+      return q < 1 ? base + prof(q) : -1e9;
+    }
+  });
+  const RINGS = 6, SEG = opt.seg ?? 11, posA = [], col = [], idx = [];
+  const tint = (opt.color || [0.7, 0.68, 0.63]).map(c => c * 0.55); // vertex colours are linear: keep rocks a natural grey
+  const vert = (q, th, y) => {
+    const fq = q * f(th), u = fq * Math.cos(th) * a, v = fq * Math.sin(th) * b;
+    posA.push(cx + u * c - v * s, y, cz + u * s + v * c);
+    const k = rr(0.86, 1.08) * (0.82 + 0.18 * clamp((y - base) / Math.max(h, 0.01), 0, 1));
+    col.push(tint[0] * k, tint[1] * k, tint[2] * k);
+  };
+  vert(0, 0, base + prof(0));
+  const ths = []; for (let j = 0; j < SEG; j++) ths.push((j + rr(-0.25, 0.25)) / SEG * TAU);
+  for (let k = 1; k <= RINGS; k++) for (let j = 0; j < SEG; j++) { const q = k / RINGS; vert(q, ths[j], base + prof(q) + (k < RINGS ? rr(-0.08, 0.04) * h : 0)); }
+  for (let j = 0; j < SEG; j++) vert(1.05, ths[j], base - 0.05);
+  for (let j = 0; j < SEG; j++) idx.push(0, 1 + (j + 1) % SEG, 1 + j);
+  for (let k = 0; k < RINGS; k++) for (let j = 0; j < SEG; j++) {
+    const a0 = 1 + k * SEG + j, a1 = 1 + k * SEG + (j + 1) % SEG, b0 = a0 + SEG, b1 = a1 + SEG;
+    idx.push(a0, a1, b1, a0, b1, b0);
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(posA, 3));
+  geo.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+  geo.setIndex(idx); geo.computeVertexNormals();
+  return shadowy(new THREE.Mesh(geo, M.rock));
+}
+
+function addBlocker(x, z, r) { blockers.push({ x, z, r }); }
+// solid walls for things too tall to climb (frame boards, edging, big logs): the truck slides off them instead of wedging
+const segBlockers = [];
+function addSegBlocker(ax, az, bx, bz, r) { segBlockers.push({ ax, az, bx, bz, r, cx: (ax + bx) / 2, cz: (az + bz) / 2, half: Math.hypot(bx - ax, bz - az) / 2 + r }); }
+function addStake(x, z, h = 0.3, r = 0.022, mat = M.stake) {
+  const g = new THREE.CylinderGeometry(r, r, h, 6); const m = new THREE.Mesh(g, mat);
+  m.position.set(x, groundH(x, z) + h / 2 - 0.03, z); shadowy(m); addBlocker(x, z, r + 0.005); return m;
+}
+const LIMESTONE = [0.74, 0.71, 0.64], RIVER = [0.6, 0.55, 0.5], RIVER2 = [0.47, 0.43, 0.4], RIVER3 = [0.66, 0.6, 0.52];
+const riverTint = () => [RIVER, RIVER2, RIVER3][(rnd() * 3) | 0];
+
+/* =========================================================
+   TERRAIN
+   ========================================================= */
+// blue-green hydroseed mulch patches around the edges (very visible in the photos)
+const hydro = [[-5.4, -3.4, 1.1], [-4.6, -4.5, 0.9], [5.9, -2.4, 0.7], [3.6, -4.8, 0.8], [-1.8, -4.9, 0.8], [0.9, -4.9, 0.6]];
+function groundColor(x, z) {
+  const dp = distToPath(x, z);
+  let c = [0.58, 0.42, 0.27]; // brown dirt with pine needles
+  const n1 = Math.sin(x * 2.3 + Math.sin(z * 1.7) * 2) * Math.sin(z * 2.9 - x * 0.6);
+  c = c.map((v, i) => v * (1 + n1 * 0.12) + [0.03, 0.02, 0][i] * n1);
+  const gravel = [0.7, 0.64, 0.55];
+  const t = smooth(PATH_HALF + 0.15, PATH_HALF - 0.15, dp);
+  c = c.map((v, i) => lerp(v, gravel[i], t));
+  let hy = 0;
+  for (const [hx, hz, hr] of hydro) hy = Math.max(hy, smooth(hr, hr * 0.5, Math.hypot(x - hx, z - hz) * (1 + 0.18 * Math.sin(x * 5 + z * 3))));
+  hy *= 1 - t;
+  c = c.map((v, i) => lerp(v, [0.24, 0.62, 0.6][i], hy * 0.9));
+  const md = moundH(x, z) / MOUND.h;
+  c = c.map((v, i) => lerp(v, [0.55, 0.41, 0.28][i], smooth(0.0, 0.25, md) * 0.7));
+  const cr = smooth(0.3, 0.12, distToLine(CREEK, x, z)) * (1 - t);
+  c = c.map((v, i) => lerp(v, [0.46, 0.5, 0.53][i], cr * 0.75));
+  const grass = smooth(-4.25, -4.75, z) * (1 - t) * (insideEdge(x, z) ? 0.2 : 1);
+  c = c.map((v, i) => lerp(v, [0.38, 0.52, 0.2][i], grass));
+  const k = 0.9 + 0.2 * Math.sin(x * 21.7 + z * 3.1) * Math.sin(z * 19.3 - x * 2.3);
+  return c.map(v => v * k);
+}
+{
+  const W = 20, D = 13.6, nx = 340, nz = 232;
+  const geo = new THREE.PlaneGeometry(W, D, nx, nz);
+  geo.rotateX(-Math.PI / 2);
+  geo.translate(0, 0, 1.5);
+  const pos = geo.attributes.position, col = [];
+  for (let i = 0; i < pos.count; i++) {
+    const x = pos.getX(i), z = pos.getZ(i);
+    pos.setY(i, groundH(x, z));
+    col.push(...groundColor(x, z));
+  }
+  geo.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+  geo.computeVertexNormals();
+  const terrain = new THREE.Mesh(geo, MSM({ vertexColors: true, map: soilTex, roughness: 1 }));
+  terrain.receiveShadow = true; scene.add(terrain);
+  // surroundings
+  const far = new THREE.Mesh(new THREE.PlaneGeometry(220, 220), MSM({ color: 0x5f6b38, roughness: 1 }));
+  far.rotation.x = -Math.PI / 2; far.position.y = -0.03; far.receiveShadow = true; scene.add(far);
+  const court = new THREE.Mesh(new THREE.PlaneGeometry(28, 28), MSM({ map: courtTex, roughness: 0.85 }));
+  court.rotation.x = -Math.PI / 2; court.position.set(-2, 0.004, -19.25); court.receiveShadow = true; scene.add(court);
+  // nets
+  [-8.2, 4.2].forEach(cx => {
+    const net = new THREE.Mesh(new THREE.PlaneGeometry(12.8, 0.95), MSM({ map: chainTex.clone(), color: 0x222222, transparent: true, side: THREE.DoubleSide, depthWrite: false }));
+    net.material.map.repeat.set(110, 8); net.material.map.needsUpdate = true;
+    net.position.set(cx, 0.48, -19.9); scene.add(net);
+    [-6.5, 6.5].forEach(o => { const p = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 1.07, 8), M.fencePost); p.position.set(cx + o, 0.53, -19.9); scene.add(p); });
+  });
+}
+
+/* fence along the course side of the courts + far windscreens */
+{
+  const len = 28, h = 3, z = -5.05;
+  const mat = MSM({ map: chainTex, transparent: true, side: THREE.DoubleSide, depthWrite: false, roughness: 0.6, metalness: 0.3 });
+  const f = new THREE.Mesh(new THREE.PlaneGeometry(len, h), mat); f.position.set(-2, h / 2, z); scene.add(f);
+  for (let x = -16; x <= 12.01; x += 3.1) {
+    const p = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, h + 0.05, 8), M.fencePost);
+    p.position.set(x, h / 2, z); p.castShadow = true; scene.add(p);
+  }
+  const rail = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, len, 6), M.fencePost);
+  rail.rotation.z = Math.PI / 2; rail.position.set(-2, h, z); scene.add(rail);
+  const wind = MSM({ color: 0x1fb3a4, roughness: 0.8 });
+  [[-8.2, -33.2], [4.2, -33.2]].forEach(([x, zz]) => { const w = new THREE.Mesh(new THREE.PlaneGeometry(11, 1.9), wind); w.position.set(x, 1.1, zz); scene.add(w); });
+  const fb = new THREE.Mesh(new THREE.PlaneGeometry(28, h), mat); fb.position.set(-2, h / 2, -33.3); scene.add(fb);
+  // umpire chair (orange) seen in the photos
+  const chair = new THREE.Group();
+  const om = MSM({ color: 0xe0782f });
+  [[-0.25, -0.25], [0.25, -0.25], [-0.25, 0.25], [0.25, 0.25]].forEach(([a, b]) => { const l = new THREE.Mesh(new THREE.BoxGeometry(0.04, 1.4, 0.04), om); l.position.set(a, 0.7, b); chair.add(l); });
+  const seat = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.05, 0.6), om); seat.position.y = 1.4; chair.add(seat);
+  chair.position.set(-1.7, 0, -19.9); scene.add(chair);
+}
+
+/* =========================================================
+   TREES (instanced) — spruce/pine with high crowns like the photos
+   ========================================================= */
+const treeList = [];
+const canopy = []; // hidden in course view so you can see the whole course from above
+const courseTrees = [[-3.7, -1.0, 0.24], [-4.1, -3.0, 0.2], [-5.2, -2.5, 0.2], [-5.3, -1.6, 0.19], [-2.6, -4.75, 0.2], [-0.6, -4.85, 0.19],
+  [2.2, -4.75, 0.2], [3.9, -4.5, 0.19], [5.45, -3.6, 0.18], [-4.4, -4.2, 0.21], [5.9, -1.4, 0.17]]
+for (const [x, z, r] of courseTrees) { treeList.push({ x, z, r, h: rr(12, 19), y: groundH(x, z), kind: 'spruce' }); addBlocker(x, z, r + 0.02); }
+for (let i = 0; i < 260; i++) {
+  let x, z, ok = false;
+  for (let t = 0; t < 20 && !ok; t++) {
+    x = rr(-38, 34); z = rr(-50, 38);
+    const inCourse = (x > -6.2 && x < 8.2 && z > -5.6 && z < 3.4) || distToPath(x, z) < 2.2;
+    const inCourts = x > -16.5 && x < 12.5 && z > -34 && z <= -5.6;
+    const inLot = x > -21 && x < -10 && z > -1.5 && z < 9.5;
+    ok = !inCourse && !inCourts && !inLot;
+  }
+  if (ok) treeList.push({ x, z, r: rr(0.16, 0.32), h: rr(12, 24), y: groundH(x, z), kind: rnd() < 0.2 ? 'aspen' : 'spruce' });
+}
+{
+  const spruces = treeList.filter(t => t.kind === 'spruce'), aspens = treeList.filter(t => t.kind === 'aspen');
+  const trunkGeo = new THREE.CylinderGeometry(0.5, 1, 1, 10); trunkGeo.translate(0, 0.5, 0);
+  const coneGeo = new THREE.ConeGeometry(1, 1, 9); coneGeo.translate(0, 0.5, 0);
+  const trunks = new THREE.InstancedMesh(trunkGeo, MSM({ map: barkTex, color: 0xb59a86 }), spruces.length);
+  const cones = new THREE.InstancedMesh(coneGeo, MSM({ color: 0xffffff, roughness: 1, flatShading: true }), spruces.length * 6);
+  const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), sc = new V3(), p = new V3(), col = new THREE.Color();
+  const e = new THREE.Euler();
+  let ci = 0;
+  spruces.forEach((t, i) => {
+    p.set(t.x, t.y - 0.05, t.z); sc.set(t.r, t.h, t.r); m4.compose(p, q, sc); trunks.setMatrixAt(i, m4);
+    const crownBase = t.h * rr(0.3, 0.42), layers = 6;
+    for (let k = 0; k < layers; k++) {
+      const f = k / (layers - 1);
+      const rad = (2.0 - f * 1.55) * (t.h / 16) * rr(0.85, 1.12), hh = (t.h - crownBase) * 0.3;
+      p.set(t.x + rr(-0.1, 0.1), t.y + crownBase + f * (t.h - crownBase) * 0.78, t.z + rr(-0.1, 0.1));
+      e.set(rr(-0.05, 0.05), rnd() * TAU, rr(-0.05, 0.05)); q.setFromEuler(e);
+      sc.set(rad, hh, rad); m4.compose(p, q, sc); cones.setMatrixAt(ci, m4);
+      col.setHSL(0.35 + rr(-0.04, 0.03), rr(0.38, 0.5), rr(0.12, 0.19) + f * 0.04); cones.setColorAt(ci, col); ci++;
+    }
+    q.identity();
+  });
+  trunks.castShadow = true; trunks.receiveShadow = true; cones.castShadow = true; cones.receiveShadow = true;
+  scene.add(trunks, cones); canopy.push(trunks, cones);
+  // fall aspens: white trunks, golden crowns (the yellow trees behind the course)
+  const aTrunk = new THREE.InstancedMesh(trunkGeo, MSM({ color: 0xd9d6c8 }), aspens.length);
+  const blobGeo = new THREE.IcosahedronGeometry(1, 1);
+  const aCrown = new THREE.InstancedMesh(blobGeo, MSM({ color: 0xffffff, flatShading: true }), aspens.length * 4);
+  let ai = 0;
+  aspens.forEach((t, i) => {
+    p.set(t.x, t.y, t.z); sc.set(t.r * 0.7, t.h, t.r * 0.7); m4.compose(p, q, sc); aTrunk.setMatrixAt(i, m4);
+    for (let k = 0; k < 4; k++) {
+      const s = rr(1.3, 2.2) * t.h / 18;
+      p.set(t.x + rr(-0.9, 0.9), t.y + t.h * rr(0.62, 0.95), t.z + rr(-0.9, 0.9)); sc.set(s, s * 1.3, s); m4.compose(p, q, sc);
+      aCrown.setMatrixAt(ai, m4); col.setHSL(rr(0.1, 0.14), rr(0.75, 0.88), rr(0.4, 0.5)); aCrown.setColorAt(ai, col); ai++;
+    }
+  });
+  aTrunk.castShadow = aCrown.castShadow = true; scene.add(aTrunk, aCrown); canopy.push(aTrunk, aCrown);
+
+  // willow shrubs: clumps of leafy blobs, green with some fall yellow
+  const shrubSpots = [];
+  for (let x = -9.5; x < 10; x += rr(0.5, 1.1)) { if (x > 2.2 && x < 5.5) continue; shrubSpots.push([x, rr(-4.9, -4.55), 1]); }
+  for (let z = -4; z < -1.5; z += rr(0.7, 1.3)) shrubSpots.push([rr(-5.8, -5.4), z, 1]);
+  [[-4.3, -4.5], [-1.9, -4.4], [1.1, -4.0], [3.0, -4.7], [5.5, -4.5], [-5.4, -0.9], [7.6, -0.4], [7.5, -2.8]].forEach(([x, z]) => shrubSpots.push([x, z, 0.9]));
+  const leafCount = shrubSpots.length * 5;
+  const shrubs = new THREE.InstancedMesh(blobGeo, MSM({ color: 0xffffff, flatShading: true }), leafCount);
+  let si = 0;
+  for (const [x, z, sz] of shrubSpots) {
+    if (insideEdge(x, z, -0.45)) continue;
+    const s = rr(0.22, 0.42) * sz, yellow = rnd() < 0.3;
+    for (let k = 0; k < 5; k++) {
+      const ss = s * rr(0.5, 0.9);
+      p.set(x + rr(-s, s) * 0.8, groundH(x, z) + ss * rr(0.7, 1.6), z + rr(-s, s) * 0.8);
+      sc.set(ss * rr(0.9, 1.3), ss * rr(1.0, 1.5), ss * rr(0.9, 1.3)); m4.compose(p, q, sc);
+      shrubs.setMatrixAt(si, m4);
+      if (yellow && k > 1) col.setHSL(rr(0.11, 0.14), 0.75, rr(0.38, 0.46)); else col.setHSL(rr(0.2, 0.27), rr(0.5, 0.62), rr(0.17, 0.26));
+      shrubs.setColorAt(si, col); si++;
+    }
+  }
+  shrubs.count = si; shrubs.castShadow = true; shrubs.receiveShadow = true; scene.add(shrubs);
+
+  // young spruce seedlings by the fence (seen in the photos)
+  const seedl = new THREE.InstancedMesh(coneGeo, MSM({ color: 0x2f5a2e, flatShading: true }), 24);
+  let di = 0;
+  for (let k = 0; k < 24; k++) {
+    const x = rr(-9, 9), z = rr(-4.95, -4.6), h = rr(0.25, 0.6);
+    if (insideEdge(x, z, -0.2)) continue;
+    p.set(x, groundH(x, z), z); sc.set(h * 0.32, h, h * 0.32); m4.compose(p, q, sc); seedl.setMatrixAt(di++, m4);
+  }
+  seedl.castShadow = true; scene.add(seedl);
+}
+
+/* =========================================================
+   THE COURSE — modelled on the club photos
+   ========================================================= */
+const gates = [];
+const nearTreeXZ = (x, z, d) => treeList.some(t => Math.hypot(t.x - x, t.z - z) < t.r + d);
+function addGate(name, x, z, yaw, w = 0.8) {
+  // yaw: travel direction in truck convention: forward = (cos yaw, -sin yaw)
+  const fx = Math.cos(yaw), fz = -Math.sin(yaw), rx = Math.sin(yaw), rz = Math.cos(yaw);
+  const ax = x - rx * w / 2, az = z - rz * w / 2, bx = x + rx * w / 2, bz = z + rz * w / 2;
+  const flagMat = MSM({ color: 0xf39a2b, emissive: 0x000000 });
+  const meshes = [];
+  [[ax, az], [bx, bz]].forEach(([sx, sz]) => {
+    const gy = H(sx, sz);
+    const g = new THREE.Group();
+    const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 0.34, 6), MSM({ color: 0xeeeeee }));
+    pole.position.y = 0.17; g.add(pole);
+    const flag = new THREE.Mesh(new THREE.BoxGeometry(0.004, 0.06, 0.09), flagMat);
+    flag.position.set(0, 0.31, 0.045); g.add(flag);
+    g.position.set(sx, gy - 0.02, sz); g.rotation.y = -yaw; g.traverse(o => { o.castShadow = true; });
+    scene.add(g); meshes.push(g);
+  });
+  gates.push({ name, x, z, yaw, w, ax, az, bx, bz, fx, fz, flagMat, meshes });
+}
+
+/* The club blueprint course: a boulder mound with The Summit on top, bridges, a creek bed,
+   Avalanche Alley and Switchbacks, ringed with boulders, with easy, moderate and hard lines.
+   The rules sign stays on its spruce by the entrance, and the RC TRACK cookies stand raised up on a log. */
+function addBridge(cx, cz, len, wid, b) {
+  // the deck follows the slope of the hill, a few cm up, with gentle ramps at both ends
+  const Lx = Math.cos(b), Lz = Math.sin(b), Wx = -Lz, Wz = Lx, r = 0.22, hl = len / 2, dl = len - 2 * r;
+  const gA = groundH(cx - Lx * hl, cz - Lz * hl), gB = groundH(cx + Lx * hl, cz + Lz * hl);
+  let h0 = groundH(cx - Lx * (hl - r), cz - Lz * (hl - r)) + 0.035, h1 = groundH(cx + Lx * (hl - r), cz + Lz * (hl - r)) + 0.035, lift = 0, low = 1e9;
+  for (let i = 0; i <= 12; i++) { const t = i / 12, d = -dl / 2 + dl * t; for (const w of [-wid / 2, 0, wid / 2]) { const g = groundH(cx + Lx * d + Wx * w, cz + Lz * d + Wz * w); lift = Math.max(lift, g + 0.02 - lerp(h0, h1, t)); low = Math.min(low, g); } }
+  h0 += lift; h1 += lift;
+  addSlab(cx - Lx * (hl - r / 2), cz - Lz * (hl - r / 2), r, wid, b, gA + 0.003, h0, { mat: M.plank, thick: 0.025 });
+  addSlab(cx + Lx * (hl - r / 2), cz + Lz * (hl - r / 2), r, wid, b, h1, gB + 0.003, { mat: M.plank, thick: 0.025 });
+  addSlab(cx, cz, dl, wid, b, h0, h1, { mat: M.plank, bottom: low - 0.02 });
+  const n = Math.floor(dl / 0.045);
+  for (let i = 0; i <= n; i++) { const d = -dl / 2 + i * 0.045, t = i / n; const m = new THREE.Mesh(new THREE.BoxGeometry(0.006, 0.004, wid), M.darkWood); m.position.set(cx + Lx * d, lerp(h0, h1, t) + 0.001, cz + Lz * d); m.rotation.y = -b; m.rotation.z = Math.atan2(h1 - h0, dl); scene.add(m); }
+  [-1, 1].forEach(sd => {
+    const m = new THREE.Mesh(new THREE.BoxGeometry(dl, 0.03, 0.02), M.darkWood);
+    m.position.set(cx + Wx * sd * (wid / 2 + 0.01), (h0 + h1) / 2 - 0.012, cz + Wz * sd * (wid / 2 + 0.01)); m.rotation.set(0, -b, Math.atan2(h1 - h0, dl)); m.rotation.order = 'YZX'; m.castShadow = true; scene.add(m);
+  });
+  return (h0 + h1) / 2;
+}
+const BRIDGES = [];
+{
+  // the rules sign on its spruce by the entrance (same tree as the real course)
+  const board = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.68, 0.02), [M.darkWood, M.darkWood, M.darkWood, M.darkWood, MSM({ map: signTex(), roughness: 0.5 }), M.darkWood]);
+  board.position.set(-3.7, 1.25, -1.0 + 0.25); board.castShadow = true; scene.add(board);
+
+  // RC TRACK cookies, raised up on a peeled log so they stand tall
+  const letters = ['R', 'C', '', 'T', 'R', 'A', 'C', 'K'];
+  const x0 = -1.95, x1 = -0.75, zc = 0.05, gyL = groundH(-1.35, zc);
+  addLog(x0 - 0.12, zc, x1 + 0.12, zc, 0.06, { y: gyL + 0.05, mat: M.peeled, noBlock: true });
+  addSegBlocker(x0 - 0.12, zc, x1 + 0.12, zc, 0.1);
+  letters.forEach((ch, i) => {
+    if (!ch) return;
+    const x = lerp(x0, x1, i / (letters.length - 1)), r = 0.09;
+    const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, 0.05, 20), [M.bark, MSM({ map: letterTex(ch) }), M.cookie]);
+    m.rotation.set(Math.PI / 2, 0, 0); m.position.set(x, gyL + 0.105 + r, zc + 0.02); shadowy(m);
+  });
+
+  // the hill: big boulders ring it all the way round, open at Cedar Crossing, the pit side and up by Avalanche Alley
+  const C = MOUND, gaps = [[1.51, 0.13], [2.6, 0.17], [5.5, 0.25]];
+  const BOULDER = () => [0.5 + rr(-0.05, 0.05), 0.45 + rr(-0.03, 0.03), 0.4];
+  for (let a = 0; a < TAU; a += 0.06) {
+    if (gaps.some(([g, w]) => Math.abs(a - g) < w)) continue;
+    const vv = 1.04 * Math.sin(a), x = C.x + C.rx * 1.04 * Math.cos(a) * hillW(vv), z = C.z + C.rz * vv;
+    addRock(x, z, rr(0.15, 0.21), rr(0.12, 0.17), rr(0.08, 0.11), a, { color: BOULDER(), sink: 0.2, seg: 10, p: 1.6 });
+  }
+  BRIDGES.push([0.76, -0.8], [-0.8, -3.2], [1.6, -2.56]);
+  { // Cedar Crossing: the way in at the bottom, over a little stony creek
+    for (let x = 0.35; x <= 1.2; x += 0.09) addRock(x, -0.8 + rr(-0.04, 0.04), 0.05, 0.04, 0.03, rnd() * 3, { color: [0.46, 0.5, 0.53], visualOnly: true });
+    addBridge(0.76, -0.8, 0.95, 0.3, Math.PI / 2);
+    addGate('Cedar Crossing', 0.76, -0.8, -Math.PI / 2, 0.45);
+  }
+  // Timber Pass Bridge up on the left, just below Rocky Creek Bed
+  addBridge(-0.8, -3.2, 0.75, 0.3, 0.32);
+  addGate('Timber Pass Bridge', -0.8, -3.2, -0.32, 0.45);
+  // the middle bridge on the moderate line
+  addBridge(1.6, -2.56, 0.8, 0.3, 1.77);
+  // The Summit boulder climb: a pile of big boulders at the top, a flat rock to park on
+  for (let k = 0, n = 0; k < 120 && n < 12; k++) {
+    const a = rnd() * TAU, d = rr(0.35, 0.75), x = 0.6 + Math.cos(a) * d, z = -3.7 + Math.sin(a) * d * 0.7;
+    if (distToLine(LINES.hard, x, z) < 0.33 || distToLine(LINES.moderate, x, z) < 0.33) continue;
+    addRock(x, z, rr(0.17, 0.25), rr(0.15, 0.21), rr(0.09, 0.13), rnd() * 3, { color: BOULDER(), sink: 0.2, seg: 10, p: 1.6 }); n++;
+  }
+  addRock(0.6, -3.7, 0.24, 0.2, 0.04, 0.3, { p: 4, seg: 9, amp: 0.12, color: [0.55, 0.52, 0.47], sink: 0.4 });
+  addGate('The Summit', 0.6, -3.7, 0, 0.55);
+  // Rocky Creek Bed: river stones down the gully on the left
+  for (let i = 0; i < 46; i++) {
+    const t = rnd(), seg = Math.min(CREEK.length - 2, (t * (CREEK.length - 1)) | 0), f = t * (CREEK.length - 1) - seg;
+    const x = lerp(CREEK[seg][0], CREEK[seg + 1][0], f) + rr(-0.14, 0.14), z = lerp(CREEK[seg][1], CREEK[seg + 1][1], f) + rr(-0.14, 0.14);
+    if (Math.hypot(x + 0.8, z + 3.2) < 0.5 || Math.hypot(x + 0.5, z + 3.9) < 0.3) continue;
+    addRock(x, z, rr(0.05, 0.08), rr(0.04, 0.06), rr(0.02, 0.035), rnd() * 3, { color: riverTint(), sink: 0.3 });
+  }
+  addGate('Rocky Creek Bed', -0.5, -3.9, -2.62, 0.5);
+  // Avalanche Alley: the dirt trail and loose rock spilling down the top right
+  for (let i = 0; i < 34; i++) {
+    const t = rnd(), x = lerp(3.3, 1.7, t) + rr(-0.15, 0.15), z = lerp(-3.85, -3.65, t) + rr(-0.15, 0.15);
+    if (distToLine(LINES.hard, x, z) < 0.16) continue;
+    addRock(x, z, rr(0.04, 0.08), rr(0.03, 0.06), rr(0.015, 0.03), rnd() * 3, { p: 3, seg: 7, color: [0.6, 0.58, 0.53], sink: 0.35 });
+  }
+  addGate('Avalanche Alley', 1.95, -3.75, -2.65, 0.5);
+  // Switchbacks: the hard line's dirt trail curving round the outside right of the ring
+  addGate('Switchbacks', 4.4, -2.2, Math.PI / 2, 0.6);
+  const C2G = (x, z) => gates.some(g => Math.hypot(g.x - x, g.z - z) < 0.3);
+  // boulders packed all over the hill, every one drivable; the painted lines stay a bit smoother
+  for (let k = 0, placed = 0; k < 4000 && placed < 190; k++) {
+    const u = rr(-1, 1), v = rr(-1, 1); if (u * u + v * v > 0.9) continue;
+    const x = C.x + u * C.rx * hillW(v), z = C.z + v * C.rz;
+    const onLine = Object.values(LINES).some(L => distToLine(L, x, z) < 0.14);
+    if (BRIDGES.some(([bx, bz]) => Math.hypot(bx - x, bz - z) < 0.5) || C2G(x, z) || Math.hypot(x - 0.6, z + 3.7) < 0.3 || distToLine(CREEK, x, z) < 0.22) continue;
+    const big = !onLine && rnd() < 0.6;
+    addRock(x, z, big ? rr(0.12, 0.2) : rr(0.07, 0.12), big ? rr(0.1, 0.16) : rr(0.06, 0.1), big ? rr(0.08, 0.13) : rr(0.035, 0.06), rnd() * 3,
+      { color: BOULDER(), sink: 0.2, seg: big ? 10 : 8, p: big ? 1.6 : 2.5 }); placed++;
+  }
+  // stepping logs and cookie paths between the boulders
+  [[1.95, -1.9, 2.25, -2.3], [-1.9, -2.4, -2.15, -2.1], [0.2, -2.75, 0.55, -2.9], [2.5, -2.9, 2.75, -3.3]].forEach(([ax, az, bx, bz]) =>
+    addLog(ax, az, bx, bz, 0.025, { mat: rnd() < 0.5 ? M.peeled : M.bark, sink: 0.9, noBlock: true }));
+  for (let i = 0; i < 7; i++) { const x = lerp(-1.3, -0.5, i / 6) + rr(-0.03, 0.03), z = lerp(-1.45, -1.25, i / 6); addDisc(x, z, rr(0.05, 0.07), 0.018, { y: groundH(x, z) }); }
+  for (let i = 0; i < 6; i++) { const x = lerp(2.6, 3.3, i / 5), z = lerp(-1.45, -1.25, i / 5) + rr(-0.03, 0.03); addDisc(x, z, rr(0.05, 0.07), 0.018, { y: groundH(x, z) }); }
+  // the big boulder by the pit
+  addRock(-2.55, -0.25, 0.22, 0.19, 0.11, 0.5, { color: BOULDER(), sink: 0.25, seg: 10 });
+  // smaller climbable rocks on the moderate and hard lines
+  for (let k = 0; k < 60; k++) {
+    const L = rnd() < 0.6 ? LINES.hard : LINES.moderate, i = (rnd() * (L.length - 1)) | 0, f = rnd();
+    const x = lerp(L[i][0], L[i + 1][0], f) + rr(-0.1, 0.1), z = lerp(L[i][1], L[i + 1][1], f) + rr(-0.1, 0.1);
+    if (!insideEdge(x, z, 0.3) || BRIDGES.some(([bx, bz]) => Math.hypot(bx - x, bz - z) < 0.55)) continue;
+    addRock(x, z, rr(0.06, 0.1), rr(0.05, 0.08), rr(0.02, 0.035), rnd() * 3, { p: 3, seg: 8, color: [0.5, 0.47, 0.42], sink: 0.3 });
+  }
+  // signpost at the start of the other side
+  const px = 2.5, pz = -1.15, gy = groundH(px, pz);
+  const post = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.06, 1.5, 8), M.darkWood);
+  post.position.set(px, gy + 0.72, pz); shadowy(post); addBlocker(px, pz, 0.07);
+  const tip = new THREE.Mesh(new THREE.ConeGeometry(0.06, 0.16, 4), M.darkWood); tip.position.set(px, gy + 1.55, pz); scene.add(tip);
+  const ps = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.15, 0.02), [M.darkWood, M.darkWood, M.darkWood, M.darkWood, MSM({ map: postSignTex() }), M.darkWood]);
+  ps.position.set(px, gy + 1.28, pz + 0.06); ps.castShadow = true; scene.add(ps);
+  // Pit / Viewing Area: a log bench for parents by the entrance
+  const bench = new THREE.Group();
+  const bseat = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.08, 0.32), M.plank); bseat.position.y = 0.42; bench.add(bseat);
+  [-0.45, 0.45].forEach(o => { const l = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.13, 0.38, 12), [M.bark, M.cookie, M.cookie]); l.position.set(o, 0.19, 0); bench.add(l); });
+  bench.traverse(o => { o.castShadow = true; }); bench.position.set(-3.4, groundH(-3.4, 1.0), 1.0); bench.rotation.y = 0.15; scene.add(bench);
+  // painted line markers
+  const COLORS = { easy: 0x7cc242, moderate: 0x2f80ed, hard: 0x141414 };
+  const dashG = new THREE.BoxGeometry(0.065, 0.004, 0.026), dashes = [];
+  for (const [k, L] of Object.entries(LINES)) for (let i = 0; i < L.length - 1; i++) {
+    const [ax, az] = L[i], [bx, bz] = L[i + 1], len = Math.hypot(bx - ax, bz - az), n = Math.floor(len / 0.1);
+    for (let j = 0; j < n; j++) { const t = (j + 0.5) / n, x = lerp(ax, bx, t), z = lerp(az, bz, t); dashes.push([x, z, Math.atan2(bz - az, bx - ax), COLORS[k]]); }
+  }
+  const dm = new THREE.InstancedMesh(dashG, new THREE.MeshBasicMaterial({ color: 0xffffff }), dashes.length);
+  const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), col = new THREE.Color(), one = new V3(1, 1, 1), p = new V3();
+  dashes.forEach(([x, z, a, c], i) => { e.set(0, -a, 0); q.setFromEuler(e); p.set(x, H(x, z) + 0.006, z); m4.compose(p, q, one); dm.setMatrixAt(i, m4); dm.setColorAt(i, col.setHex(c)); });
+  scene.add(dm);
+}
+
+/* =========================================================
+   SCENERY — fill the course like the photos (visual only, kept off the driving line)
+   ========================================================= */
+function distToRoute(x, z) { return Math.min(...Object.values(LINES).map(L => distToLine(L, x, z))); }
+const nearTree = (x, z, d) => treeList.some(t => Math.hypot(t.x - x, t.z - z) < t.r + d);
+function scatterPoint(minRoute, tries = 30) {
+  for (let t = 0; t < tries; t++) {
+    const x = rr(-5.6, 6.2), z = rr(-4.9, 0.8);
+    if (distToPath(x, z) < PATH_HALF + 0.15) continue;
+    if (distToRoute(x, z) < minRoute || nearTree(x, z, 0.05)) continue;
+    return [x, z];
+  }
+  return null;
+}
+{
+  const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), sc = new V3(), p = new V3(), col = new THREE.Color(), e = new THREE.Euler();
+  // grass tufts
+  const bladeTex = tex(64, 64, (g, w, h) => {
+    g.clearRect(0, 0, w, h);
+    for (let i = 0; i < 16; i++) {
+      const x = rr(8, 56), lean = rr(-14, 14), top = rr(4, 26);
+      g.strokeStyle = ['#7f9a3c', '#9fb04a', '#6b8433', '#b8b65a', '#c9b56a'][(rnd() * 5) | 0]; g.lineWidth = rr(1.5, 3);
+      g.beginPath(); g.moveTo(x, h); g.quadraticCurveTo(x + lean * 0.3, h * 0.5, x + lean, top); g.stroke();
+    }
+  });
+  const tuftGeo = new THREE.BufferGeometry();
+  {
+    const P = [], U = [], I = [];
+    [0, Math.PI / 3, 2 * Math.PI / 3].forEach((a, k) => {
+      const c = Math.cos(a) * 0.5, s = Math.sin(a) * 0.5, b = k * 4;
+      P.push(-c, 0, -s, c, 0, s, c, 1, s, -c, 1, -s); U.push(0, 0, 1, 0, 1, 1, 0, 1); I.push(b, b + 1, b + 2, b, b + 2, b + 3);
+    });
+    tuftGeo.setAttribute('position', new THREE.Float32BufferAttribute(P, 3));
+    tuftGeo.setAttribute('uv', new THREE.Float32BufferAttribute(U, 2));
+    tuftGeo.setIndex(I); tuftGeo.computeVertexNormals();
+  }
+  const TUFTS = 700;
+  const tufts = new THREE.InstancedMesh(tuftGeo, new THREE.MeshLambertMaterial({ map: bladeTex, alphaTest: 0.45, side: THREE.DoubleSide }), TUFTS);
+  let ti = 0;
+  for (let k = 0; k < TUFTS * 3 && ti < TUFTS; k++) {
+    const x = rr(-10, 10), z = rr(-5, 6.8);
+    const edgeOfPath = Math.abs(distToPath(x, z) - PATH_HALF - 0.25) < 0.35;
+    const byFence = z < -3.9, inHydro = hydro.some(([hx, hz, hr]) => Math.hypot(x - hx, z - hz) < hr * 0.9);
+    const nearTrunk = treeList.some(t => { const d = Math.hypot(t.x - x, t.z - z); return d > t.r && d < t.r + 0.5; });
+    if (!(edgeOfPath || byFence || inHydro || nearTrunk || rnd() < 0.05)) continue;
+    if (distToPath(x, z) < PATH_HALF - 0.05 || distToRoute(x, z) < 0.4 || nearTree(x, z, 0.02)) continue;
+    const s = rr(0.1, 0.24) * (byFence ? 1.6 : 1);
+    e.set(0, rnd() * TAU, 0); q.setFromEuler(e);
+    p.set(x, groundH(x, z) - 0.005, z); sc.set(s * rr(0.8, 1.3), s, s * rr(0.8, 1.3)); m4.compose(p, q, sc);
+    tufts.setMatrixAt(ti, m4); col.setHSL(rr(0.15, 0.22), rr(0.3, 0.5), rr(0.55, 0.8)); tufts.setColorAt(ti, col); ti++;
+  }
+  tufts.count = ti; tufts.receiveShadow = true; scene.add(tufts);
+
+  // fallen leaves (yellow aspen / willow) and spruce needles
+  const leafGeo = new THREE.CircleGeometry(0.014, 5); leafGeo.rotateX(-Math.PI / 2);
+  const LEAVES = 450;
+  const leaves = new THREE.InstancedMesh(leafGeo, MSM({ color: 0xffffff, side: THREE.DoubleSide }), LEAVES);
+  for (let k = 0; k < LEAVES; k++) {
+    const x = rr(-5.8, 7.5), z = rr(-5, 3.5);
+    e.set(rr(-0.3, 0.3), rnd() * TAU, rr(-0.3, 0.3)); q.setFromEuler(e);
+    p.set(x, H(x, z) + 0.004, z); const s = rr(0.7, 1.5); sc.set(s, 1, s * rr(1.2, 1.8)); m4.compose(p, q, sc);
+    leaves.setMatrixAt(k, m4);
+    const r = rnd(); if (r < 0.55) col.setHSL(rr(0.1, 0.15), rr(0.7, 0.85), rr(0.45, 0.58)); else if (r < 0.8) col.setHSL(rr(0.06, 0.09), rr(0.6, 0.75), rr(0.38, 0.48)); else col.setHSL(0.08, 0.35, rr(0.22, 0.3));
+    leaves.setColorAt(k, col);
+  }
+  leaves.receiveShadow = true; scene.add(leaves);
+
+  // pebbles
+  const pebGeo = new THREE.IcosahedronGeometry(1, 0);
+  const PEB = 650;
+  const pebbles = new THREE.InstancedMesh(pebGeo, MSM({ color: 0xffffff, flatShading: true }), PEB);
+  for (let k = 0; k < PEB; k++) {
+    const x = rr(-9.8, 9.8), z = rr(-4.9, 6.5);
+    e.set(rnd() * 3, rnd() * 3, rnd() * 3); q.setFromEuler(e);
+    const s = rr(0.006, 0.016); p.set(x, H(x, z), z); sc.set(s * rr(1, 1.6), s * 0.6, s * rr(1, 1.6)); m4.compose(p, q, sc);
+    pebbles.setMatrixAt(k, m4); col.setHSL(rr(0.06, 0.12), rr(0.05, 0.2), rr(0.35, 0.72)); pebbles.setColorAt(k, col);
+  }
+  scene.add(pebbles);
+
+  // sticks, branches and pine cones (off the driving line)
+  const stickGeo = new THREE.CylinderGeometry(1, 0.7, 1, 5); stickGeo.rotateZ(Math.PI / 2);
+  const sticks = new THREE.InstancedMesh(stickGeo, MSM({ color: 0x6b5340 }), 40);
+  let sk = 0;
+  for (let k = 0; k < 40; k++) {
+    const pt = scatterPoint(0.5); if (!pt) continue;
+    const len = rr(0.12, 0.6), r = rr(0.005, 0.014);
+    e.set(0, rnd() * TAU, rr(-0.06, 0.06)); q.setFromEuler(e);
+    p.set(pt[0], groundH(pt[0], pt[1]) + r * 0.6, pt[1]); sc.set(len, r, r); m4.compose(p, q, sc); sticks.setMatrixAt(sk++, m4);
+  }
+  sticks.count = sk; sticks.castShadow = true; scene.add(sticks);
+  const coneG = new THREE.IcosahedronGeometry(1, 0);
+  const pcones = new THREE.InstancedMesh(coneG, MSM({ color: 0x6e4a2c, flatShading: true }), 90);
+  let pc = 0;
+  for (let k = 0; k < 90; k++) {
+    const t = treeList[(rnd() * courseTrees.length) | 0], a = rnd() * TAU, d = t.r + rr(0.1, 1.2);
+    const x = t.x + Math.cos(a) * d, z = t.z + Math.sin(a) * d;
+    if (distToRoute(x, z) < 0.35) continue;
+    e.set(rr(1.3, 1.8), rnd() * TAU, 0); q.setFromEuler(e);
+    p.set(x, groundH(x, z) + 0.012, z); sc.set(0.013, 0.025, 0.013); m4.compose(p, q, sc); pcones.setMatrixAt(pc++, m4);
+  }
+  pcones.count = pc; pcones.castShadow = true; scene.add(pcones);
+
+  // root flares at the base of the course trees
+  const flareGeo = new THREE.ConeGeometry(1, 1, 10, 1, true);
+  const flares = new THREE.InstancedMesh(flareGeo, MSM({ map: barkTex, color: 0xa08a78, side: THREE.DoubleSide }), 40);
+  let fi = 0;
+  treeList.slice(0, courseTrees.length).forEach(t => { p.set(t.x, t.y + 0.08, t.z); sc.set(t.r * 1.9, 0.3, t.r * 1.9); m4.compose(p, q.identity(), sc); flares.setMatrixAt(fi++, m4); });
+  flares.count = fi; flares.receiveShadow = true; scene.add(flares);
+}
+
+/* --- the neighbourhood: community centre, parking lot, trailer, playground --- */
+{
+  const box = (w, h, d, color, x, y, z, ry = 0) => { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), MSM({ color })); m.position.set(x, y, z); m.rotation.y = ry; m.castShadow = true; m.receiveShadow = true; scene.add(m); return m; };
+  // community centre hall beyond the courts
+  box(18, 4.2, 9, 0x8a7a63, -2, 2.1, -40);
+  const roof = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 6.4, 18.6, 4, 1), MSM({ color: 0x3f6e5c, flatShading: true }));
+  roof.rotation.set(0, Math.PI / 4, Math.PI / 2); roof.scale.set(1, 1, 0.75); roof.position.set(-2, 5.4, -40); scene.add(roof);
+  for (let i = 0; i < 5; i++) box(1.4, 1.2, 0.05, 0x324a55, -9 + i * 3.4, 2.4, -35.47);
+  box(4, 3, 3, 0x8c6f4e, 13, 1.5, -12); // storage shed
+  // parking lot (west), pickups, jeep, white trailer
+  const lot = new THREE.Mesh(new THREE.PlaneGeometry(13, 13), MSM({ color: 0x8a8173, roughness: 1 }));
+  lot.rotation.x = -Math.PI / 2; lot.position.set(-15.6, 0.012, 4); lot.receiveShadow = true; scene.add(lot);
+  const truck = (x, z, ry, color) => {
+    const g = new THREE.Group();
+    const b = (w, h, d, c, px, py, pz) => { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), MSM({ color: c, roughness: 0.4, metalness: 0.3 })); m.position.set(px, py, pz); m.castShadow = true; g.add(m); };
+    b(5.6, 0.85, 2.0, color, 0, 0.95, 0); b(2.2, 0.75, 1.9, color, 0.4, 1.75, 0); b(2.0, 0.6, 1.92, 0x1a2228, 0.4, 1.78, 0);
+    [[-1.8, 1], [1.8, 1], [-1.8, -1], [1.8, -1]].forEach(([a, c]) => { const w = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 0.3, 14), MSM({ color: 0x18181a })); w.rotation.x = Math.PI / 2; w.position.set(a, 0.4, c * 0.95); g.add(w); });
+    g.position.set(x, 0, z); g.rotation.y = ry; scene.add(g);
+  };
+  truck(-13.0, 4.2, 0.15, 0x7d8790); truck(-16.0, 6.6, -0.1, 0xeeeeea); truck(-18.3, 2.8, 0.3, 0x23272b);
+  box(4.6, 2.2, 2.2, 0xf2f2ee, -13.4, 1.3, 7.8, 0.4); box(0.6, 0.12, 0.12, 0x333333, -11.0, 0.5, 8.8, 0.4); // trailer
+  // playground tower (teal roof) to the north-west
+  box(1.4, 2.4, 1.4, 0xb68b52, -15, 1.2, -4);
+  const tr = new THREE.Mesh(new THREE.ConeGeometry(1.2, 1.1, 4), MSM({ color: 0x2aa199 })); tr.position.set(-15, 2.95, -4); tr.rotation.y = Math.PI / 4; scene.add(tr);
+  const slide = box(0.6, 0.06, 2.8, 0xe5c33a, -15, 1.1, -2.1); slide.rotation.x = 0.6;
+  // bench along the accessible path
+  const bx = 0.8, bz = pathZ(0.8) + PATH_HALF + 0.35;
+  box(1.5, 0.05, 0.4, 0x8a6a46, bx, 0.45, bz); box(1.5, 0.35, 0.05, 0x8a6a46, bx, 0.7, bz + 0.2);
+  [-0.65, 0.65].forEach(o => box(0.06, 0.45, 0.4, 0x2e2e2e, bx + o, 0.22, bz));
+  // clouds
+  const cloudMat = new THREE.MeshLambertMaterial({ color: 0xffffff, emissive: 0x8a96a3, fog: false });
+  const puff = new THREE.IcosahedronGeometry(1, 1);
+  for (let c = 0; c < 9; c++) {
+    const a = rr(-0.6, 3.6), d = rr(70, 95), cx = Math.cos(a) * d, cz = -Math.sin(a) * d, cy = rr(28, 45);
+    for (let k = 0; k < 6; k++) { const m = new THREE.Mesh(puff, cloudMat); const s = rr(4, 8); m.scale.set(s * 1.6, s * 0.7, s); m.position.set(cx + rr(-9, 9), cy + rr(-1.5, 2), cz + rr(-5, 5)); scene.add(m); }
+  }
+}
+
+/* --- the black edging board wraps all the way around the course, open at the entrance --- */
+{
+  const N = 120, pts = [];
+  for (let i = 0; i <= N; i++) { const a = i / N * TAU; pts.push([a, EDGE.x + EDGE.rx * Math.cos(a), EDGE.z + EDGE.rz * Math.sin(a)]); }
+  for (let i = 0; i < N; i++) {
+    const [a, ax, az] = pts[i], [, bx, bz] = pts[i + 1], am = a + Math.PI / N;
+    if (am > EDGE.gap[0] && am < EDGE.gap[1]) continue;
+    const mx = (ax + bx) / 2, mz = (az + bz) / 2, gy = groundH(mx, mz);
+    addSlab(mx, mz, Math.hypot(bx - ax, bz - az) + 0.01, 0.012, Math.atan2(bz - az, bx - ax), gy + 0.11, gy + 0.11, { mat: M.metal, bottom: gy - 0.04, visualOnly: true });
+    addSegBlocker(ax, az, bx, bz, 0.008);
+  }
+}
+
+/* =========================================================
+   THE TRUCK — blue TRX-4 Bronco style crawler
+   ========================================================= */
+// TRX-4M Bronco is 1/18 scale: the model is drawn in MCAR units and shrunk by K
+const K = 0.52;
+const MCAR = { L: 0.324, T: 0.215, r: 0.058 };
+const MWOFF = [[MCAR.L / 2, -MCAR.T / 2], [MCAR.L / 2, MCAR.T / 2], [-MCAR.L / 2, -MCAR.T / 2], [-MCAR.L / 2, MCAR.T / 2]];
+const CAR = { L: MCAR.L * K, T: MCAR.T * K, r: MCAR.r * K, rc: 0.046, maxSteer: 0.62 };
+const WOFF = MWOFF.map(([f, s]) => [f * K, s * K]); // [forward, right] in metres
+const CORNERS = [[0.25, -0.125], [0.25, 0.125], [-0.26, -0.125], [-0.26, 0.125], [0, -0.13], [0, 0.13], [0.26, 0], [-0.27, 0]].map(([f, s]) => [f * K, s * K]);
+const car = new THREE.Group(); car.rotation.order = 'YZX'; scene.add(car);
+const model = new THREE.Group(); model.scale.setScalar(K); car.add(model);
+const wheels = [];
+const RIG = {};
+{
+  const blue = MSM({ color: 0x0a3fc4, roughness: 0.3, metalness: 0.1 });
+  const black = MSM({ color: 0x15171a, roughness: 0.55 });
+  const satin = MSM({ color: 0x24272b, roughness: 0.45, metalness: 0.35 });
+  const glass = MSM({ color: 0x0b1116, roughness: 0.08, metalness: 0.6 });
+  const alu = MSM({ color: 0xb9bec4, roughness: 0.3, metalness: 0.85 });
+  const chrome = MSM({ color: 0xe8ecef, roughness: 0.12, metalness: 1 });
+  const red = MSM({ color: 0xd8342a, roughness: 0.4, metalness: 0.3 });
+  const light = MSM({ color: 0xfffbea, emissive: 0xb8ad84, roughness: 0.15 });
+  const tail = MSM({ color: 0xd13b2a, emissive: 0x5a120a, roughness: 0.3 });
+  const amber = MSM({ color: 0xf2a33a, emissive: 0x6a3a08, roughness: 0.3 });
+  const mk = (geo, mat, x, y, z, parent) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.castShadow = true; parent.add(m); return m; };
+  const box = (w, h, d, mat, x, y, z, parent) => mk(new THREE.BoxGeometry(w, h, d), mat, x, y, z, parent);
+  const cyl = (r, len, mat, axis, x, y, z, parent, seg = 12) => { const g = new THREE.CylinderGeometry(r, r, len, seg); if (axis === 'x') g.rotateZ(Math.PI / 2); if (axis === 'z') g.rotateX(Math.PI / 2); return mk(g, mat, x, y, z, parent); };
+
+  /* chassis (rides on the four contact points) */
+  const chassis = new THREE.Group(); model.add(chassis);
+  [-0.032, 0.032].forEach(z => box(0.4, 0.03, 0.006, satin, 0, 0.05, z, chassis));        // frame rails
+  [0.17, -0.17, 0.0].forEach(x => box(0.012, 0.012, 0.07, satin, x, 0.05, 0, chassis));    // cross members
+  box(0.07, 0.045, 0.06, black, 0.0, 0.045, 0, chassis);                                     // transmission
+  cyl(0.017, 0.045, alu, 'x', -0.055, 0.052, 0, chassis, 14);                                 // motor can
+  cyl(0.019, 0.012, red, 'x', -0.083, 0.052, 0, chassis, 14);                                  // heat sink
+  box(0.03, 0.022, 0.022, black, 0.13, 0.066, 0.02, chassis);                                 // steering servo
+  box(0.11, 0.024, 0.045, MSM({ color: 0x2c2c33, roughness: 0.6 }), 0.07, 0.083, 0, chassis); // battery
+  [[0.14, -1], [0.14, 1], [-0.14, -1], [-0.14, 1]].forEach(([x, s]) => cyl(0.004, 0.06, alu, 'y', x, 0.085, s * 0.03, chassis, 6)); // body posts
+
+  /* body shell (leans on the suspension), shaped after the club's TRX-4M Bronco */
+  const shell = new THREE.Group(); model.add(shell);
+  const WX = MCAR.L / 2, AR = 0.076; // wheel x, wheel-arch radius
+  box(2 * (WX - AR), 0.087, 0.2, blue, 0, 0.083, 0, shell);                        // doors / rockers between the arches
+  box(0.15, 0.047, 0.2, blue, WX + 0.0, 0.103, 0, shell);                          // front fenders over the wheels
+  box(0.15, 0.047, 0.2, blue, -WX - 0.0, 0.103, 0, shell);                         // rear quarters over the wheels
+  box(0.03, 0.07, 0.196, blue, 0.226, 0.092, 0, shell);                            // nose
+  box(0.024, 0.07, 0.196, blue, -0.228, 0.092, 0, shell);                          // tailgate
+  box(0.16, 0.012, 0.196, blue, 0.155, 0.13, 0, shell);                            // hood
+  box(0.11, 0.004, 0.06, blue, 0.15, 0.137, 0, shell);                             // hood bulge
+  box(0.296, 0.064, 0.188, glass, -0.083, 0.158, 0, shell);                        // cabin glass
+  box(0.306, 0.012, 0.196, black, -0.083, 0.196, 0, shell);                        // hardtop roof
+  [[0.068, blue, 0.012], [-0.02, black, 0.014], [-0.12, black, 0.014], [-0.226, black, 0.016]].forEach(([x, m, w]) => box(w, 0.066, 0.192, m, x, 0.158, 0, shell)); // A (blue) to D pillars
+  [-1, 1].forEach(sd => {
+    const flare = new THREE.Mesh(new THREE.TorusGeometry(AR, 0.012, 6, 18, Math.PI), black);
+    // big rounded fender flares
+    [WX, -WX].forEach(x => { const f = flare.clone(); f.position.set(x, 0.0, sd * 0.104); f.scale.set(1, 1, 1.9); f.castShadow = true; shell.add(f); });
+    box(0.004, 0.08, 0.003, satin, -0.012, 0.085, sd * 0.1005, shell);              // door seams
+    box(0.014, 0.004, 0.004, satin, 0.03, 0.115, sd * 0.1015, shell);               // door handles
+    box(0.014, 0.004, 0.004, satin, -0.06, 0.115, sd * 0.1015, shell);
+    box(0.17, 0.012, 0.016, black, 0, 0.037, sd * 0.104, shell);                    // rock sliders
+    const mir = box(0.014, 0.018, 0.02, black, 0.062, 0.142, sd * 0.112, shell);    // mirrors
+    box(0.006, 0.006, 0.012, black, 0.066, 0.132, sd * 0.104, shell);
+    // round headlights with a white ring, amber marker, tall tail lights
+    cyl(0.017, 0.008, glass, 'x', 0.242, 0.1, sd * 0.066, shell, 16);
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(0.0145, 0.0028, 6, 18), light); ring.rotation.y = Math.PI / 2; ring.position.set(0.247, 0.1, sd * 0.066); shell.add(ring);
+    box(0.004, 0.014, 0.01, amber, 0.243, 0.1, sd * 0.088, shell);
+    box(0.006, 0.042, 0.014, tail, -0.241, 0.1, sd * 0.09, shell);
+    box(0.006, 0.006, 0.01, light, 0.258, 0.062, sd * 0.06, shell);                 // LED fog lights in the bumper
+    // roof rack: side rails with legs
+    box(0.27, 0.006, 0.008, black, -0.085, 0.214, sd * 0.084, shell);
+    [0.04, -0.2].forEach(x => box(0.006, 0.016, 0.008, black, x, 0.206, sd * 0.084, shell));
+  });
+  [0.03, -0.19].forEach(x => cyl(0.004, 0.17, black, 'z', x, 0.218, 0, shell, 8));  // rack cross bars
+  box(0.01, 0.05, 0.172, black, 0.244, 0.1, 0, shell);                             // grille
+  [-0.034, -0.012, 0.012, 0.034].forEach(z => box(0.004, 0.034, 0.012, satin, 0.25, 0.1, z, shell));
+  box(0.03, 0.03, 0.214, black, 0.255, 0.06, 0, shell);                            // front bumper
+  [-1, 1].forEach(sd => box(0.012, 0.012, 0.004, chrome, 0.272, 0.064, sd * 0.07, shell)); // tow hooks
+  box(0.026, 0.026, 0.2, black, -0.25, 0.062, 0, shell);                           // rear bumper
+  cyl(0.006, 0.02, chrome, 'x', -0.266, 0.056, 0, shell, 8);                       // hitch
+  const spareG = new THREE.CylinderGeometry(0.05, 0.05, 0.034, 20); spareG.rotateZ(Math.PI / 2);
+  mk(spareG, black, -0.258, 0.118, 0, shell);
+  cyl(0.026, 0.036, satin, 'x', -0.258, 0.118, 0, shell, 12);
+  const decalTex = tex(128, 128, (g, w, h) => {
+    g.fillStyle = '#ffffff'; g.fillRect(0, 0, w, h);
+    g.fillStyle = '#17140f'; g.font = 'bold 40px Impact, Arial Black, sans-serif'; g.textAlign = 'center'; g.fillText('BCRC', w / 2, 84);
+    g.fillStyle = '#c4893e'; g.fillRect(14, 96, w - 28, 10); g.fillRect(14, 22, w - 28, 10);
+  });
+  // RCEV: the Bragg Creek RC Club logo (RC Everett), on the doors and hood
+  const rcevTex = new THREE.TextureLoader().load(RCEV_LOGO); rcevTex.encoding = THREE.sRGBEncoding; rcevTex.anisotropy = 4;
+  const rcevMat = MSM({ map: rcevTex, roughness: 0.45 });
+  const hoodDecal = new THREE.Mesh(new THREE.PlaneGeometry(0.072, 0.072), rcevMat);
+  hoodDecal.rotation.set(-Math.PI / 2, 0, -Math.PI / 2); hoodDecal.position.set(0.165, 0.1365, 0); shell.add(hoodDecal);
+  [-1, 1].forEach(sd => { const d = new THREE.Mesh(new THREE.PlaneGeometry(0.062, 0.062), rcevMat); d.position.set(-0.07, 0.083, sd * 0.1013); d.rotation.y = sd > 0 ? 0 : Math.PI; shell.add(d); });
+
+  const bannerTex = tex(256, 48, (g, w, h) => {
+    g.fillStyle = '#f4e23c'; g.fillRect(0, 0, w, h);
+    g.fillStyle = '#17140f'; g.font = 'bold 28px Impact, Arial Black, sans-serif'; g.textAlign = 'center'; g.fillText('BRAGG CREEK RC', w / 2, 35);
+  });
+  const banner = new THREE.Mesh(new THREE.PlaneGeometry(0.16, 0.026), MSM({ map: bannerTex, roughness: 0.4 }));
+  banner.rotation.y = Math.PI / 2; banner.position.set(0.0745, 0.175, 0); shell.add(banner);
+
+  /* solid axles with portal hubs; each tilts on its own as the truck articulates */
+  const tireProfile = [];
+  const R = MCAR.r, Wd = 0.046;
+  for (let k = 0; k <= 12; k++) { const t = k / 12, y = (t - 0.5) * Wd, bulge = Math.sin(t * Math.PI); tireProfile.push(new THREE.Vector2(0.036 + bulge * 0.004 + (R - 0.04) * Math.pow(bulge, 0.35), y)); }
+  const tireG = new THREE.LatheGeometry(tireProfile, 28); tireG.rotateX(Math.PI / 2);
+  const tireM = MSM({ color: 0x0b0b0c, roughness: 1, side: THREE.DoubleSide });
+  const lugG = new THREE.BoxGeometry(0.013, 0.005, 0.02);
+  const rimG = new THREE.CylinderGeometry(0.036, 0.036, 0.044, 16); rimG.rotateX(Math.PI / 2);
+  const ringG = new THREE.TorusGeometry(0.033, 0.0035, 6, 20);
+  const boltG = new THREE.CylinderGeometry(0.0022, 0.0022, 0.004, 5); boltG.rotateX(Math.PI / 2);
+  const spokeG = new THREE.BoxGeometry(0.005, 0.03, 0.004);
+  RIG.axles = [];
+  [MCAR.L / 2, -MCAR.L / 2].forEach((f, ai) => {
+    const axle = new THREE.Group(); axle.position.set(f, 0, 0); model.add(axle);
+    cyl(0.011, MCAR.T - 0.07, satin, 'z', 0, 0.006, 0, axle, 10);           // axle tubes
+    const pumpkin = mk(new THREE.SphereGeometry(0.024, 14, 10), satin, 0, 0.004, 0.012, axle); pumpkin.scale.set(1, 0.9, 1.1);
+    cyl(0.01, 0.02, alu, 'x', ai === 0 ? -0.022 : 0.022, 0.006, 0.012, axle, 10); // pinion
+    const wheelsOnAxle = [];
+    [-1, 1].forEach(sd => {
+      const knuckle = new THREE.Group(); knuckle.position.set(0, 0, sd * MCAR.T / 2); axle.add(knuckle);
+      box(0.026, 0.05, 0.016, satin, 0, 0.012, -sd * 0.026, knuckle);      // portal housing
+      const spin = new THREE.Group(); knuckle.add(spin);
+      mk(tireG, tireM, 0, 0, 0, spin);
+      for (let k = 0; k < 18; k++) { // staggered tread blocks
+        const a = k / 18 * TAU, off = (k % 2 ? 0.011 : -0.011);
+        const l = new THREE.Mesh(lugG, tireM); l.position.set(Math.cos(a) * (R - 0.001), Math.sin(a) * (R - 0.001), off); l.rotation.z = a + Math.PI / 2; spin.add(l);
+      }
+      mk(rimG, black, 0, 0, 0, spin);
+      const ring = mk(ringG, satin, 0, 0, sd * 0.0225, spin);
+      for (let k = 0; k < 10; k++) { const a = k / 10 * TAU; mk(boltG, chrome, Math.cos(a) * 0.033, Math.sin(a) * 0.033, sd * 0.0245, spin); }
+      for (let k = 0; k < 5; k++) { const sp = mk(spokeG, satin, 0, 0, sd * 0.022, spin); sp.rotation.z = k / 5 * TAU; sp.translateY(0.014); }
+      cyl(0.008, 0.006, alu, 'z', 0, 0, sd * 0.0235, spin, 8); // hub
+      wheelsOnAxle.push({ knuckle, spin });
+    });
+    RIG.axles.push({ axle, f, wheels: wheelsOnAxle });
+  });
+  wheels.push(RIG.axles[0].wheels[0], RIG.axles[0].wheels[1], RIG.axles[1].wheels[0], RIG.axles[1].wheels[1]);
+
+  /* parts that stretch between chassis and axles: shocks, links, driveshafts, steering link */
+  const unitCyl = (r, mat) => { const g = new THREE.CylinderGeometry(r, r, 1, 8); const m = new THREE.Mesh(g, mat); m.castShadow = true; model.add(m); return m; };
+  const coilTex = tex(16, 64, (g, w, h) => { g.fillStyle = '#c42a22'; g.fillRect(0, 0, w, h); g.fillStyle = 'rgba(0,0,0,0.55)'; for (let y = 0; y < h; y += 8) g.fillRect(0, y, w, 3); });
+  coilTex.wrapT = THREE.RepeatWrapping;
+  const coilMat = MSM({ map: coilTex, roughness: 0.4, metalness: 0.3 });
+  RIG.shocks = []; RIG.links = [];
+  RIG.axles.forEach((A, ai) => {
+    const sgnF = ai === 0 ? -1 : 1; // toward chassis centre
+    [-1, 1].forEach(sd => {
+      RIG.shocks.push({ A, top: new V3(A.f + sgnF * 0.035, 0.112, sd * 0.05), bot: [0.012 * sgnF, 0.016, sd * 0.07],
+        body: unitCyl(0.0085, alu), spring: unitCyl(0.0105, coilMat), shaft: unitCyl(0.0035, chrome) });
+      RIG.links.push({ A, top: new V3(A.f + sgnF * 0.13, 0.034, sd * 0.032), bot: [0, -0.008, sd * 0.05], mesh: unitCyl(0.0042, alu) }); // lower links
+    });
+    RIG.links.push({ A, top: new V3(A.f + sgnF * 0.1, 0.062, 0.012), bot: [0.0, 0.028, 0.035], mesh: unitCyl(0.0035, alu) }); // upper links
+    RIG.links.push({ A, top: new V3(A.f + sgnF * 0.1, 0.062, -0.012), bot: [0.0, 0.028, -0.01], mesh: unitCyl(0.0035, alu) });
+    RIG.links.push({ A, top: new V3(sgnF > 0 ? 0.035 : -0.035, 0.04, 0.0), bot: [sgnF * 0.024, 0.006, 0.012], mesh: unitCyl(0.0045, chrome) }); // driveshaft
+  });
+  RIG.steerLink = unitCyl(0.003, alu);
+}
+const _ya = new V3(0, 1, 0), _d = new V3(), _m = new V3(), _a = new V3(), _b = new V3();
+function stretch(mesh, a, b) {
+  _d.subVectors(b, a); const len = _d.length() || 1e-4;
+  _m.addVectors(a, b).multiplyScalar(0.5);
+  mesh.position.copy(_m); mesh.quaternion.setFromUnitVectors(_ya, _d.divideScalar(len)); mesh.scale.set(1, len, 1);
+}
+function axleLocal(A, p, out) { // axle-local point -> car-local
+  const r = A.axle.rotation.x, c = Math.cos(r), s = Math.sin(r);
+  return out.set(A.axle.position.x + p[0], A.axle.position.y + p[1] * c - p[2] * s, p[1] * s + p[2] * c);
+}
+
+/* dust kicked up by the tyres */
+const dust = [];
+{
+  const dTex = tex(64, 64, (g, w, h) => { const gr = g.createRadialGradient(32, 32, 2, 32, 32, 30); gr.addColorStop(0, 'rgba(150,128,100,0.75)'); gr.addColorStop(1, 'rgba(150,128,100,0)'); g.fillStyle = gr; g.fillRect(0, 0, w, h); });
+  for (let i = 0; i < 48; i++) {
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: dTex, transparent: true, depthWrite: false, opacity: 0 }));
+    sp.visible = false; scene.add(sp); dust.push({ sp, life: 0, vx: 0, vy: 0, vz: 0 });
+  }
+}
+let dustI = 0;
+function puff(x, y, z, k) {
+  const d = dust[dustI = (dustI + 1) % dust.length];
+  d.life = 1; d.sp.visible = true; d.sp.position.set(x, y + 0.02, z);
+  d.vx = rr(-0.15, 0.15) * k; d.vy = rr(0.08, 0.22) * k; d.vz = rr(-0.15, 0.15) * k; d.s0 = rr(0.025, 0.045);
+}
+function updateDust(dt) {
+  for (const d of dust) {
+    if (d.life <= 0) continue;
+    d.life -= dt * 1.1;
+    d.sp.position.x += d.vx * dt; d.sp.position.y += d.vy * dt; d.sp.position.z += d.vz * dt;
+    const s = d.s0 * (1 + (1 - d.life) * 2.5); d.sp.scale.set(s, s, s);
+    d.sp.material.opacity = Math.max(0, d.life) * 0.55;
+    if (d.life <= 0) d.sp.visible = false;
+  }
+}
+
+/* =========================================================
+   TRUCK PHYSICS — terrain-following crawler
+   Each tire touches the ground as a circle; steps too tall for the tire stop the truck,
+   the body pitches and rolls from the four contact points, and too much lean rolls it over.
+   The body and bumpers also collide, so the truck can't pass through logs or boards.
+   ========================================================= */
+const GEARS = { low: { vmax: 0.7, acc: 1.8, g0: 44, g1: 72, label: 'Low' }, high: { vmax: 1.6, acc: 2.4, g0: 22, g1: 46, label: 'High' } };
+const S = { x: 0, z: 0, yaw: 0, v: 0, steer: 0, y: 0, vy: 0, pitch: 0, roll: 0, vp: 0, vr: 0, wc: [0, 0, 0, 0], gear: 'low', slip: 0, spin: 0, flipped: 0, flipDir: 1,
+  pen: 0, bpen: 0, push: 0, stuckT: 0, hinted: false, lean: 0, leanV: 0, squat: 0, squatV: 0, bob: 0, bobV: 0, lastV: 0 };
+// contact samples spread evenly by angle around the tyre, so ledges are met smoothly
+const WS = Array.from({ length: 15 }, (_, k) => { const a = (k / 14 - 0.5) * 2 * 1.47; return [Math.sin(a) * CAR.rc, Math.cos(a) * CAR.rc]; });
+function wheelCenter(px, pz, yaw, i) {
+  const c = Math.cos(yaw), s = Math.sin(yaw), fx = c, fz = -s, rx = s, rz = c, [f, sd] = WOFF[i];
+  const wx = px + fx * f + rx * sd, wz = pz + fz * f + rz * sd, rc = CAR.rc;
+  let best = -1e9;
+  for (let k = 0; k < WS.length; k++) {
+    const d = WS[k][0], lift = WS[k][1];
+    for (let l = -1; l <= 1; l++) {
+      const lo = l * 0.009, h = H(wx + fx * d + rx * lo, wz + fz * d + rz * lo) + lift;
+      if (h > best) best = h;
+    }
+  }
+  return best - (rc - CAR.r);
+}
+// how deep the truck's footprint (a rectangle) overlaps trees, stakes, walls or the course edge (0 = clear)
+const RECT = { f0: -0.275 * K, f1: 0.275 * K, s: 0.122 * K };
+function rectCircle(cf, cs, r) {
+  const qf = clamp(cf, RECT.f0, RECT.f1), qs = clamp(cs, -RECT.s, RECT.s);
+  if (qf === cf && qs === cs) return r + Math.min(cf - RECT.f0, RECT.f1 - cf, RECT.s - cs, cs + RECT.s);
+  return r - Math.hypot(cf - qf, cs - qs);
+}
+function blockerPen(px, pz, yaw) {
+  const c = Math.cos(yaw), s = Math.sin(yaw);
+  let pen = 0;
+  for (const [f, sd] of CORNERS) {
+    const x = px + c * f + s * sd, z = pz - s * f + c * sd;
+    pen = Math.max(pen, -5.9 - x, x - 7.8, -4.95 - z, z - 2.9);
+  }
+  for (const b of blockers) {
+    const dx = b.x - px, dz = b.z - pz;
+    if (dx * dx + dz * dz > (0.4 + b.r) * (0.4 + b.r)) continue;
+    pen = Math.max(pen, rectCircle(dx * c - dz * s, dx * s + dz * c, b.r));
+  }
+  for (const w of segBlockers) {
+    if (Math.hypot(w.cx - px, w.cz - pz) > w.half + 0.4) continue;
+    const n = Math.max(1, Math.ceil(w.half * 2 / 0.02));
+    for (let k = 0; k <= n; k++) {
+      const dx = lerp(w.ax, w.bx, k / n) - px, dz = lerp(w.az, w.bz, k / n) - pz;
+      if (dx * dx + dz * dz > 0.25) continue;
+      pen = Math.max(pen, rectCircle(dx * c - dz * s, dx * s + dz * c, w.r));
+    }
+  }
+  return pen;
+}
+// body points: [forward, right, height of the underside above the axle line]
+const BODYPTS = [[0.26, 0, 0.048], [0.26, -0.09, 0.048], [0.26, 0.09, 0.048], [-0.25, 0, 0.05], [-0.25, -0.09, 0.05], [-0.25, 0.09, 0.05],
+  [0, 0, 0.03], [0.075, 0, 0.03], [-0.075, 0, 0.03], [0, -0.1, 0.034], [0, 0.1, 0.034], [0.08, -0.1, 0.034], [0.08, 0.1, 0.034], [-0.08, -0.1, 0.034], [-0.08, 0.1, 0.034]]
+  .map(([f, s, h]) => [f * K, s * K, h * K]);
+function bodyPen(px, pz, yaw, wc) {
+  const c = Math.cos(yaw), s = Math.sin(yaw);
+  let pen = -1;
+  for (const [f, sd, floor] of BODYPTS) {
+    const u = f / CAR.L + 0.5, v = sd / CAR.T + 0.5;
+    const plane = lerp(lerp(wc[2], wc[3], v), lerp(wc[0], wc[1], v), u);
+    const x = px + c * f + s * sd, z = pz - s * f + c * sd;
+    pen = Math.max(pen, H(x, z) - (plane + floor));
+  }
+  return pen;
+}
+const STEP_PROBE = 0.004, STEP_MAX = 0.02, BODY_TOL = 0.01;
+function tooSteep(px, pz, yaw, dir) {
+  const c = Math.cos(yaw), s = Math.sin(yaw);
+  const qx = px + c * STEP_PROBE * dir, qz = pz - s * STEP_PROBE * dir;
+  const lim = STEP_MAX + Math.min(0.03, S.push * 0.025); // keep pushing and the tyres claw up a ledge, like a real crawler
+  for (let i = 0; i < 4; i++) if (wheelCenter(qx, qz, yaw, i) - S.wc[i] > lim) return true;
+  return false;
+}
+function settle() {
+  for (let i = 0; i < 4; i++) S.wc[i] = wheelCenter(S.x, S.z, S.yaw, i);
+}
+function placeCar(x, z, yaw) {
+  Object.assign(S, { x, z, yaw, v: 0, steer: 0, vy: 0, flipped: 0, slip: 0, push: 0, stuckT: 0, hinted: false, lean: 0, leanV: 0, squat: 0, squatV: 0, bob: 0, bobV: 0 });
+  settle();
+  S.pen = bodyPen(x, z, yaw, S.wc); S.bpen = blockerPen(x, z, yaw);
+  S.y = (S.wc[0] + S.wc[1] + S.wc[2] + S.wc[3]) / 4;
+  S.pitch = S.vp = Math.atan2((S.wc[0] + S.wc[1]) - (S.wc[2] + S.wc[3]), 2 * CAR.L);
+  S.roll = S.vr = Math.atan2((S.wc[0] + S.wc[2]) - (S.wc[1] + S.wc[3]), 2 * CAR.T);
+}
+
+const input = { thr: 0, steer: 0 };
+let bumpT = 0;
+const _wc = [0, 0, 0, 0];
+function tryMove(nx, nz, nyaw, dir) {
+  const bp = blockerPen(nx, nz, nyaw);
+  if (bp > 0 && bp > S.bpen + 1e-5) return 'tree';
+  if (tooSteep(S.x, S.z, nyaw, dir)) return 'step';
+  for (let i = 0; i < 4; i++) _wc[i] = wheelCenter(nx, nz, nyaw, i);
+  const pen = bodyPen(nx, nz, nyaw, _wc);
+  if (pen > BODY_TOL + Math.min(0.06, S.push * 0.04) && pen > S.pen + 0.002) return 'body'; // keep pushing and the skid plate scrapes over
+  S.x = nx; S.z = nz; S.yaw = nyaw; S.bpen = bp; S.pen = pen;
+  for (let i = 0; i < 4; i++) S.wc[i] = _wc[i];
+  return null;
+}
+function physStep(dt) {
+  if (S.flipped > 0) { // rolling over animation
+    S.flipped += dt;
+    S.vr = lerp(S.vr, S.flipDir * 1.9, Math.min(1, dt * 3));
+    return;
+  }
+  const g = GEARS[S.gear];
+  S.steer += clamp(input.steer * CAR.maxSteer - S.steer, -dt * 2.6, dt * 2.6);
+  let target = input.thr * g.vmax;
+  const dir = Math.sign(input.thr || S.v);
+  const climbDeg = S.pitch * dir * 180 / Math.PI;
+  S.slip = 0;
+  if (input.thr !== 0 && climbDeg > g.g0) {
+    const k = clamp(1 - (climbDeg - g.g0) / (g.g1 - g.g0), 0, 1);
+    target *= k; S.slip = 1 - k;
+  }
+  const braking = input.thr === 0 || (Math.sign(target) !== Math.sign(S.v) && Math.abs(S.v) > 0.02);
+  const rate = braking ? 5 : g.acc;
+  S.lastV = S.v;
+  S.v += clamp(target - S.v, -rate * dt, rate * dt);
+  // move in small steps so ledges are caught
+  const dist = S.v * dt, n = Math.max(1, Math.ceil(Math.abs(dist) / 0.007));
+  let blocked = null;
+  for (let i = 0; i < n; i++) {
+    const d = dist / n, nyaw = S.yaw + d / CAR.L * Math.tan(S.steer);
+    blocked = tryMove(S.x + Math.cos(nyaw) * d, S.z - Math.sin(nyaw) * d, nyaw, Math.sign(d));
+    if (blocked) {
+      // a truck pinned on a ledge can still pivot a little on the spot
+      if (Math.abs(S.steer) > 0.1) tryMove(S.x + Math.cos(S.yaw) * d * 0.15, S.z - Math.sin(S.yaw) * d * 0.15, S.yaw + d * 0.6 / CAR.L * Math.tan(S.steer), Math.sign(d));
+      if (Math.abs(S.v) > 0.5) bumpT = 0.25;
+      S.v = 0; break;
+    }
+  }
+  S.lastBlock = blocked;
+  if ((blocked === 'step' || blocked === 'body') && input.thr) S.push += dt; else S.push = Math.max(0, S.push - dt * 2);
+  if (blocked && input.thr) S.stuckT += dt; else S.stuckT = Math.max(0, S.stuckT - dt);
+  if (S.stuckT > 2.2 && !S.hinted && G.mode !== 'menu') { S.hinted = true; toast(isTouch ? 'Stuck? Back up and try another line, or tap Reset' : 'Stuck? Back up and try another line, or press R to reset'); }
+  if (S.stuckT === 0) S.hinted = false;
+  const spinRate = (S.v * dt + (S.slip > 0.3 || blocked ? input.thr * dt * 1.4 : 0)) / CAR.r;
+  S.spin -= spinRate;
+  // body
+  const yT = (S.wc[0] + S.wc[1] + S.wc[2] + S.wc[3]) / 4;
+  if (S.y > yT + 0.004) { S.vy -= 9.8 * dt; S.y = Math.max(yT, S.y + S.vy * dt); if (S.y === yT) { S.bobV += S.vy * 0.6; S.vy = 0; } }
+  else { S.y = lerp(S.y, yT, Math.min(1, dt * 30)); S.vy = 0; }
+  S.pitch = Math.atan2((S.wc[0] + S.wc[1]) - (S.wc[2] + S.wc[3]), 2 * CAR.L);
+  S.roll = Math.atan2((S.wc[0] + S.wc[2]) - (S.wc[1] + S.wc[3]), 2 * CAR.T);
+  S.vp = lerp(S.vp, S.pitch, Math.min(1, dt * 12));
+  S.vr = lerp(S.vr, S.roll, Math.min(1, dt * 12));
+  // the shell sways on its springs: leans out in turns, squats on throttle, bounces on landings
+  const yawRate = S.v / CAR.L * Math.tan(S.steer), acc = (S.v - S.lastV) / Math.max(dt, 1e-3);
+  const spring = (x, v, target, k, c) => v + ((target - x) * k - v * c) * dt;
+  S.leanV = spring(S.lean, S.leanV, clamp(S.v * yawRate * 0.045, -0.09, 0.09), 160, 9); S.lean += S.leanV * dt;
+  S.squatV = spring(S.squat, S.squatV, clamp(acc * 0.012, -0.05, 0.05), 140, 8); S.squat += S.squatV * dt;
+  S.bobV = spring(S.bob, S.bobV, 0, 260, 10); S.bob = clamp(S.bob + S.bobV * dt, -0.01, 0.006);
+  // dust from spinning or rolling tyres
+  if (Math.abs(spinRate) > 0.25 * dt * 60 / 60 && rnd() < Math.min(0.9, Math.abs(S.v) * 0.35 + (S.slip > 0.3 || blocked ? 0.5 : 0))) {
+    const i = 2 + (rnd() * 2 | 0), [f, sd] = WOFF[i], c = Math.cos(S.yaw), sn = Math.sin(S.yaw);
+    puff(S.x + c * f + sn * sd, S.wc[i] - CAR.r, S.z - sn * f + c * sd, 1 + S.slip);
+  }
+  if (Math.abs(S.roll) > 0.86 || Math.abs(S.pitch) > 1.2) {
+    S.flipped = 0.001; S.flipDir = Math.abs(S.roll) > 0.86 ? Math.sign(S.roll) : Math.sign(S.roll || 1);
+    S.v = 0; onRollover();
+  }
+}
+const _p = new V3();
+function syncCar() {
+  car.position.set(S.x, S.y, S.z);
+  car.rotation.set(S.vr, S.yaw, S.vp);
+  const tp = Math.tan(S.vp), tr = Math.tan(S.vr);
+  const off = S.wc.map((w, i) => S.flipped ? 0 : clamp(w - (S.y + WOFF[i][0] * tp - WOFF[i][1] * tr), -0.024, 0.024) / K);
+  RIG.axles.forEach((A, ai) => {
+    const l = off[ai * 2], r = off[ai * 2 + 1];
+    A.axle.position.y = (l + r) / 2;
+    A.axle.rotation.x = Math.atan2(l - r, MCAR.T);
+    A.wheels.forEach(w => { w.knuckle.rotation.y = ai === 0 ? S.steer : 0; w.spin.rotation.z = S.spin; });
+  });
+  // shell sways and settles on the suspension
+  const shell = model.children[1];
+  shell.rotation.set(S.lean, 0, S.squat);
+  shell.position.y = (S.bob - Math.abs(S.lean) * 0.015) / K;
+  for (const sh of RIG.shocks) {
+    axleLocal(sh.A, sh.bot, _a); _b.copy(sh.top);
+    _d.subVectors(_b, _a); const len = _d.length(); _d.normalize();
+    _p.copy(_b).addScaledVector(_d, -0.042); stretch(sh.body, _b, _p);       // shock body hangs from the chassis
+    stretch(sh.shaft, _a, _p);                                                // shaft slides in and out
+    _p.copy(_a).addScaledVector(_d, len * 0.12); _m.copy(_b).addScaledVector(_d, -len * 0.08);
+    const sp = sh.spring; stretch(sp, _p, _m); sp.material.map.repeat.set(1, Math.max(1, len * 90) / 6);
+  }
+  for (const L of RIG.links) { axleLocal(L.A, L.bot, _a); stretch(L.mesh, L.top, _a); }
+  // steering link between the front knuckles
+  const FA = RIG.axles[0];
+  axleLocal(FA, [-0.03, 0.0, -MCAR.T / 2 + 0.03], _a); axleLocal(FA, [-0.03, 0.0, MCAR.T / 2 - 0.03], _b);
+  _a.x += Math.sin(S.steer) * 0.02; _b.x += Math.sin(S.steer) * 0.02;
+  stretch(RIG.steerLink, _a, _b);
+}
+
+/* =========================================================
+   GAME STATE, GATES, TIMER
+   ========================================================= */
+const G = { mode: 'menu', got: new Set(), running: false, t: 0, resets: 0, lastGate: -1, lastDir: 1, camMode: 0, attract: 0, finished: false, labelFor: -1 };
+const CAMS = ['Chase', 'Driver', 'Bumper', 'Course'];
+const PENALTY = 10;
+let best = null;
+try { const b = parseFloat(localStorage.getItem('bcrc-best')); if (b > 0) best = b; } catch (e) {}
+const fmt = t => { const m = Math.floor(t / 60), s = t - m * 60; return m + ':' + (s < 10 ? '0' : '') + s.toFixed(1); };
+function refreshBest() { $('#bestTxt').textContent = best ? fmt(best) : 'No run yet'; }
+refreshBest();
+document.querySelectorAll('.club-logo').forEach(img => { img.src = RCEV_LOGO; });
+
+const labelCanvas = document.createElement('canvas'); labelCanvas.width = 384; labelCanvas.height = 96;
+const labelTex = new THREE.CanvasTexture(labelCanvas); labelTex.encoding = THREE.sRGBEncoding;
+const label = new THREE.Sprite(new THREE.SpriteMaterial({ map: labelTex, depthTest: false, transparent: true }));
+label.scale.set(0.6, 0.15, 1); label.renderOrder = 10; scene.add(label);
+const guide = new THREE.Mesh(new THREE.BoxGeometry(1, 0.004, 0.025), new THREE.MeshBasicMaterial({ color: 0xf39a2b, transparent: true, opacity: 0.85 }));
+scene.add(guide);
+function drawLabel(num, name) {
+  const g = labelCanvas.getContext('2d');
+  g.clearRect(0, 0, 384, 96);
+  g.fillStyle = 'rgba(23,20,15,0.88)'; g.beginPath(); g.roundRect ? g.roundRect(4, 8, 376, 80, 10) : g.rect(4, 8, 376, 80); g.fill();
+  g.fillStyle = '#f39a2b'; g.fillRect(4, 8, 64, 80);
+  g.fillStyle = '#17140f'; g.font = 'bold 46px Arial, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(num, 36, 50);
+  g.fillStyle = '#f4eee2'; g.font = 'bold 26px Arial Narrow, Arial, sans-serif'; g.textAlign = 'left'; g.fillText(name, 80, 50);
+  labelTex.needsUpdate = true;
+}
+// Course run: collect every flag in any order. No set route, just like the real course.
+function nearestFlag() {
+  let best = -1, bd = 1e9;
+  gates.forEach((g, i) => { if (G.got.has(i)) return; const d = Math.hypot(g.x - S.x, g.z - S.z); if (d < bd) { bd = d; best = i; } });
+  return best;
+}
+function updateLabel() {
+  const run = G.mode === 'run' && !G.finished;
+  const i = run ? nearestFlag() : -1;
+  label.visible = i >= 0;
+  if (i < 0) return;
+  if (i !== G.labelFor) {
+    const g = gates[i]; G.labelFor = i;
+    drawLabel('⚑', g.name);
+    label.position.set(g.x, Math.max(H(g.ax, g.az), H(g.bx, g.bz), H(g.x, g.z)) + 0.45, g.z);
+  }
+}
+function refreshGates() {
+  const free = G.mode === 'free';
+  gates.forEach((gt, i) => {
+    gt.meshes.forEach(m => { m.visible = !free; });
+    const got = G.got.has(i);
+    gt.flagMat.color.setHex(got ? 0x8d8a83 : 0xffa21f);
+    gt.flagMat.emissive.setHex(got ? 0x000000 : 0x4a2800);
+  });
+  guide.visible = false; G.labelFor = -1; updateLabel();
+  $('#gateNum').innerHTML = G.got.size + '<small>/' + gates.length + '</small>';
+  const last = gates[G.lastGate];
+  $('#gateName').textContent = G.finished ? 'All flags!' : last ? last.name : 'Any order';
+}
+function segCross(p0x, p0z, p1x, p1z, g) {
+  const d = (ax, az, bx, bz, cx, cz) => (bx - ax) * (cz - az) - (bz - az) * (cx - ax);
+  const d1 = d(g.ax, g.az, g.bx, g.bz, p0x, p0z), d2 = d(g.ax, g.az, g.bx, g.bz, p1x, p1z);
+  const d3 = d(p0x, p0z, p1x, p1z, g.ax, g.az), d4 = d(p0x, p0z, p1x, p1z, g.bx, g.bz);
+  return (d1 > 0) !== (d2 > 0) && (d3 > 0) !== (d4 > 0);
+}
+function checkGates(px, pz) {
+  if (G.mode !== 'run' || G.finished) return;
+  if (!G.running && Math.hypot(S.x - SPAWN[0], S.z - SPAWN[1]) > 0.05) { G.running = true; G.t = 0; }
+  gates.forEach((g, i) => {
+    if (G.got.has(i) || !segCross(px, pz, S.x, S.z, g)) return;
+    G.got.add(i); G.lastGate = i;
+    G.lastDir = ((S.x - px) * g.fx + (S.z - pz) * g.fz) >= 0 ? 1 : -1;
+    const left = gates.length - G.got.size;
+    beep(left ? 660 : 880);
+    if (left) toast(g.name + ' · ' + left + (left === 1 ? ' flag' : ' flags') + ' to go');
+    else finishRun();
+    refreshGates();
+  });
+}
+function resetPose() {
+  const g = gates[G.lastGate];
+  if (G.lastGate < 0 || !g) placeCar(SPAWN[0], SPAWN[1], SPAWN[2]);
+  else placeCar(g.x + g.fx * 0.22 * G.lastDir, g.z + g.fz * 0.22 * G.lastDir, G.lastDir > 0 ? g.yaw : g.yaw + Math.PI);
+}
+function doReset(manual) {
+  if (G.mode === 'run' && G.running) { G.resets++; $('#pen').textContent = G.resets + (G.resets === 1 ? ' reset' : ' resets') + ' · +' + G.resets * PENALTY + 's'; }
+  if (G.mode === 'free') { const fx = S.x, fz = S.z, fy = S.yaw; placeCar(fx, fz, fy); if (S.flipped || Math.abs(S.roll) > 0.6) resetFree(); return; }
+  resetPose();
+  if (manual) toast(G.mode === 'run' && G.running ? 'Reset · +' + PENALTY + ' s' : 'Back on the trail');
+}
+function resetFree() { placeCar(SPAWN[0], SPAWN[1], SPAWN[2]); }
+let flipTimer = 0;
+function onRollover() { toast(G.mode === 'run' && G.running ? 'Rolled it! Back to your last flag · +' + PENALTY + ' s' : 'Rolled it! Putting it back on its wheels'); flipTimer = 1.5; }
+
+function startMode(mode) {
+  G.mode = mode; G.got = new Set(); G.running = false; G.t = 0; G.resets = 0; G.lastGate = -1; G.lastDir = 1; G.finished = false;
+  $('#menu').hidden = true; $('#finish').hidden = true; $('#hud').hidden = false;
+  $('#pGate').hidden = mode === 'free';
+  $('#timeLbl').textContent = mode === 'free' ? 'Speed' : 'Time';
+  $('#pen').textContent = mode === 'free' ? 'Free drive' : '0 resets';
+  placeCar(SPAWN[0], SPAWN[1], SPAWN[2]);
+  refreshGates();
+  toast(mode === 'free' ? 'Free drive. Explore the whole course.' : 'Collect all ' + gates.length + ' flags in any order. The clock starts when you move.');
+  audioStart();
+}
+function finishRun() {
+  G.running = false; G.finished = true;
+  const total = G.t + G.resets * PENALTY;
+  let isBest = false;
+  if (!best || total < best) { best = total; isBest = true; try { localStorage.setItem('bcrc-best', String(total)); } catch (e) {} }
+  refreshBest();
+  $('#fDrive').textContent = fmt(G.t); $('#fRes').textContent = G.resets; $('#fTotal').textContent = fmt(total);
+  $('#fBest').textContent = fmt(best);
+  $('#fBestLbl').innerHTML = isBest ? '<span class="newbest">New best time</span>' : 'Best course time';
+  setTimeout(() => { if (G.finished && G.mode === 'run') { $('#finish').hidden = false; } }, 1400);
+}
+function toMenu() {
+  G.mode = 'menu'; $('#menu').hidden = false; $('#finish').hidden = true; $('#hud').hidden = true; input.thr = input.steer = 0;
+  label.visible = guide.visible = false; gates.forEach(g => g.meshes.forEach(m => { m.visible = true; }));
+}
+let toastT = 0;
+function toast(t) { const el = $('#toast'); el.textContent = t; el.classList.add('show'); toastT = 2.4; }
+
+/* =========================================================
+   INPUT: keyboard, touch buttons, gamepad
+   ========================================================= */
+const keys = {};
+const touchK = { left: 0, right: 0, gas: 0, rev: 0 };
+addEventListener('keydown', e => {
+  if (e.repeat) return;
+  const k = e.key.toLowerCase(); keys[k] = true;
+  if (G.mode === 'menu') return;
+  if (k === 'c') cycleCam();
+  if (k === 'g') toggleGear();
+  if (k === 'r') doReset(true);
+  if (k === 'm') toggleSound();
+  if (k === 'escape') toMenu();
+  if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', ' '].includes(k)) e.preventDefault();
+});
+addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false; });
+addEventListener('blur', () => { for (const k in keys) keys[k] = false; for (const k in touchK) touchK[k] = 0; });
+document.querySelectorAll('.tbtn').forEach(b => {
+  const k = b.dataset.k;
+  const on = e => { e.preventDefault(); touchK[k] = 1; b.classList.add('on'); try { b.setPointerCapture(e.pointerId); } catch (_) {} audioStart(); };
+  const off = e => { touchK[k] = 0; b.classList.remove('on'); };
+  b.addEventListener('pointerdown', on); b.addEventListener('pointerup', off); b.addEventListener('pointercancel', off); b.addEventListener('lostpointercapture', off);
+  b.addEventListener('contextmenu', e => e.preventDefault());
+});
+function readInput() {
+  let thr = 0, st = 0;
+  if (keys['w'] || keys['arrowup'] || touchK.gas) thr += 1;
+  if (keys['s'] || keys['arrowdown'] || touchK.rev) thr -= 1;
+  if (keys['a'] || keys['arrowleft'] || touchK.left) st += 1;
+  if (keys['d'] || keys['arrowright'] || touchK.right) st -= 1;
+  const pads = navigator.getGamepads ? navigator.getGamepads() : [];
+  for (const p of pads) {
+    if (!p) continue;
+    const ax = p.axes[0] || 0; if (Math.abs(ax) > 0.12) st = -ax;
+    const rt = p.buttons[7] ? p.buttons[7].value : 0, lt = p.buttons[6] ? p.buttons[6].value : 0;
+    const ry = p.axes[1] || 0;
+    if (rt > 0.05 || lt > 0.05) thr = rt - lt; else if (Math.abs(ry) > 0.15) thr = -ry;
+    if (p.buttons[3] && p.buttons[3].pressed && !readInput.yHeld) { cycleCam(); } readInput.yHeld = p.buttons[3] && p.buttons[3].pressed;
+    if (p.buttons[2] && p.buttons[2].pressed && !readInput.xHeld) { toggleGear(); } readInput.xHeld = p.buttons[2] && p.buttons[2].pressed;
+    if (p.buttons[1] && p.buttons[1].pressed && !readInput.bHeld) { doReset(true); } readInput.bHeld = p.buttons[1] && p.buttons[1].pressed;
+    break;
+  }
+  input.thr = clamp(thr, -1, 1); input.steer = clamp(st, -1, 1);
+}
+function cycleCam() { G.camMode = (G.camMode + 1) % CAMS.length; $('#camTxt').textContent = CAMS[G.camMode]; }
+function toggleGear() { S.gear = S.gear === 'low' ? 'high' : 'low'; $('#gearTxt').textContent = GEARS[S.gear].label; toast(S.gear === 'low' ? 'Low gear: slow and strong for climbing' : 'High gear: faster, but less climbing grip'); }
+$('#bCam').onclick = cycleCam; $('#bGear').onclick = toggleGear; $('#bReset').onclick = () => doReset(true);
+$('#bMenu').onclick = toMenu; $('#bSound').onclick = toggleSound;
+$('#bRun').onclick = () => startMode('run'); $('#bFree').onclick = () => startMode('free');
+$('#bView').onclick = () => { startMode('free'); G.camMode = 3; $('#camTxt').textContent = CAMS[3]; camPos.set(0.5 + Math.sin(OV.az) * 5, 8, 3); toast(isTouch ? 'Course view: drag to spin, pinch to zoom' : 'Course view: drag to spin, scroll to zoom. Press C to drive up close'); };
+$('#bAgain').onclick = () => startMode('run'); $('#bFinFree').onclick = () => startMode('free');
+
+/* =========================================================
+   SOUND: little brushed-motor whine
+   ========================================================= */
+let ac = null, osc, osc2, gain, soundOn = false;
+function audioStart() {
+  if (ac) { if (ac.state === 'suspended') ac.resume(); return; }
+  try {
+    ac = new (window.AudioContext || window.webkitAudioContext)();
+    osc = ac.createOscillator(); osc.type = 'sawtooth';
+    osc2 = ac.createOscillator(); osc2.type = 'square';
+    const f = ac.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 900;
+    gain = ac.createGain(); gain.gain.value = 0;
+    osc.connect(f); osc2.connect(f); f.connect(gain); gain.connect(ac.destination);
+    osc.start(); osc2.start();
+  } catch (e) { ac = null; }
+}
+function toggleSound() { soundOn = !soundOn; $('#sndTxt').textContent = soundOn ? 'On' : 'Off'; audioStart(); }
+function beep(freq) {
+  if (!ac || !soundOn) return;
+  const o = ac.createOscillator(), g = ac.createGain(); o.frequency.value = freq; o.type = 'triangle';
+  g.gain.setValueAtTime(0.08, ac.currentTime); g.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + 0.25);
+  o.connect(g); g.connect(ac.destination); o.start(); o.stop(ac.currentTime + 0.26);
+}
+function updateSound() {
+  if (!ac || !gain) return;
+  const sp = Math.abs(S.v) + (S.slip > 0.3 ? 0.6 : 0);
+  const on = soundOn && G.mode !== 'menu' && !document.hidden;
+  gain.gain.setTargetAtTime(on ? 0.012 + Math.min(0.05, sp * 0.03) * (input.thr ? 1 : 0.4) : 0, ac.currentTime, 0.05);
+  osc.frequency.setTargetAtTime(70 + sp * 170 * (S.gear === 'low' ? 1.3 : 0.8), ac.currentTime, 0.05);
+  osc2.frequency.setTargetAtTime(35 + sp * 85, ac.currentTime, 0.05);
+}
+
+/* =========================================================
+   CAMERA
+   ========================================================= */
+const camPos = new V3(-6.5, 1.2, 4.6), camLook = new V3(-6.5, 0.1, 3);
+const driver = new V3(-6.2, 1.5, 4.2);
+function updateCamera(dt) {
+  const fx = Math.cos(S.yaw), fz = -Math.sin(S.yaw);
+  const target = new V3(S.x, S.y + 0.06, S.z);
+  if (G.mode === 'menu') {
+    G.attract += dt;
+    const a = Math.sin(G.attract * 0.06);
+    camera.position.set(0.3 + a * 2.6, 2.4, 3.4);
+    camera.lookAt(0.6 + a * 1.8, 0.1, -2.0); return;
+  }
+  const k = 1 - Math.exp(-dt * 5);
+  if (G.camMode === 0) {
+    const want = new V3(S.x - fx * 0.55, S.y + 0.22, S.z - fz * 0.55);
+    want.y = Math.max(want.y, H(want.x, want.z) + 0.1);
+    camPos.lerp(want, k); camLook.lerp(target, 1 - Math.exp(-dt * 10));
+  } else if (G.camMode === 1) {
+    // a club member walking along beside the truck, eyes at ~1.5 m
+    const dx = driver.x - S.x, dz = driver.z - S.z, d = Math.hypot(dx, dz) || 1;
+    const want = d > 1.9 ? 1.9 : d < 1.1 ? 1.1 : d;
+    driver.x = S.x + dx / d * want; driver.z = S.z + dz / d * want;
+    driver.y = groundH(driver.x, driver.z) + 1.5;
+    camPos.lerp(driver, 1 - Math.exp(-dt * 3)); camLook.lerp(target, 1 - Math.exp(-dt * 8));
+  } else if (G.camMode === 3) {
+    // drone view over the whole course: drag to spin, scroll or pinch to zoom
+    const el = OV.el, az = OV.az, cx = 0.5 + (S.x - 0.5) * 0.2, cz = -2.0 + (S.z + 2.0) * 0.2;
+    const want = new V3(cx + Math.sin(az) * Math.cos(el) * OV.dist, Math.sin(el) * OV.dist, cz + Math.cos(az) * Math.cos(el) * OV.dist);
+    camPos.lerp(want, 1 - Math.exp(-dt * 6)); camLook.lerp(new V3(cx, 0, cz), 1 - Math.exp(-dt * 6));
+  } else {
+    const p = new V3(0.1, 0.1, 0).applyEuler(car.rotation).add(car.position);
+    const l = new V3(0.9, 0.02, 0).applyEuler(car.rotation).add(car.position);
+    camPos.copy(p); camLook.copy(l);
+  }
+  camera.position.copy(camPos);
+  camera.lookAt(camLook);
+  if (window.__camOverride) { const o = window.__camOverride; camera.position.set(S.x + o[0], S.y + o[1], S.z + o[2]); camera.lookAt(S.x, S.y + 0.04, S.z); }
+}
+
+/* course-view controls and the marker that shows where the truck is */
+const OV = { az: 0.15, el: 1.05, dist: 9 };
+const marker = new THREE.Mesh(new THREE.ConeGeometry(0.5, 1.1, 4), new THREE.MeshBasicMaterial({ color: 0xf39a2b }));
+marker.rotation.x = Math.PI; marker.visible = false; scene.add(marker);
+{
+  const ptrs = new Map(); let pinch0 = 0, dist0 = 12;
+  canvas.addEventListener('pointerdown', e => { if (G.camMode !== 3 || G.mode === 'menu') return; ptrs.set(e.pointerId, [e.clientX, e.clientY]); try { canvas.setPointerCapture(e.pointerId); } catch (_) {}
+    if (ptrs.size === 2) { const [a, b] = [...ptrs.values()]; pinch0 = Math.hypot(a[0] - b[0], a[1] - b[1]); dist0 = OV.dist; } });
+  canvas.addEventListener('pointermove', e => {
+    if (!ptrs.has(e.pointerId)) return;
+    const [px, py] = ptrs.get(e.pointerId); ptrs.set(e.pointerId, [e.clientX, e.clientY]);
+    if (ptrs.size === 1) { OV.az -= (e.clientX - px) * 0.008; OV.el = clamp(OV.el + (e.clientY - py) * 0.006, 0.3, 1.5); }
+    else if (ptrs.size === 2 && pinch0) { const [a, b] = [...ptrs.values()]; OV.dist = clamp(dist0 * pinch0 / Math.max(10, Math.hypot(a[0] - b[0], a[1] - b[1])), 3, 22); }
+  });
+  const up = e => { ptrs.delete(e.pointerId); if (ptrs.size < 2) pinch0 = 0; };
+  canvas.addEventListener('pointerup', up); canvas.addEventListener('pointercancel', up);
+  canvas.addEventListener('wheel', e => { if (G.camMode !== 3) return; e.preventDefault(); OV.dist = clamp(OV.dist * Math.exp(e.deltaY * 0.001), 3, 22); }, { passive: false });
+}
+function updateMarker(now) {
+  marker.visible = G.camMode === 3 && G.mode !== 'menu';
+  canopy.forEach(m => { m.visible = !marker.visible; });
+  if (!marker.visible) return;
+  const k = OV.dist / 12 * 0.6;
+  marker.scale.setScalar(k);
+  marker.position.set(S.x, S.y + 0.25 + k * 0.6 + Math.sin(now / 250) * 0.04 * k, S.z);
+  marker.rotation.y = now / 600;
+}
+
+/* =========================================================
+   LOOP
+   ========================================================= */
+function resize() {
+  const w = innerWidth, h = innerHeight;
+  renderer.setSize(w, h, false); camera.aspect = w / h;
+  camera.fov = w < h ? 74 : 62; camera.updateProjectionMatrix();
+}
+addEventListener('resize', resize); resize();
+
+function simulate(dt) {
+  if (G.mode === 'menu') return;
+  const px = S.x, pz = S.z;
+  physStep(dt);
+  checkGates(px, pz);
+  if (G.running) G.t += dt;
+  if (S.flipped > 0) { flipTimer -= dt; if (flipTimer <= 0) { if (G.mode === 'run') { if (G.running) { G.resets++; $('#pen').textContent = G.resets + (G.resets === 1 ? ' reset' : ' resets') + ' · +' + G.resets * PENALTY + 's'; } resetPose(); } else { placeCar(S.x, S.z, S.yaw); if (Math.abs(S.roll) > 0.6) resetFree(); } } }
+}
+let last = performance.now(), hudT = 0;
+function frame(now) {
+  const dt = Math.min(0.05, (now - last) / 1000); last = now;
+  if (G.mode !== 'menu') readInput();
+  simulate(dt);
+  syncCar();
+  updateDust(dt);
+  updateCamera(dt);
+  updateMarker(now);
+  updateSound();
+  if (G.mode === 'run') updateLabel();
+  if (label.visible) label.material.opacity = 0.75 + 0.25 * Math.sin(now / 250);
+  if (toastT > 0) { toastT -= dt; if (toastT <= 0) $('#toast').classList.remove('show'); }
+  hudT -= dt;
+  if (hudT <= 0 && G.mode !== 'menu') {
+    hudT = 0.1;
+    $('#timer').textContent = G.mode === 'free' ? (Math.abs(S.v) * 3.6).toFixed(1) + ' km/h' : fmt(G.t);
+  }
+  renderer.render(scene, camera);
+  requestAnimationFrame(frame);
+}
+placeCar(SPAWN[0], SPAWN[1], SPAWN[2]);
+refreshGates();
+label.visible = guide.visible = false;
+requestAnimationFrame(frame);
+
+// test hook: run physics without rendering
+window.__crawler = { S, G, gates, H, obstacles, input, wheelCenter, blockerPen, bodyPen, tooSteep, tryMove, blockers, startMode, sim(sec, fn) { const dt = 1 / 60; for (let t = 0; t < sec; t += dt) { if (fn) fn(); simulate(dt); } return { x: S.x, z: S.z, next: G.got.size, flipped: S.flipped }; }, placeCar, toggleGear };
+})();
+</script>
+</body>
+</html>
