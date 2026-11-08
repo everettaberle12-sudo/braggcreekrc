@@ -259,7 +259,7 @@ body.touch .keys { display: none; }
         <div class="eyebrow">The Trashers got you</div>
         <h1>Truck Wrecked</h1>
       </div>
-      <p>They stomped your crawler and ripped the body apart. The course stays trashed until you restart.</p>
+      <p>They stomped your crawler, picked it up and threw it into the tree. Now the motor's on fire. The course stays trashed until you restart.</p>
       <div class="actions">
         <button class="btn primary" id="bRebuild">Rebuild truck</button>
         <button class="btn" id="bRestart">Restart course</button>
@@ -411,7 +411,7 @@ function H(x, z) {
    ========================================================= */
 const canvas = $('#c');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isTouch ? 1.5 : 2));
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.outputEncoding = THREE.sRGBEncoding;
@@ -440,8 +440,8 @@ scene.add(new THREE.HemisphereLight(0xcfe3f5, 0x5a4630, 0.62));
 const sun = new THREE.DirectionalLight(0xffe2b8, 1.75);
 sun.position.set(-7, 12, 9);
 sun.castShadow = true;
-sun.shadow.mapSize.set(isTouch ? 1024 : 2048, isTouch ? 1024 : 2048);
-Object.assign(sun.shadow.camera, { left: -11, right: 11, top: 8, bottom: -8, near: 1, far: 40 });
+sun.shadow.mapSize.set(isTouch ? 2048 : 4096, isTouch ? 2048 : 4096);
+Object.assign(sun.shadow.camera, { left: -9, right: 9, top: 7, bottom: -7, near: 1, far: 40 });
 sun.shadow.bias = -0.0004;
 sun.shadow.normalBias = 0.01;
 scene.add(sun); scene.add(sun.target);
@@ -452,7 +452,7 @@ function tex(w, h, draw, opt = {}) {
   draw(c.getContext('2d'), w, h);
   const t = new THREE.CanvasTexture(c);
   if (opt.srgb !== false) t.encoding = THREE.sRGBEncoding;
-  t.anisotropy = 4;
+  t.anisotropy = renderer.capabilities.getMaxAnisotropy();
   if (opt.repeat) { t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(opt.repeat[0], opt.repeat[1]); }
   return t;
 }
@@ -465,18 +465,18 @@ function speckle(g, w, h, n, cols, smin, smax) {
 }
 
 /* ---------- textures ---------- */
-const barkTex = tex(128, 256, (g, w, h) => {
+const barkTex = tex(256, 512, (g, w, h) => {
   // spruce bark: grey-brown with reddish plates
   g.fillStyle = '#5e4a3c'; g.fillRect(0, 0, w, h);
-  for (let i = 0; i < 320; i++) {
+  for (let i = 0; i < 1300; i++) {
     g.fillStyle = ['#3a2c22', '#7a5f4b', '#8c6d55', '#4a382c', '#6d6158', '#9a7a5e'][(rnd() * 6) | 0];
     g.fillRect(rnd() * w, rnd() * h, rr(2, 9), rr(6, 34));
   }
 }, { repeat: [2, 1] });
-const peeledTex = tex(128, 256, (g, w, h) => {
+const peeledTex = tex(256, 512, (g, w, h) => {
   // freshly peeled pine log: golden, with darker streaks
   g.fillStyle = '#d0a668'; g.fillRect(0, 0, w, h);
-  for (let i = 0; i < 180; i++) {
+  for (let i = 0; i < 700; i++) {
     g.fillStyle = ['#b98a4c', '#e3c088', '#9a7044', '#c99a5c', '#f0d39c'][(rnd() * 5) | 0];
     g.fillRect(rnd() * w, rnd() * h, rr(1, 3), rr(20, 120));
   }
@@ -494,8 +494,8 @@ function drawCookie(g, w, h) {
   for (let i = 0; i < 3; i++) { const a = rnd() * TAU; g.beginPath(); g.moveTo(cx + Math.cos(a) * R * 0.85, cy + Math.sin(a) * R * 0.85); g.lineTo(cx + Math.cos(a) * R * 0.3, cy + Math.sin(a) * R * 0.3); g.stroke(); }
   for (let i = 0; i < 10; i++) { g.fillStyle = 'rgba(80,58,38,0.32)'; g.beginPath(); g.arc(rnd() * w, rnd() * h, rr(4, 14), 0, TAU); g.fill(); }
 }
-const cookieTex = tex(128, 128, drawCookie);
-const plankTex = tex(64, 256, (g, w, h) => {
+const cookieTex = tex(256, 256, drawCookie);
+const plankTex = tex(128, 512, (g, w, h) => {
   g.fillStyle = '#c9ab7a'; g.fillRect(0, 0, w, h);
   g.strokeStyle = 'rgba(120,86,48,0.35)'; g.lineWidth = 1;
   for (let i = 0; i < 14; i++) { g.beginPath(); let x = rnd() * w; g.moveTo(x, 0); for (let y = 0; y <= h; y += 16) g.lineTo(x + Math.sin(y * 0.05 + i) * 3, y); g.stroke(); }
@@ -505,9 +505,9 @@ const blueBoardTex = tex(64, 256, (g, w, h) => {
   g.fillStyle = '#6f97a6'; g.fillRect(0, 0, w, h);
   speckle(g, w, h, 140, ['#b49c74', '#88aab5', '#55808f', '#9fb9bf'], 2, 10);
 });
-const soilTex = tex(256, 256, (g, w, h) => {
+const soilTex = tex(512, 512, (g, w, h) => {
   g.fillStyle = '#808080'; g.fillRect(0, 0, w, h);
-  speckle(g, w, h, 2600, ['#5e5e5e', '#9a9a9a', '#6d6d6d', '#b4b4b4', '#4c4c4c'], 1, 3.5);
+  speckle(g, w, h, 10400, ['#5e5e5e', '#9a9a9a', '#6d6d6d', '#b4b4b4', '#4c4c4c'], 1, 3.5);
 }, { repeat: [44, 30] });
 const chainTex = tex(64, 64, (g, w, h) => {
   g.clearRect(0, 0, w, h); g.strokeStyle = '#a7b0b2'; g.lineWidth = 3;
@@ -620,7 +620,7 @@ function addLog(ax, az, bx, bz, r, opt = {}) {
     }
   });
   if (r >= 0.09 && !opt.noBlock) addSegBlocker(ax, az, bx, bz, r * 0.92);
-  const geo = new THREE.CylinderGeometry(r, r * 0.96, len, 16, 1);
+  const geo = new THREE.CylinderGeometry(r, r * 0.96, len, 24, 1);
   const mesh = new THREE.Mesh(geo, [opt.mat || (rnd() < 0.5 ? M.bark : M.peeled), M.cookie, M.cookie]);
   mesh.quaternion.setFromUnitVectors(UP, new V3(dx, 0, dz).normalize());
   mesh.rotateY(rnd() * TAU);
@@ -661,7 +661,7 @@ function addDisc(cx, cz, r, thick, opt = {}) {
   const top = (opt.y ?? H(cx, cz)) + thick;
   addObs({ x0: cx - r, x1: cx + r, z0: cz - r, z1: cz + r, h(x, z) { const dx = x - cx, dz = z - cz; return dx * dx + dz * dz < r * r ? top : -1e9; } });
   const deep = thick + 0.12;
-  const mesh = new THREE.Mesh(new THREE.CylinderGeometry(r, r * 0.98, deep, 18), [M.bark, opt.mat || M.cookie, M.cookie]);
+  const mesh = new THREE.Mesh(new THREE.CylinderGeometry(r, r * 0.98, deep, 28), [M.bark, opt.mat || M.cookie, M.cookie]);
   mesh.position.set(cx, top - deep / 2, cz);
   mesh.rotation.y = rnd() * TAU;
   return shadowy(mesh);
@@ -684,8 +684,8 @@ function addRock(cx, cz, a, b, h, yaw, opt = {}) {
       return q < 1 ? base + prof(q) : -1e9;
     }
   });
-  const RINGS = 6, SEG = opt.seg ?? 11, posA = [], col = [], idx = [];
-  const tint = (opt.color || [0.7, 0.68, 0.63]).map(c => c * 0.55); // vertex colours are linear: keep rocks a natural grey
+  const RINGS = 8, SEG = (opt.seg ?? 11) + 4, posA = [], col = [], idx = [];
+  const tint = (opt.color || [0.7, 0.68, 0.63]).map(c => c * 0.4); // vertex colours are linear: keep rocks a natural grey
   const vert = (q, th, y) => {
     const fq = q * f(th), u = fq * Math.cos(th) * a, v = fq * Math.sin(th) * b;
     posA.push(cx + u * c - v * s, y, cz + u * s + v * c);
@@ -817,8 +817,8 @@ for (let i = 0; i < 260; i++) {
 }
 {
   const spruces = treeList.filter(t => t.kind === 'spruce'), aspens = treeList.filter(t => t.kind === 'aspen');
-  const trunkGeo = new THREE.CylinderGeometry(0.5, 1, 1, 10); trunkGeo.translate(0, 0.5, 0);
-  const coneGeo = new THREE.ConeGeometry(1, 1, 9); coneGeo.translate(0, 0.5, 0);
+  const trunkGeo = new THREE.CylinderGeometry(0.5, 1, 1, 16); trunkGeo.translate(0, 0.5, 0);
+  const coneGeo = new THREE.ConeGeometry(1, 1, 14); coneGeo.translate(0, 0.5, 0);
   const trunks = new THREE.InstancedMesh(trunkGeo, MSM({ map: barkTex, color: 0xb59a86 }), spruces.length);
   const cones = new THREE.InstancedMesh(coneGeo, MSM({ color: 0xffffff, roughness: 1, flatShading: true }), spruces.length * 6);
   const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), sc = new V3(), p = new V3(), col = new THREE.Color();
@@ -841,7 +841,7 @@ for (let i = 0; i < 260; i++) {
   scene.add(trunks, cones); canopy.push(trunks, cones);
   // fall aspens: white trunks, golden crowns (the yellow trees behind the course)
   const aTrunk = new THREE.InstancedMesh(trunkGeo, MSM({ color: 0xd9d6c8 }), aspens.length);
-  const blobGeo = new THREE.IcosahedronGeometry(1, 1);
+  const blobGeo = new THREE.IcosahedronGeometry(1, 2);
   const aCrown = new THREE.InstancedMesh(blobGeo, MSM({ color: 0xffffff, flatShading: true }), aspens.length * 4);
   let ai = 0;
   aspens.forEach((t, i) => {
@@ -1016,40 +1016,29 @@ const BRIDGES = [];
     return best;
   })();
   {
-    const gy = groundH(TREE.x, TREE.z), lean = 0.22, dir = 0, SH = 0.42; // stump height
+    const gy = groundH(TREE.x, TREE.z), lean = 0.4, dir = 0;
     const barkM = MSM({ map: barkTex, color: 0xb59a86 }), crackM = MSM({ color: 0x1a120b, side: THREE.DoubleSide });
-    const rawM = MSM({ color: 0x3e2c1c, roughness: 1, flatShading: true });
-    // the stump stays put, with a jagged broken top
-    const stump = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.3, SH, 16), [barkM, rawM, rawM]);
-    stump.position.set(TREE.x, gy + SH / 2 - 0.02, TREE.z); stump.castShadow = stump.receiveShadow = true; scene.add(stump);
-    for (let k = 0; k < 7; k++) {
-      const a = k / 7 * TAU + rr(-0.2, 0.2), sh = new THREE.Mesh(new THREE.ConeGeometry(rr(0.05, 0.08), rr(0.08, 0.18), 4), barkM);
-      sh.position.set(TREE.x + Math.cos(a) * 0.17, gy + SH + 0.04, TREE.z + Math.sin(a) * 0.17); sh.rotation.set(rr(-0.2, 0.2), rnd() * 3, rr(-0.2, 0.2)); sh.castShadow = true; scene.add(sh);
-    }
-    // the trunk snapped off the stump and leans, rocking on the break
-    const pivot = new THREE.Group(); pivot.position.set(TREE.x + 0.22, gy + SH, TREE.z); pivot.rotation.y = dir; scene.add(pivot);
+    const dirtBall = MSM({ color: 0x3a2a1c, roughness: 1, flatShading: true });
+    // a whole, healthy spruce tipping out of the ground: it pivots on its roots, ready to fall
+    const pivot = new THREE.Group(); pivot.position.set(TREE.x + 0.2, gy - 0.03, TREE.z); pivot.rotation.y = dir; scene.add(pivot);
     const tilt = new THREE.Group(); tilt.rotation.z = -lean; pivot.add(tilt);
-    const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.24, 8.4, 16), [barkM, rawM, rawM]);
-    trunk.position.set(-0.22, 4.2 + 0.03, 0); trunk.castShadow = true; tilt.add(trunk);
-    // jagged underside where it broke
-    for (let k = 0; k < 6; k++) {
-      const a = k / 6 * TAU, sh = new THREE.Mesh(new THREE.ConeGeometry(rr(0.05, 0.07), rr(0.08, 0.15), 4), barkM);
-      sh.position.set(-0.22 + Math.cos(a) * 0.15, 0.0, Math.sin(a) * 0.15); sh.rotation.x = Math.PI; sh.castShadow = true; tilt.add(sh);
+    const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.25, 8.6, 24), barkM);
+    trunk.position.set(-0.2, 4.3, 0); trunk.castShadow = true; tilt.add(trunk);
+    const flare = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.4, 0.3, 24), barkM); flare.position.set(-0.2, 0.12, 0); flare.castShadow = true; tilt.add(flare);
+    // the root ball lifting out of the ground with the trunk, roots hanging off it
+    const ball = new THREE.Mesh(new THREE.SphereGeometry(0.5, 18, 10, 0, TAU, Math.PI / 2, Math.PI / 2), dirtBall);
+    ball.scale.set(1.05, 0.45, 1.05); ball.position.set(-0.25, 0.03, 0); ball.castShadow = true; tilt.add(ball);
+    for (let k = 0; k < 10; k++) {
+      const a = k / 10 * TAU, root = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.03, rr(0.25, 0.45), 6), barkM);
+      root.position.set(-0.25 + Math.cos(a) * 0.45, -0.08, Math.sin(a) * 0.45); root.rotation.set(Math.sin(a) * 0.9, 0, -Math.cos(a) * 0.9); root.castShadow = true; tilt.add(root);
     }
-    // a crack running down the middle of the trunk, front and back
-    [-1, 1].forEach(sd => {
-      const crack = new THREE.Mesh(new THREE.PlaneGeometry(0.035, 3.6), crackM);
-      crack.position.set(-0.22, 1.85, sd * 0.215); crack.rotation.set(sd * 0.03, sd > 0 ? 0 : Math.PI, 0); tilt.add(crack);
-      const fork = new THREE.Mesh(new THREE.PlaneGeometry(0.025, 0.9), crackM);
-      fork.position.set(-0.17, 3.5, sd * 0.19); fork.rotation.set(0, sd > 0 ? 0 : Math.PI, 0.25); tilt.add(fork);
-    });
     const crown = [];
-    for (let k = 0; k < 5; k++) {
-      const c = new THREE.Mesh(new THREE.ConeGeometry(1.5 - k * 0.25, 1.6, 9), MSM({ color: 0x2f4a2c, flatShading: true }));
-      c.position.set(-0.22, 4.3 + k * 0.85, 0); c.castShadow = true; tilt.add(c); crown.push(c);
+    for (let k = 0; k < 6; k++) {
+      const c = new THREE.Mesh(new THREE.ConeGeometry(1.55 - k * 0.22, 1.5, 16), MSM({ color: 0x2f4a2c, flatShading: true }));
+      c.position.set(-0.2, 3.7 + k * 0.8, 0); c.castShadow = true; tilt.add(c); crown.push(c);
     }
     canopy.push(tilt);
-    // torn-up dirt and snapped roots around the stump, on the side the tree is pulling out of
+    // torn-up dirt and snapped roots around the base, on the side the tree is pulling out of
     const dirtM = MSM({ color: 0x3a2a1c, roughness: 1, flatShading: true });
     for (let k = 0; k < 14; k++) {
       const a = rr(1.9, 4.4), d = rr(0.25, 0.6), r = rr(0.06, 0.15);
@@ -1062,7 +1051,7 @@ const BRIDGES = [];
     addBlocker(TREE.x - 0.35, TREE.z, 0.3);
     const halves = [];
     addBlocker(TREE.x, TREE.z, 0.32);
-    TRASH.tree = { pivot, tilt, halves, lean };
+    TRASH.tree = { pivot, tilt, halves, lean, hit: 0 };
   }
   // boulders packed all over the hill, every one drivable; the painted lines stay a bit smoother
   for (let k = 0, placed = 0; k < 4000 && placed < 190; k++) {
@@ -1381,7 +1370,7 @@ const RIG = {};
   const tireProfile = [];
   const R = MCAR.r, Wd = 0.046;
   for (let k = 0; k <= 12; k++) { const t = k / 12, y = (t - 0.5) * Wd, bulge = Math.sin(t * Math.PI); tireProfile.push(new THREE.Vector2(0.036 + bulge * 0.004 + (R - 0.04) * Math.pow(bulge, 0.35), y)); }
-  const tireG = new THREE.LatheGeometry(tireProfile, 28); tireG.rotateX(Math.PI / 2);
+  const tireG = new THREE.LatheGeometry(tireProfile, 40); tireG.rotateX(Math.PI / 2);
   const tireM = MSM({ color: 0x0b0b0c, roughness: 1, side: THREE.DoubleSide });
   const lugG = new THREE.BoxGeometry(0.013, 0.005, 0.02);
   const rimG = new THREE.CylinderGeometry(0.036, 0.036, 0.044, 16); rimG.rotateX(Math.PI / 2);
@@ -1434,6 +1423,7 @@ const RIG = {};
   });
   RIG.steerLink = unitCyl(0.003, alu);
 }
+const TRUCK_SHELL = model.children[1];
 const _ya = new V3(0, 1, 0), _d = new V3(), _m = new V3(), _a = new V3(), _b = new V3();
 function stretch(mesh, a, b) {
   _d.subVectors(b, a); const len = _d.length() || 1e-4;
@@ -1652,7 +1642,7 @@ function syncCar() {
     A.wheels.forEach(w => { w.knuckle.rotation.y = ai === 0 ? S.steer : 0; w.spin.rotation.z = S.spin; });
   });
   // shell sways and settles on the suspension
-  const shell = model.children[1];
+  const shell = TRUCK_SHELL;
   shell.rotation.set(S.lean, 0, S.squat);
   shell.position.y = (S.bob - Math.abs(S.lean) * 0.015) / K;
   for (const sh of RIG.shocks) {
@@ -1888,6 +1878,12 @@ function updateSound() {
 const camPos = new V3(-6.5, 1.2, 4.6), camLook = new V3(-6.5, 0.1, 3);
 const driver = new V3(-6.2, 1.5, 4.2);
 function updateCamera(dt) {
+  if (G.wreck && G.mode !== 'menu' && G.camMode !== 3) {
+    // the wreck camera stands back so you can watch the whole thing
+    camPos.lerp(G.wreck.cam, 1 - Math.exp(-dt * 3));
+    camLook.lerp(new V3(S.x, S.y + 0.15, S.z), 1 - Math.exp(-dt * 6));
+    camera.position.copy(camPos); camera.lookAt(camLook); return;
+  }
   const fx = Math.cos(S.yaw), fz = -Math.sin(S.yaw);
   const target = new V3(S.x, S.y + 0.06, S.z);
   if (G.mode === 'menu') {
@@ -1920,6 +1916,12 @@ function updateCamera(dt) {
   }
   camera.position.copy(camPos);
   camera.lookAt(camLook);
+  if (TR.cine && TR.cine.t > 0 && !G.wreck) {
+    TR.cine.t -= dt;
+    camera.position.set(TR.cine.x + 2.0, H(TR.cine.x + 2, TR.cine.z + 2.6) + 1.7, TR.cine.z + 2.9);
+    camera.lookAt(TR.cine.x, 1.0, TR.cine.z);
+    camPos.copy(camera.position);
+  }
   if (window.__camOverride) { const o = window.__camOverride; camera.position.set(S.x + o[0], S.y + o[1], S.z + o[2]); camera.lookAt(S.x, S.y + 0.04, S.z); }
 }
 
@@ -1992,6 +1994,7 @@ function repairCourse() {
     if (t.torn) t.torn.visible = false; t.broken = false;
   });
   TR.debris.forEach(d => { d.visible = false; });
+  gates.forEach(g => g.meshes.forEach(m => { const xf = m.userData.xf; if (xf) { m.position.copy(xf.p); m.quaternion.copy(xf.q); } }));
   TR.broken = false;
 }
 TRASH.bridges.forEach(b => { b.kind = 'bridge'; });
@@ -2010,13 +2013,18 @@ function gangStart() {
   TR.gang.forEach((m, i) => {
     m.plan = plan[i].slice(); m.state = 'ride'; m.sx = -11 - i * 1.2; m.sz = -0.9 + (i - 1.5) * 0.5;
     const first = m.plan[0]; m.dx = first.x + rr(-0.7, -0.4); m.dz = first.z + rr(-0.3, 0.3);
-    m.x = m.sx; m.z = m.sz; m.yaw = 0; m.walk = 0; m.g.visible = m.bike.g.visible = true; m.lost = 0;
+    m.x = m.sx; m.z = m.sz; m.yaw = 0; m.walk = 0; m.g.visible = m.bike.g.visible = true; m.lost = 0; m.slot = i / 4 * TAU + 0.4;
   });
-  TR.phase = 'raid'; TR.t = 0; TR.chaseT = 0; TR.caught = false;
+  TR.phase = 'raid'; TR.t = 0; TR.chaseT = 0; TR.caught = false; TR.cineDone = false; TR.cine = null;
   $('#alert').hidden = false; $('#alert').textContent = 'The Trashers are here! Get away from them';
   beep(220); beep(180);
 }
+function knockFlags() {
+  gates.forEach(g => g.meshes.forEach(m => { saveXf(m); m.rotation.set(Math.PI / 2 - 0.1, rnd() * TAU, 0); m.position.y = m.userData.xf.p.y + 0.01; }));
+  TR.broken = true;
+}
 function gangLeave() {
+  if (TR.phase === 'raid') knockFlags();
   TR.phase = 'leave';
   TR.gang.forEach(m => { m.state = m.state === 'ride' ? 'rideOut' : 'toBike'; });
   $('#alert').hidden = true;
@@ -2041,8 +2049,9 @@ function poseGang(dt) {
       m.legs.forEach(l => { l.rotation.z = 1.2; }); m.arms.forEach(a => { a.rotation.z = 1.1; });
     } else {
       m.g.position.set(m.x, gy, m.z); m.g.rotation.set(0, m.yaw, 0);
-      const sw = Math.sin(m.walk) * 0.6, stomp = m.state === 'stomp' ? Math.abs(Math.sin(TR.t * 9)) * 1.1 : 0;
+      const sw = Math.sin(m.walk) * 0.6, stomp = (m.state === 'stomp' || (m.state === 'smash' && m.plan[0] && m.plan[0].kind !== 'board')) ? Math.abs(Math.sin(TR.t * 9 + m.slot * 3)) * 1.1 : 0;
       m.legs[0].rotation.z = sw + stomp; m.legs[1].rotation.z = -sw; m.arms[0].rotation.z = -sw * 0.8; m.arms[1].rotation.z = sw * 0.8 + (m.state === 'smash' ? Math.sin(TR.t * 12) * 1.4 : 0);
+      if (m.state === 'lift') { m.arms[0].rotation.z = m.arms[1].rotation.z = 2.7; }
       if (!m.bikeDown) { m.bikeDown = true; m.bike.g.rotation.set(Math.PI / 2 - 0.15, m.yaw, 0); m.bike.g.position.set(m.bx, H(m.bx, m.bz) + 0.12, m.bz); }
     }
   });
@@ -2069,7 +2078,15 @@ function updateTrashers(dt) {
         const t = m.plan[0];
         if (!t) { m.state = 'toBike'; break; }
         if (m.state === 'walk') { if (moveTo(m, t.x + (t.kind === 'board' ? 0 : -0.25), t.z + (t.kind === 'board' ? 0.45 : 0.25), 1.1, dt)) { m.state = 'smash'; m.smashT = 0; } }
-        else { m.smashT += dt; if (m.smashT > 1.0) { if (!t.broken) placeBroken(t); m.plan.shift(); m.state = 'walk'; } }
+        else {
+          m.smashT += dt;
+          const dur = t.kind === 'board' ? 2.6 : 1.4;
+          if (t.kind === 'board' && !t.broken) {
+            const b = t.parts[0]; saveXf(b); b.rotation.set(0, 0, Math.sin(m.smashT * 22) * 0.06 * m.smashT); b.position.x = b.userData.xf.p.x + Math.sin(m.smashT * 31) * 0.02;
+            if (!TR.cineDone) { TR.cineDone = true; TR.cine = { t: 4.2, x: t.x, z: t.z }; toast('One of them is smashing the rules sign!'); }
+          }
+          if (m.smashT > dur) { if (!t.broken) placeBroken(t); m.plan.shift(); m.state = 'walk'; }
+        }
         break; }
       case 'chase': {
         anyChasing = true;
@@ -2077,10 +2094,14 @@ function updateTrashers(dt) {
         const slope = H(m.x + Math.cos(m.yaw) * 0.2, m.z - Math.sin(m.yaw) * 0.2) - H(m.x, m.z);
         const sp = 0.62 * (slope > 0.03 ? 0.55 : 1);
         moveTo(m, S.x, S.z, sp, dt);
-        if (dTruck < 0.24 && !G.wreck) { m.state = 'stomp'; TR.caught = true; wreckTruck(); }
+        if (dTruck < 0.24 && !G.wreck) { TR.caught = true; wreckTruck(); }
         if (dTruck > 3.0) { m.lost += dt; if (m.lost > 3) m.state = 'walk'; } else m.lost = 0;
         break; }
-      case 'stomp': m.walk += dt * 4; break;
+      case 'stomp': {
+        const W = G.wreck;
+        if (W && (W.stage === 'stomp')) { const a = m.slot; moveTo(m, S.x + Math.cos(a) * 0.3, S.z + Math.sin(a) * 0.3, 1.4, dt); m.yaw = Math.atan2(-(S.z - m.z), S.x - m.x); }
+        m.walk += dt * 4; break; }
+      case 'lift': if (G.wreck) { m.x = S.x - Math.cos(m.yaw) * 0.25; m.z = S.z + Math.sin(m.yaw) * 0.25; } break;
       case 'toBike': if (moveTo(m, m.bx, m.bz, 1.2, dt)) { m.state = 'rideOut'; } break;
       case 'rideOut': if (moveTo(m, -13, m.sz, 2.6, dt)) { m.g.visible = m.bike.g.visible = false; m.state = 'gone'; } break;
     }
@@ -2092,7 +2113,7 @@ function updateTrashers(dt) {
     if (TR.chaseT >= ESCAPE_TIME) { toast('You got away! The Trashers gave up.'); gangLeave(); }
   }
   if (TR.phase === 'raid' && TR.gang.every(m => m.state === 'toBike' || m.state === 'rideOut' || m.state === 'gone' || (m.state === 'walk' && !m.plan.length))) gangLeave();
-  if (TR.caught && TR.phase === 'raid' && TR.t > 0 && G.wreck && G.wreck.t > 2) gangLeave();
+  if (TR.caught && TR.phase === 'raid' && G.wreck && G.wreck.stage === 'burn' && G.wreck.st > 1.5) gangLeave();
   if (TR.phase === 'leave' && TR.gang.every(m => m.state === 'gone')) {
     TR.phase = 'idle'; TR.next = TRASH_EVERY; TR.warned = false;
     if (TR.broken) toast('The Trashers rode off. The course stays wrecked until you restart.');
@@ -2106,50 +2127,111 @@ function resetTrashers() {
   repairCourse();
 }
 
-/* the truck gets stomped and ripped apart */
+/* the truck gets stomped, picked up, thrown into the tree, and the motor catches fire */
 const WRECK_PARTS = [];
+const FIRE = [], SMOKE = [];
+{
+  const fTex = tex(64, 64, (g, w, h) => { const gr = g.createRadialGradient(32, 32, 1, 32, 32, 30); gr.addColorStop(0, 'rgba(255,240,170,1)'); gr.addColorStop(0.35, 'rgba(255,150,30,0.9)'); gr.addColorStop(1, 'rgba(200,40,0,0)'); g.fillStyle = gr; g.fillRect(0, 0, w, h); });
+  const sTex = tex(64, 64, (g, w, h) => { const gr = g.createRadialGradient(32, 32, 2, 32, 32, 30); gr.addColorStop(0, 'rgba(40,36,34,0.85)'); gr.addColorStop(1, 'rgba(40,36,34,0)'); g.fillStyle = gr; g.fillRect(0, 0, w, h); });
+  for (let i = 0; i < 26; i++) { const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: fTex, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending })); sp.visible = false; scene.add(sp); FIRE.push({ sp, life: 0 }); }
+  for (let i = 0; i < 22; i++) { const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: sTex, transparent: true, depthWrite: false })); sp.visible = false; scene.add(sp); SMOKE.push({ sp, life: 0 }); }
+}
+const fireLight = new THREE.PointLight(0xff7a20, 0, 2.5); scene.add(fireLight);
+function rigLinks() { return [...RIG.shocks.flatMap(s => [s.body, s.spring, s.shaft]), ...RIG.links.map(l => l.mesh), RIG.steerLink]; }
+function launchPart(o, power) {
+  // pull a part off the truck into the world and send it flying
+  const p = WRECK_PARTS.find(q => q.o === o) || (WRECK_PARTS.push({ o, parent: o.parent }), WRECK_PARTS[WRECK_PARTS.length - 1]);
+  saveXf(o); p.parent = p.parent || o.parent;
+  if (o.parent !== scene) scene.attach(o);
+  p.fly = true; p.vx = rr(-1, 1) * power; p.vy = rr(0.8, 1.8) * power; p.vz = rr(-1, 1) * power; p.sx = rr(-8, 8); p.sy = rr(-8, 8); p.sz = rr(-8, 8);
+}
 function wreckTruck() {
   if (G.wreck) return;
-  const shell = model.children[1];
-  if (!WRECK_PARTS.length) {
-    shell.children.forEach(o => WRECK_PARTS.push({ o, floor: -0.06 }));
-    model.children.forEach(o => { if (o !== shell && o.isGroup) WRECK_PARTS.push({ o, floor: 0.02 }); });
-  }
-  WRECK_PARTS.forEach(p => { saveXf(p.o); p.vx = rr(-1.2, 1.2); p.vy = rr(1.0, 2.6); p.vz = rr(-1.2, 1.2); p.sx = rr(-9, 9); p.sy = rr(-9, 9); p.sz = rr(-9, 9); });
-  [...RIG.shocks.flatMap(s => [s.body, s.spring, s.shaft]), ...RIG.links.map(l => l.mesh), RIG.steerLink].forEach(m => { m.visible = false; });
-  G.wreck = { t: 0 }; S.v = 0; input.thr = input.steer = 0; $('#alert').hidden = true;
-  for (let i = 0; i < 10; i++) puff(S.x + rr(-0.1, 0.1), S.y, S.z + rr(-0.1, 0.1), 3);
-  toast('They stomped your truck!');
+  const T = TRASH.tree, aim = new V3(-0.2, 1.0, 0); T.tilt.updateMatrixWorld(true); T.tilt.localToWorld(aim);
+  const away = Math.atan2(S.z - aim.z, S.x - aim.x), side = away + 0.9;
+  const mx = (S.x + aim.x) / 2, mz = (S.z + aim.z) / 2;
+  const cam = new V3(mx + 0.6, 0, mz + 1.7); cam.y = H(cam.x, cam.z) + 2.6; // in front of the course, looking up the hill
+  G.wreck = { t: 0, stage: 'stomp', st: 0, crush: 0, aim, nextPop: 0.4, cam };
+  S.v = 0; input.thr = input.steer = 0; $('#alert').hidden = true;
+  rigLinks().forEach(m => { m.visible = false; });
+  TR.gang.forEach(m => { if (m.g.visible && m.state !== 'ride' && m.state !== 'rideOut' && m.state !== 'gone') m.state = 'stomp'; });
+  toast('They caught you! They\'re stomping your truck!');
 }
 function updateWreck(dt) {
-  if (!G.wreck) return;
-  G.wreck.t += dt;
-  WRECK_PARTS.forEach(p => {
-    const o = p.o;
-    if (o.position.y > p.floor || p.vy > 0) {
-      p.vy -= 9.8 * dt * 2.2; o.position.x += p.vx * dt; o.position.y = Math.max(p.floor, o.position.y + p.vy * dt); o.position.z += p.vz * dt;
-      o.rotation.x += p.sx * dt; o.rotation.y += p.sy * dt; o.rotation.z += p.sz * dt;
-      if (o.position.y === p.floor) { p.vy = 0; p.vx *= 0.3; p.vz *= 0.3; p.sx = p.sy = p.sz = 0; }
+  const W = G.wreck; if (!W) return;
+  W.t += dt; W.st += dt;
+  const shell = TRUCK_SHELL;
+  if (W.stage === 'stomp') {
+    // crushed under their boots, panels popping off
+    W.crush = Math.min(1, W.crush + dt * 0.4);
+    shell.scale.set(1, 1 - W.crush * 0.45, 1 + W.crush * 0.08); shell.rotation.set(rr(-0.08, 0.08) * W.crush, 0, rr(-0.08, 0.08) * W.crush);
+    if (W.t > W.nextPop) { W.nextPop = W.t + 0.35; const kids = shell.children.filter(o => o.parent === shell); if (kids.length > 6) launchPart(kids[(rnd() * kids.length) | 0], 0.8); for (let i = 0; i < 3; i++) puff(S.x + rr(-0.15, 0.15), S.y, S.z + rr(-0.15, 0.15), 2.5); }
+    if (W.st > 2.6) {
+      W.stage = 'lift'; W.st = 0;
+      const m = TR.gang.filter(g => g.state === 'stomp').sort((a, b) => Math.hypot(a.x - S.x, a.z - S.z) - Math.hypot(b.x - S.x, b.z - S.z))[0];
+      if (m) { m.state = 'lift'; m.yaw = Math.atan2(-(W.aim.z - m.z), W.aim.x - m.x); W.thrower = m; }
+      W.y0 = S.y; toast('They picked it up!');
     }
+  } else if (W.stage === 'lift') {
+    S.y = W.y0 + Math.min(1, W.st / 0.8) * 1.2; S.vp = Math.sin(W.st * 3) * 0.2;
+    if (W.st > 1.0) {
+      W.stage = 'throw'; W.st = 0; W.p0 = new V3(S.x, S.y, S.z);
+      if (W.thrower) W.thrower.state = 'stomp';
+      toast('…and threw it into the tree!');
+    }
+  } else if (W.stage === 'throw') {
+    const k = Math.min(1, W.st / 0.6);
+    S.x = lerp(W.p0.x, W.aim.x, k); S.z = lerp(W.p0.z, W.aim.z, k); S.y = lerp(W.p0.y, W.aim.y, k) + Math.sin(k * Math.PI) * 0.5;
+    S.vr += dt * 9; S.vp += dt * 6;
+    if (k >= 1) {
+      // smash into the trunk: wheels and axles break off, the tree shakes
+      W.stage = 'fall'; W.st = 0; W.vy = 0; TRASH.tree.hit = 1;
+      model.children.filter(o => o !== shell && o.isGroup && o.parent === model).forEach(o => launchPart(o, 1.2));
+      for (let i = 0; i < 12; i++) puff(S.x + rr(-0.2, 0.2), S.y - 0.2, S.z + rr(-0.2, 0.2), 3);
+      W.fx = 0.1; W.fz = 0.75; // bounces off the trunk toward the front, where you can see it burn
+    }
+  } else if (W.stage === 'fall') {
+    W.vy -= 9.8 * dt; S.y += W.vy * dt; S.x += W.fx * dt; S.z += W.fz * dt; S.vr += dt * 3;
+    const g = H(S.x, S.z) + 0.03;
+    if (S.y <= g) { S.y = g; S.vr = Math.PI * 0.85; S.vp = 0.2; W.stage = 'burn'; W.st = 0; toast('The motor\'s on fire!'); }
+  } else if (W.stage === 'burn') {
+    if (W.st > 4.0 && !W.shown) { W.shown = true; $('#wrecked').hidden = false; }
+  }
+  // flying parts land on the ground in the world
+  WRECK_PARTS.forEach(p => {
+    if (!p.fly) return; const o = p.o, fl = H(o.position.x, o.position.z) + 0.01;
+    p.vy -= 9.8 * dt; o.position.x += p.vx * dt; o.position.y += p.vy * dt; o.position.z += p.vz * dt;
+    o.rotation.x += p.sx * dt; o.rotation.y += p.sy * dt; o.rotation.z += p.sz * dt;
+    if (o.position.y < fl) { o.position.y = fl; p.vy = Math.abs(p.vy) * 0.25; p.vx *= 0.5; p.vz *= 0.5; p.sx *= 0.5; p.sy *= 0.5; p.sz *= 0.5; if (Math.abs(p.vy) < 0.3) { p.vy = 0; p.fly = false; } }
   });
-  if (G.wreck.t > 2.2 && $('#wrecked').hidden && !G.wreck.shown) { G.wreck.shown = true; $('#wrecked').hidden = false; }
 }
-function updateWreckPose() {
-  // keep the flying parts where the wreck put them (syncCar would snap them back)
-  WRECK_PARTS.forEach(p => { p.o.updateMatrix(); });
+function updateFire(dt) {
+  const burning = G.wreck && G.wreck.stage === 'burn';
+  fireLight.intensity = burning ? 1.4 + Math.sin(performance.now() / 60) * 0.4 : 0;
+  if (burning) {
+    fireLight.position.set(S.x, S.y + 0.12, S.z);
+    if (rnd() < 0.7) { const f = FIRE.find(q => q.life <= 0); if (f) { f.life = 1; f.sp.visible = true; f.sp.position.set(S.x + rr(-0.05, 0.05), S.y + 0.04, S.z + rr(-0.05, 0.05)); f.v = rr(0.3, 0.6); f.s = rr(0.16, 0.3); } }
+    if (rnd() < 0.35) { const m = SMOKE.find(q => q.life <= 0); if (m) { m.life = 1; m.sp.visible = true; m.sp.position.set(S.x + rr(-0.04, 0.04), S.y + 0.15, S.z + rr(-0.04, 0.04)); m.s = rr(0.25, 0.4); } }
+  }
+  FIRE.forEach(f => { if (f.life <= 0) return; f.life -= dt * 2.2; f.sp.position.y += f.v * dt; const k = Math.max(0, f.life); f.sp.scale.setScalar(f.s * (0.5 + k)); f.sp.material.opacity = k; if (f.life <= 0) f.sp.visible = false; });
+  SMOKE.forEach(m => { if (m.life <= 0) return; m.life -= dt * 0.45; m.sp.position.y += dt * 0.35; m.sp.position.x += dt * 0.06; const k = Math.max(0, m.life); m.sp.scale.setScalar(m.s * (2.5 - k * 1.5)); m.sp.material.opacity = k * 0.7; if (m.life <= 0) m.sp.visible = false; });
 }
+function updateWreckPose() {}
 function swayTree(now) {
   const T = TRASH.tree; if (!T) return;
   // gusty wind: a big slow sway with sharper gusts on top, in two directions
   const t = now / 1000, gust = 0.6 + 0.4 * Math.sin(t * 0.37);
   const lurch = Math.pow(Math.max(0, Math.sin(t * 0.55)), 6) * 0.12; // every so often it lurches like it's going over
   const sw = (Math.sin(t * 0.9) * 0.12 + Math.sin(t * 2.3) * 0.04) * gust - lurch, sw2 = Math.sin(t * 0.63 + 1) * 0.06 * gust;
-  T.tilt.rotation.z = -T.lean + sw; T.tilt.rotation.x = sw2;
+  T.hit = Math.max(0, (T.hit || 0) - 0.016);
+  T.tilt.rotation.z = -T.lean + sw - Math.sin(t * 18) * T.hit * 0.06; T.tilt.rotation.x = sw2;
 
 }
 function rebuildTruck() {
-  WRECK_PARTS.forEach(p => { const xf = p.o.userData.xf; if (xf) { p.o.position.copy(xf.p); p.o.quaternion.copy(xf.q); } });
-  [...RIG.shocks.flatMap(s => [s.body, s.spring, s.shaft]), ...RIG.links.map(l => l.mesh), RIG.steerLink].forEach(m => { m.visible = true; });
+  WRECK_PARTS.forEach(p => { if (p.parent && p.o.parent !== p.parent) p.parent.add(p.o); const xf = p.o.userData.xf; if (xf) { p.o.position.copy(xf.p); p.o.quaternion.copy(xf.q); p.o.scale.copy(xf.s); } p.fly = false; });
+  const shell = TRUCK_SHELL; shell.scale.set(1, 1, 1); shell.rotation.set(0, 0, 0);
+  rigLinks().forEach(m => { m.visible = true; });
+  FIRE.concat(SMOKE).forEach(f => { f.life = 0; f.sp.visible = false; }); fireLight.intensity = 0;
   G.wreck = null; $('#wrecked').hidden = true;
 }
 $('#bRebuild').onclick = () => {
@@ -2214,6 +2296,7 @@ function frame(now) {
   simulate(dt);
   syncCar();
   if (G.wreck) updateWreckPose();
+  updateFire(dt);
   swayTree(now);
   updateDust(dt);
   updateCamera(dt);
