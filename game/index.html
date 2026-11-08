@@ -717,7 +717,7 @@ for (let i = 0; i < 260; i++) {
     x = rr(-38, 34); z = rr(-50, 38);
     const inCourse = (x > -6.2 && x < 8.2 && z > -5.6 && z < 3.4) || distToPath(x, z) < 2.2;
     const inCourts = x > -16.5 && x < 12.5 && z > -34 && z <= -5.6;
-    const inLot = x > -18 && x < -7 && z > -1 && z < 9.5;
+    const inLot = x > -21 && x < -10 && z > -1.5 && z < 9.5;
     ok = !inCourse && !inCourts && !inLot;
   }
   if (ok) treeList.push({ x, z, r: rr(0.16, 0.32), h: rr(12, 24), y: groundH(x, z), kind: rnd() < 0.2 ? 'aspen' : 'spruce' });
@@ -1098,7 +1098,7 @@ function scatterPoint(minRoute, tries = 30) {
   box(4, 3, 3, 0x8c6f4e, 13, 1.5, -12); // storage shed
   // parking lot (west), pickups, jeep, white trailer
   const lot = new THREE.Mesh(new THREE.PlaneGeometry(13, 13), MSM({ color: 0x8a8173, roughness: 1 }));
-  lot.rotation.x = -Math.PI / 2; lot.position.set(-12.5, 0.003, 4); lot.receiveShadow = true; scene.add(lot);
+  lot.rotation.x = -Math.PI / 2; lot.position.set(-15.6, 0.012, 4); lot.receiveShadow = true; scene.add(lot);
   const truck = (x, z, ry, color) => {
     const g = new THREE.Group();
     const b = (w, h, d, c, px, py, pz) => { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), MSM({ color: c, roughness: 0.4, metalness: 0.3 })); m.position.set(px, py, pz); m.castShadow = true; g.add(m); };
@@ -1106,8 +1106,8 @@ function scatterPoint(minRoute, tries = 30) {
     [[-1.8, 1], [1.8, 1], [-1.8, -1], [1.8, -1]].forEach(([a, c]) => { const w = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 0.3, 14), MSM({ color: 0x18181a })); w.rotation.x = Math.PI / 2; w.position.set(a, 0.4, c * 0.95); g.add(w); });
     g.position.set(x, 0, z); g.rotation.y = ry; scene.add(g);
   };
-  truck(-10.5, 3.6, 0.15, 0x7d8790); truck(-13.5, 6.4, -0.1, 0xeeeeea); truck(-15.8, 2.6, 0.3, 0x23272b);
-  box(4.6, 2.2, 2.2, 0xf2f2ee, -9.6, 1.3, 7.6, 0.4); box(0.6, 0.12, 0.12, 0x333333, -7.2, 0.5, 8.6, 0.4); // trailer
+  truck(-13.0, 4.2, 0.15, 0x7d8790); truck(-16.0, 6.6, -0.1, 0xeeeeea); truck(-18.3, 2.8, 0.3, 0x23272b);
+  box(4.6, 2.2, 2.2, 0xf2f2ee, -13.4, 1.3, 7.8, 0.4); box(0.6, 0.12, 0.12, 0x333333, -11.0, 0.5, 8.8, 0.4); // trailer
   // playground tower (teal roof) to the north-west
   box(1.4, 2.4, 1.4, 0xb68b52, -15, 1.2, -4);
   const tr = new THREE.Mesh(new THREE.ConeGeometry(1.2, 1.1, 4), MSM({ color: 0x2aa199 })); tr.position.set(-15, 2.95, -4); tr.rotation.y = Math.PI / 4; scene.add(tr);
