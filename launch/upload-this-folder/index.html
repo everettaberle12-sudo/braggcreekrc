@@ -416,7 +416,7 @@ function H(x, z) {
    ========================================================= */
 const canvas = $('#c');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isTouch ? 1.5 : 1.75));
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.outputEncoding = THREE.sRGBEncoding;
@@ -445,7 +445,7 @@ scene.add(new THREE.HemisphereLight(0xd6e6f2, 0x6b5236, 0.58));
 const sun = new THREE.DirectionalLight(0xffe2b8, 1.75);
 sun.position.set(-7, 12, 9);
 sun.castShadow = true;
-sun.shadow.mapSize.set(isTouch ? 2048 : 4096, isTouch ? 2048 : 4096);
+sun.shadow.mapSize.set(2048, 2048);
 Object.assign(sun.shadow.camera, { left: -9, right: 9, top: 7, bottom: -7, near: 1, far: 40 });
 sun.shadow.bias = -0.0004;
 sun.shadow.normalBias = 0.01;
@@ -512,12 +512,12 @@ const blueBoardTex = tex(64, 256, (g, w, h) => {
 });
 const soilTex = tex(1024, 1024, (g, w, h) => {
   // pine needles, bits of bark and grit over the dirt (tinted by the ground colour underneath)
-  g.fillStyle = '#c9bfae'; g.fillRect(0, 0, w, h);
-  speckle(g, w, h, 9000, ['#a89c88', '#d8d0c0', '#8e826e', '#e6dccb'], 1, 4);
+  g.fillStyle = '#a2988a'; g.fillRect(0, 0, w, h);
+  speckle(g, w, h, 9000, ['#857a69', '#b3aa9a', '#6e6352', '#c2b8a6'], 1, 4);
   g.lineCap = 'round';
   for (let i = 0; i < 5200; i++) {
     const x = rnd() * w, y = rnd() * h, a = rnd() * TAU, L = rr(18, 46);
-    g.strokeStyle = ['#e9c99c', '#d9a874', '#f2dcb4', '#c2905e', '#b88660', '#f6e4c4'][(rnd() * 6) | 0];
+    g.strokeStyle = ['#c9a77c', '#b98a5c', '#d6bb92', '#a2744a', '#98704e', '#dcc6a2'][(rnd() * 6) | 0];
     g.lineWidth = rr(1.2, 2.4);
     g.beginPath(); g.moveTo(x, y); g.quadraticCurveTo(x + Math.cos(a + 0.2) * L * 0.5, y + Math.sin(a + 0.2) * L * 0.5, x + Math.cos(a) * L, y + Math.sin(a) * L); g.stroke();
   }
@@ -705,7 +705,7 @@ function addRock(cx, cz, a, b, h, yaw, opt = {}) {
       return q < 1 ? base + prof(q) : -1e9;
     }
   });
-  const RINGS = 10, SEG = (opt.seg ?? 11) + 10, posA = [], col = [], idx = [];
+  const RINGS = 8, SEG = (opt.seg ?? 11) + 6, posA = [], col = [], idx = [];
   const tint = (opt.color || [0.7, 0.68, 0.63]).map(c => c * 0.68); // vertex colours are linear: keep rocks a natural grey
   const vert = (q, th, y) => {
     const fq = q * f(th), u = fq * Math.cos(th) * a, v = fq * Math.sin(th) * b;
@@ -755,7 +755,7 @@ const riverTint = () => [RIVER, RIVER2, RIVER3][(rnd() * 3) | 0];
 const hydro = [[-5.4, -3.4, 1.1], [-4.6, -4.5, 0.9], [5.9, -2.4, 0.7], [3.6, -4.8, 0.8], [-1.8, -4.9, 0.8], [0.9, -4.9, 0.6]];
 function groundColor(x, z) {
   const dp = distToPath(x, z);
-  let c = [0.58, 0.42, 0.27]; // brown dirt with pine needles
+  let c = [0.5, 0.36, 0.23]; // brown dirt with pine needles
   const n1 = Math.sin(x * 2.3 + Math.sin(z * 1.7) * 2) * Math.sin(z * 2.9 - x * 0.6);
   c = c.map((v, i) => v * (1 + n1 * 0.12) + [0.03, 0.02, 0][i] * n1);
   const gravel = [0.7, 0.64, 0.55];
@@ -775,7 +775,7 @@ function groundColor(x, z) {
   return c.map(v => v * k);
 }
 {
-  const W = 20, D = 13.6, nx = 500, nz = 340;
+  const W = 20, D = 13.6, nx = 360, nz = 245;
   const geo = new THREE.PlaneGeometry(W, D, nx, nz);
   geo.rotateX(-Math.PI / 2);
   geo.translate(0, 0, 1.5);
@@ -849,13 +849,13 @@ for (let i = 0; i < 260; i++) {
   const trunkGeo = new THREE.CylinderGeometry(0.5, 1, 1, 16); trunkGeo.translate(0, 0.5, 0);
   const coneGeo = new THREE.ConeGeometry(1, 1, 14); coneGeo.translate(0, 0.5, 0);
   const trunks = new THREE.InstancedMesh(trunkGeo, MSM({ map: barkTex, color: 0xb59a86 }), spruces.length);
-  const cones = new THREE.InstancedMesh(coneGeo, MSM({ color: 0xffffff, roughness: 1, flatShading: true }), spruces.length * 10);
+  const cones = new THREE.InstancedMesh(coneGeo, MSM({ color: 0xffffff, roughness: 1, flatShading: true }), spruces.length * 8);
   const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), sc = new V3(), p = new V3(), col = new THREE.Color();
   const e = new THREE.Euler();
   let ci = 0;
   spruces.forEach((t, i) => {
     p.set(t.x, t.y - 0.05, t.z); sc.set(t.r, t.h, t.r); m4.compose(p, q, sc); trunks.setMatrixAt(i, m4);
-    const crownBase = t.h * rr(0.3, 0.42), layers = 10;
+    const crownBase = t.h * rr(0.3, 0.42), layers = 8;
     for (let k = 0; k < layers; k++) {
       const f = k / (layers - 1);
       const rad = (1.9 - f * 1.6) * (t.h / 16) * rr(0.85, 1.1) * (k % 2 ? 0.86 : 1), hh = (t.h - crownBase) * 0.2;
@@ -870,7 +870,7 @@ for (let i = 0; i < 260; i++) {
   scene.add(trunks, cones); canopy.push(trunks, cones);
   // fall aspens: white trunks, golden crowns (the yellow trees behind the course)
   const aTrunk = new THREE.InstancedMesh(trunkGeo, MSM({ color: 0xd9d6c8 }), aspens.length);
-  const blobGeo = new THREE.IcosahedronGeometry(1, 2);
+  const blobGeo = new THREE.IcosahedronGeometry(1, 1);
   const aCrown = new THREE.InstancedMesh(blobGeo, MSM({ color: 0xffffff, flatShading: true }), aspens.length * 4);
   let ai = 0;
   aspens.forEach((t, i) => {
@@ -1168,7 +1168,7 @@ function scatterPoint(minRoute, tries = 30) {
     tuftGeo.setAttribute('uv', new THREE.Float32BufferAttribute(U, 2));
     tuftGeo.setIndex(I); tuftGeo.computeVertexNormals();
   }
-  const TUFTS = 1300;
+  const TUFTS = 900;
   const tufts = new THREE.InstancedMesh(tuftGeo, new THREE.MeshLambertMaterial({ map: bladeTex, alphaTest: 0.45, side: THREE.DoubleSide }), TUFTS);
   let ti = 0;
   for (let k = 0; k < TUFTS * 3 && ti < TUFTS; k++) {
@@ -1563,7 +1563,7 @@ const STEP_PROBE = 0.004, STEP_MAX = 0.02, BODY_TOL = 0.01;
 function tooSteep(px, pz, yaw, dir) {
   const c = Math.cos(yaw), s = Math.sin(yaw);
   const qx = px + c * STEP_PROBE * dir, qz = pz - s * STEP_PROBE * dir;
-  const lim = STEP_MAX + Math.min(0.03, S.push * 0.025); // keep pushing and the tyres claw up a ledge, like a real crawler
+  const lim = STEP_MAX + Math.min(0.03, S.push * 0.025) + (S.push > 2 ? Math.min(0.12, (S.push - 2) * 0.08) : 0); // keep pushing and the tyres claw up a ledge, like a real crawler
   for (let i = 0; i < 4; i++) if (wheelCenter(qx, qz, yaw, i) - S.wc[i] > lim) return true;
   return false;
 }
@@ -1588,7 +1588,7 @@ function tryMove(nx, nz, nyaw, dir) {
   if (tooSteep(S.x, S.z, nyaw, dir)) return 'step';
   for (let i = 0; i < 4; i++) _wc[i] = wheelCenter(nx, nz, nyaw, i);
   const pen = bodyPen(nx, nz, nyaw, _wc);
-  if (pen > BODY_TOL + Math.min(0.06, S.push * 0.04) && pen > S.pen + 0.002) return 'body'; // keep pushing and the skid plate scrapes over
+  if (pen > BODY_TOL + Math.min(0.06, S.push * 0.04) + (S.push > 2 ? Math.min(0.12, (S.push - 2) * 0.08) : 0) && pen > S.pen + 0.002) return 'body'; // keep pushing and the skid plate scrapes over
   S.x = nx; S.z = nz; S.yaw = nyaw; S.bpen = bp; S.pen = pen;
   for (let i = 0; i < 4; i++) S.wc[i] = _wc[i];
   return null;
