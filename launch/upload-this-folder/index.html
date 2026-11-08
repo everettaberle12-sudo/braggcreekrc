@@ -1016,36 +1016,46 @@ const BRIDGES = [];
     return best;
   })();
   {
-    const gy = groundH(TREE.x, TREE.z), lean = 0.32, dir = -0.9; // leans back toward the fence
+    const gy = groundH(TREE.x, TREE.z), lean = 0.3, dir = 0; // split faces the front of the course, leaning hard to the side
     const pivot = new THREE.Group(); pivot.position.set(TREE.x, gy - 0.02, TREE.z); pivot.rotation.y = dir; scene.add(pivot);
     const tilt = new THREE.Group(); tilt.rotation.z = -lean; pivot.add(tilt);
-    const halves = [];
     const barkM = MSM({ map: barkTex, color: 0xb59a86 }), woodM = MSM({ color: 0xc9a46c, roughness: 0.9 }), crackM = MSM({ color: 0x1e140c, side: THREE.DoubleSide });
+    // the base is split: two halves for the bottom 1.3 m with a dark crack and pale wood showing, solid trunk above
+    const halves = [];
     [0, Math.PI].forEach((t0, k) => {
       const g = new THREE.Group(); tilt.add(g);
-      const half = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.24, 7.5, 12, 1, false, t0, Math.PI), [barkM, woodM, woodM]);
-      half.position.y = 3.75; half.castShadow = true; g.add(half);
-      const inner = new THREE.Mesh(new THREE.PlaneGeometry(0.4, 3.2), crackM); inner.position.set(0, 1.6, 0); inner.rotation.y = Math.PI / 2 + t0; g.add(inner);
+      const half = new THREE.Mesh(new THREE.CylinderGeometry(0.21, 0.27, 1.3, 14, 1, false, t0, Math.PI), [barkM, woodM, woodM]);
+      half.position.y = 0.65; half.castShadow = true; g.add(half);
+      const face = new THREE.Mesh(new THREE.PlaneGeometry(0.44, 1.2), woodM); face.position.set(0, 0.62, 0); face.rotation.y = t0; g.add(face);
       halves.push({ g, s: k ? 1 : -1 });
     });
+    const crack = new THREE.Mesh(new THREE.BoxGeometry(0.14, 1.25, 0.5), crackM); crack.position.y = 0.62; tilt.add(crack);
+    const upper = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.21, 7.2, 14), barkM); upper.position.y = 1.3 + 3.6; upper.castShadow = true; tilt.add(upper);
+    // jagged split running a little way up the solid trunk
+    [-1, 1].forEach(sd => { const scar = new THREE.Mesh(new THREE.PlaneGeometry(0.05, 0.7), crackM); scar.position.set(0, 1.62, sd * 0.2); scar.rotation.y = sd > 0 ? 0 : Math.PI; tilt.add(scar); });
     const crown = [];
     for (let k = 0; k < 5; k++) {
       const c = new THREE.Mesh(new THREE.ConeGeometry(1.5 - k * 0.25, 1.6, 9), MSM({ color: 0x2f4a2c, flatShading: true }));
       c.position.y = 4.2 + k * 0.85; c.castShadow = true; tilt.add(c); crown.push(c);
     }
     canopy.push(tilt);
-    // the torn-up root plate standing on edge behind the trunk, roots sticking out
-    const plate = new THREE.Group(); plate.position.set(-0.12, 0.28, 0); plate.rotation.z = -lean * 0.6; pivot.add(plate);
-    const soil = new THREE.Mesh(new THREE.CylinderGeometry(0.48, 0.42, 0.16, 16), MSM({ color: 0x3d2c1e, roughness: 1, flatShading: true }));
-    soil.rotation.z = Math.PI / 2; soil.castShadow = true; plate.add(soil);
-    for (let k = 0; k < 16; k++) {
-      const a = k / 16 * TAU, len = rr(0.25, 0.55), root = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.025, len, 5), MSM({ color: 0x5a4130 }));
-      root.position.set(-0.1 - rr(0, 0.1), Math.sin(a) * (0.38 + len / 2), Math.cos(a) * (0.38 + len / 2)); root.rotation.x = -a; root.rotation.z = rr(-0.4, 0.4); root.castShadow = true; plate.add(root);
+    // splintered wood sticking out of the split
+    for (let k = 0; k < 9; k++) {
+      const sp = new THREE.Mesh(new THREE.BoxGeometry(0.015, rr(0.15, 0.4), 0.025), woodM);
+      sp.position.set(rr(-0.03, 0.03), rr(0.25, 1.2), rr(-0.22, 0.22)); sp.rotation.set(rr(-0.4, 0.4), 0, rr(-0.5, 0.5)); tilt.add(sp);
     }
-    // a hole where the roots ripped out
-    const hole = new THREE.Mesh(new THREE.CircleGeometry(0.42, 16), MSM({ color: 0x24190f }));
-    hole.rotation.x = -Math.PI / 2; hole.position.set(TREE.x + Math.cos(dir) * 0.18, groundH(TREE.x, TREE.z) + 0.006, TREE.z - Math.sin(dir) * 0.18); scene.add(hole);
-    addBlocker(TREE.x, TREE.z, 0.27);
+    // the ground heaved up and cracked open on the side the tree is pulling out of
+    const dirtM = MSM({ color: 0x3a2a1c, roughness: 1, flatShading: true });
+    for (let k = 0; k < 14; k++) {
+      const a = rr(1.9, 4.4), d = rr(0.12, 0.5), r = rr(0.06, 0.15);
+      const lump = new THREE.Mesh(new THREE.DodecahedronGeometry(r, 0), dirtM);
+      lump.position.set(TREE.x + Math.cos(a) * d, gy + r * 0.25 + (0.5 - d) * 0.12, TREE.z + Math.sin(a) * d * 1.1); lump.rotation.set(rnd() * 3, rnd() * 3, rnd() * 3); lump.scale.y = 0.6;
+      lump.castShadow = lump.receiveShadow = true; scene.add(lump);
+    }
+    for (let k = 0; k < 4; k++) { const c = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.01, rr(0.3, 0.55)), crackM); c.position.set(TREE.x - 0.25 - k * 0.07, gy + 0.11 - k * 0.02, TREE.z + rr(-0.15, 0.15)); c.rotation.y = rr(-0.6, 0.6); scene.add(c); }
+    // a couple of thick roots snapped and poking out of the heave
+    for (let k = 0; k < 3; k++) { const r = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.04, 0.35, 6), barkM); r.position.set(TREE.x - 0.35, gy + 0.08, TREE.z + (k - 1) * 0.2); r.rotation.z = 1.1 + rr(-0.2, 0.2); r.rotation.y = rr(-0.4, 0.4); r.castShadow = true; scene.add(r); }
+    addBlocker(TREE.x, TREE.z, 0.3); addBlocker(TREE.x - 0.3, TREE.z, 0.32);
     TRASH.tree = { pivot, tilt, halves, lean };
   }
   // boulders packed all over the hill, every one drivable; the painted lines stay a bit smoother
@@ -1908,12 +1918,12 @@ function updateCamera(dt) {
 }
 
 /* =========================================================
-   THE TRASHERS: every 5 minutes of driving a dirt-bike gang rides in and wrecks the course.
+   THE TRASHERS: every 2 minutes of driving a dirt-bike gang rides in and wrecks the course.
    Get away from them for 30 seconds. If they catch the truck they stomp it apart.
    The course stays wrecked until you restart.
    ========================================================= */
-const TR = { next: 300, phase: 'idle', t: 0, chaseT: 0, gang: [], debris: [], broken: false, warned: false };
-const TRASH_EVERY = 300, ESCAPE_TIME = 30;
+const TR = { next: 120, phase: 'idle', t: 0, chaseT: 0, gang: [], debris: [], broken: false, warned: false };
+const TRASH_EVERY = 120, ESCAPE_TIME = 30;
 function makePerson(color) {
   const g = new THREE.Group(), cloth = MSM({ color, roughness: 0.8 }), dark = MSM({ color: 0x1b1d22, roughness: 0.7 });
   const helmet = MSM({ color: [0xe8402a, 0xf2f2f2, 0x2b2f36, 0x3a7bd5][(rnd() * 4) | 0], roughness: 0.3, metalness: 0.2 });
@@ -2124,9 +2134,13 @@ function updateWreckPose() {
 }
 function swayTree(now) {
   const T = TRASH.tree; if (!T) return;
-  const t = now / 1000, sw = Math.sin(t * 1.1) * 0.045 + Math.sin(t * 2.7) * 0.012;
-  T.tilt.rotation.z = -T.lean + sw;
-  T.halves.forEach(h => { h.g.position.z = h.s * (0.012 + Math.max(0, sw) * 0.25); h.g.rotation.x = h.s * sw * 0.15; });
+  // gusty wind: a big slow sway with sharper gusts on top, in two directions
+  const t = now / 1000, gust = 0.6 + 0.4 * Math.sin(t * 0.37);
+  const lurch = Math.pow(Math.max(0, Math.sin(t * 0.55)), 6) * 0.12; // every so often it lurches like it's going over
+  const sw = (Math.sin(t * 0.9) * 0.12 + Math.sin(t * 2.3) * 0.04) * gust - lurch, sw2 = Math.sin(t * 0.63 + 1) * 0.06 * gust;
+  T.tilt.rotation.z = -T.lean + sw; T.tilt.rotation.x = sw2;
+  const open = 0.07 + Math.max(0, -sw) * 0.35;
+  T.halves.forEach(h => { h.g.position.x = h.s * open; h.g.rotation.z = -h.s * (0.04 + Math.max(0, -sw) * 0.25); });
 }
 function rebuildTruck() {
   WRECK_PARTS.forEach(p => { const xf = p.o.userData.xf; if (xf) { p.o.position.copy(xf.p); p.o.quaternion.copy(xf.q); } });
