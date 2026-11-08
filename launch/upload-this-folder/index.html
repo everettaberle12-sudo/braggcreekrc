@@ -76,6 +76,9 @@ button:focus-visible { outline: 2px solid var(--gate); outline-offset: 2px; }
   backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
 }
 .hbtn b { color: var(--gate); font-weight: 700; }
+.hbtn.chaos { background: #b3261e; border-color: #e0574e; color: #fff; }
+.hbtn.chaos:hover { background: #cf2f25; }
+.hbtn.chaos:disabled { opacity: 0.5; cursor: default; }
 .hbtn:hover { border-color: rgba(244, 238, 226, 0.4); }
 #toast {
   position: fixed; z-index: 6; left: 50%; top: 22%; transform: translate(-50%, 0);
@@ -202,12 +205,13 @@ body.touch .keys { display: none; }
     <button class="hbtn" id="bGear" title="Two-speed transmission (G)">Gear <b id="gearTxt">Low</b></button>
     <button class="hbtn" id="bCam" title="Change camera (C)">Cam <b id="camTxt">Chase</b></button>
     <button class="hbtn" id="bReset" title="Put the truck back at the last gate (R)">Reset</button>
+    <button class="hbtn chaos" id="bChaos" title="Send in the Trashers now (X)">Chaos</button>
     <button class="hbtn" id="bSound" title="Motor sound (M)">Sound <b id="sndTxt">Off</b></button>
     <button class="hbtn" id="bMenu" title="Back to the menu (Esc)">Menu</button>
   </div>
   <div id="toast" role="status" aria-live="polite"></div>
   <div id="alert" hidden></div>
-  <div class="keys"><kbd>W</kbd><kbd>S</kbd> throttle &nbsp;·&nbsp; <kbd>A</kbd><kbd>D</kbd> steer &nbsp;·&nbsp; <kbd>G</kbd> gear &nbsp;·&nbsp; <kbd>C</kbd> camera / course view &nbsp;·&nbsp; <kbd>R</kbd> reset</div>
+  <div class="keys"><kbd>W</kbd><kbd>S</kbd> throttle &nbsp;·&nbsp; <kbd>A</kbd><kbd>D</kbd> steer &nbsp;·&nbsp; <kbd>G</kbd> gear &nbsp;·&nbsp; <kbd>C</kbd> camera / course view &nbsp;·&nbsp; <kbd>R</kbd> reset &nbsp;·&nbsp; <kbd>X</kbd> chaos</div>
   <div id="touch">
     <div class="pad left">
       <button class="tbtn" data-k="left" aria-label="Steer left"><svg viewBox="0 0 24 24"><path d="M15.5 4 7 12l8.5 8z"/></svg></button>
@@ -1800,6 +1804,7 @@ addEventListener('keydown', e => {
   if (k === 'g') toggleGear();
   if (k === 'r') doReset(true);
   if (k === 'm') toggleSound();
+  if (k === 'x') chaosNow();
   if (k === 'escape') toMenu();
   if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', ' '].includes(k)) e.preventDefault();
 });
@@ -2239,6 +2244,11 @@ $('#bRebuild').onclick = () => {
   if (G.mode === 'run') { if (G.running) { G.resets += 3; $('#pen').textContent = G.resets + ' resets · +' + G.resets * PENALTY + 's'; } resetPose(); toast('Truck rebuilt · +30 s'); }
   else { resetFree(); toast('Truck rebuilt. The course is still trashed.'); }
 };
+function chaosNow() {
+  if (G.mode === 'menu' || G.wreck || TR.phase !== 'idle') return;
+  toast('Chaos! Here come the Trashers…'); gangStart();
+}
+$('#bChaos').onclick = chaosNow;
 $('#bRestart').onclick = () => { rebuildTruck(); startMode(G.mode === 'run' ? 'run' : 'free'); };
 
 /* course-view controls and the marker that shows where the truck is */
@@ -2303,6 +2313,7 @@ function frame(now) {
   updateMarker(now);
   updateSound();
   if (G.mode === 'run') updateLabel();
+  $('#bChaos').disabled = TR.phase !== 'idle' || !!G.wreck;
   if (label.visible) label.material.opacity = 0.75 + 0.25 * Math.sin(now / 250);
   if (toastT > 0) { toastT -= dt; if (toastT <= 0) $('#toast').classList.remove('show'); }
   hudT -= dt;
