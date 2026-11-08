@@ -163,7 +163,7 @@ body.touch .keys { display: none; }
   <div class="hud-tl">
     <div class="panel" id="pGate">
       <div class="lbl">Flags</div>
-      <div class="big" id="gateNum">0<small>/8</small></div>
+      <div class="big" id="gateNum">0<small>/6</small></div>
       <div class="sub" id="gateName">Any order</div>
     </div>
     <div class="panel" id="pTime">
@@ -203,7 +203,7 @@ body.touch .keys { display: none; }
         </div>
         <img class="club-logo" alt="RCEV, the Bragg Creek RC Club logo">
       </div>
-      <p>Drive the club's permanent course behind the tennis courts at the Bragg Creek Community Centre. There's no set route: take any line you like over the corduroy bridge, river rocks, log stairs, board ramp and the rock mound. Course Run times you collecting all 8 flags in any order.</p>
+      <p>The club's blueprint course: a boulder mound with The Summit on top, Timber Pass Bridge, Cedar Crossing, Rocky Creek Bed, Avalanche Alley and the Switchbacks. Follow the painted lines: green is easy, blue is moderate, black is hard. Course Run times you collecting every flag in any order.</p>
       <div>
         <div class="rig-label"><span class="lbl" style="color:#5b5346">Your rig</span><span>More rigs coming soon</span></div>
         <div class="rig">
@@ -277,7 +277,26 @@ if (isTouch) document.body.classList.add('touch');
    Units are metres. +x east, +z toward the gravel path, -z toward the tennis fence.
    ========================================================= */
 const PATH = [[-12, 1.75], [-4, 1.8], [1, 1.85], [3.8, 1.6], [5.8, 0.6], [6.8, -1.2], [7.0, -3.0], [7.1, -4.7]];
-const SPAWN = [-5.15, -0.24, 0];
+const SPAWN = [-3.15, -0.85, 0];
+// blueprint layout: the black edging wraps the whole course; one entrance by the sign tree
+const EDGE = { x: 0.3, z: -2.0, rx: 5.3, rz: 2.6, gap: [2.35, 2.85] };
+const insideEdge = (x, z, m = 0) => ((x - EDGE.x) / (EDGE.rx - m)) ** 2 + ((z - EDGE.z) / (EDGE.rz - m)) ** 2 < 1;
+// suggested lines painted on the course, like the club blueprint
+const LINES = {
+  easy: [[0.97, -0.9], [0.97, -1.75], [0.2, -2.0], [-0.8, -2.1], [-1.66, -2.45], [-2.52, -2.45], [-3.0, -1.6], [-1.5, -0.9], [0.97, -0.9]],
+  moderate: [[0.97, -0.9], [0.97, -1.8], [1.4, -2.3], [1.55, -2.82], [1.2, -3.4], [0.3, -3.75], [-0.6, -3.5], [-1.2, -2.9], [-1.66, -2.45], [-2.52, -2.45], [-3.0, -2.2], [-2.8, -1.2], [-1.0, -0.9], [0.97, -0.9]],
+  hard: [[2.6, -1.0], [5.2, -1.6], [5.2, -2.2], [3.85, -2.25], [3.85, -2.88], [4.65, -2.88], [4.6, -3.4], [3.6, -3.65], [3.2, -3.8], [2.6, -3.8], [0.5, -3.1], [-0.3, -4.0], [-1.0, -3.95], [-1.7, -3.7], [-2.5, -3.4], [-3.0, -2.5], [-3.2, -1.2], [-1.0, -1.0], [2.6, -1.0]],
+};
+const CREEK = [[-0.3, -4.05], [-1.0, -3.95], [-1.7, -3.72], [-2.5, -3.4]];
+function distToLine(pts, x, z) {
+  let best = 1e9;
+  for (let i = 0; i < pts.length - 1; i++) {
+    const [ax, az] = pts[i], [bx, bz] = pts[i + 1], dx = bx - ax, dz = bz - az;
+    const t = clamp(((x - ax) * dx + (z - az) * dz) / (dx * dx + dz * dz), 0, 1);
+    best = Math.min(best, Math.hypot(ax + dx * t - x, az + dz * t - z));
+  }
+  return best;
+}
 const PATH_HALF = 1.15;
 function distToPath(x, z) {
   let best = 1e9;
@@ -297,7 +316,7 @@ function pathZ(x) { // z of path centreline at x
   }
   return PATH[PATH.length - 1][1];
 }
-const MOUND = { x: 5.95, z: -2.3, rx: 1.55, rz: 1.15, h: 0.42 };
+const MOUND = { x: 0.5, z: -2.9, rx: 3.0, rz: 1.5, h: 0.4 };
 function moundH(x, z) {
   const u = (x - MOUND.x) / MOUND.rx, v = (z - MOUND.z) / MOUND.rz, q = u * u + v * v;
   return q < 1 ? MOUND.h * (1 - q) * (1 - q) : 0;
@@ -633,7 +652,7 @@ const riverTint = () => [RIVER, RIVER2, RIVER3][(rnd() * 3) | 0];
    TERRAIN
    ========================================================= */
 // blue-green hydroseed mulch patches around the edges (very visible in the photos)
-const hydro = [[-0.35, -0.95, 1.1], [-0.9, -0.4, 0.7], [0.2, -1.6, 0.8], [-3.6, -4.2, 1.2], [0.4, -4.3, 1.2], [-5.0, -2.8, 0.9], [1.9, -3.7, 0.7], [-2.4, -3.0, 0.8], [6.0, -2.4, 0.8]];
+const hydro = [[-5.4, -3.4, 1.1], [-4.6, -4.5, 0.9], [5.9, -2.4, 0.7], [3.6, -4.8, 0.8], [-1.8, -4.9, 0.8], [0.9, -4.9, 0.6]];
 function groundColor(x, z) {
   const dp = distToPath(x, z);
   let c = [0.3, 0.235, 0.18]; // dark brown course soil
@@ -646,7 +665,11 @@ function groundColor(x, z) {
   for (const [hx, hz, hr] of hydro) hy = Math.max(hy, smooth(hr, hr * 0.5, Math.hypot(x - hx, z - hz) * (1 + 0.18 * Math.sin(x * 5 + z * 3))));
   hy *= 1 - t;
   c = c.map((v, i) => lerp(v, [0.24, 0.62, 0.6][i], hy * 0.9));
-  const grass = smooth(-4.25, -4.75, z) * (1 - t);
+  const md = moundH(x, z) / MOUND.h;
+  c = c.map((v, i) => lerp(v, [0.4, 0.33, 0.27][i], smooth(0.0, 0.25, md) * 0.7));
+  const cr = smooth(0.3, 0.12, distToLine(CREEK, x, z)) * (1 - t);
+  c = c.map((v, i) => lerp(v, [0.46, 0.5, 0.53][i], cr * 0.75));
+  const grass = smooth(-4.25, -4.75, z) * (1 - t) * (insideEdge(x, z) ? 0.2 : 1);
   c = c.map((v, i) => lerp(v, [0.38, 0.52, 0.2][i], grass));
   const k = 0.9 + 0.2 * Math.sin(x * 21.7 + z * 3.1) * Math.sin(z * 19.3 - x * 2.3);
   return c.map(v => v * k);
@@ -707,9 +730,8 @@ function groundColor(x, z) {
    ========================================================= */
 const treeList = [];
 const canopy = []; // hidden in course view so you can see the whole course from above
-const courseTrees = [[-3.7, -1.0, 0.24], [-5.1, -2.2, 0.2], [-4.6, -3.9, 0.21], [-3.2, -3.6, 0.19], [-2.1, -2.7, 0.2], [-0.15, -1.95, 0.2],
-  [0.45, -0.55, 0.17], [-1.0, -4.1, 0.2], [0.6, -3.2, 0.19], [1.85, -3.0, 0.18], [2.0, -4.4, 0.2], [4.7, -0.7, 0.17],
-  [-0.9, -2.65, 0.16], [-0.9, -0.1, 0.15]];
+const courseTrees = [[-3.7, -1.0, 0.24], [-4.1, -3.0, 0.2], [-5.2, -2.5, 0.2], [-5.3, -1.6, 0.19], [-2.6, -4.75, 0.2], [-0.6, -4.85, 0.19],
+  [2.2, -4.75, 0.2], [3.9, -4.5, 0.19], [5.45, -3.6, 0.18], [-4.4, -4.2, 0.21], [5.9, -1.4, 0.17]]
 for (const [x, z, r] of courseTrees) { treeList.push({ x, z, r, h: rr(12, 19), y: groundH(x, z), kind: 'spruce' }); addBlocker(x, z, r + 0.02); }
 for (let i = 0; i < 260; i++) {
   let x, z, ok = false;
@@ -770,6 +792,7 @@ for (let i = 0; i < 260; i++) {
   const shrubs = new THREE.InstancedMesh(blobGeo, MSM({ color: 0xffffff, flatShading: true }), leafCount);
   let si = 0;
   for (const [x, z, sz] of shrubSpots) {
+    if (insideEdge(x, z, -0.45)) continue;
     const s = rr(0.22, 0.42) * sz, yellow = rnd() < 0.3;
     for (let k = 0; k < 5; k++) {
       const ss = s * rr(0.5, 0.9);
@@ -779,7 +802,6 @@ for (let i = 0; i < 260; i++) {
       if (yellow && k > 1) col.setHSL(rr(0.11, 0.14), 0.75, rr(0.38, 0.46)); else col.setHSL(rr(0.2, 0.27), rr(0.5, 0.62), rr(0.17, 0.26));
       shrubs.setColorAt(si, col); si++;
     }
-    addBlocker(x, z, s * 0.9);
   }
   shrubs.count = si; shrubs.castShadow = true; shrubs.receiveShadow = true; scene.add(shrubs);
 
@@ -787,7 +809,8 @@ for (let i = 0; i < 260; i++) {
   const seedl = new THREE.InstancedMesh(coneGeo, MSM({ color: 0x2f5a2e, flatShading: true }), 24);
   let di = 0;
   for (let k = 0; k < 24; k++) {
-    const x = rr(-9, 9), z = rr(-4.75, -4.25), h = rr(0.25, 0.6);
+    const x = rr(-9, 9), z = rr(-4.95, -4.6), h = rr(0.25, 0.6);
+    if (insideEdge(x, z, -0.2)) continue;
     p.set(x, groundH(x, z), z); sc.set(h * 0.32, h, h * 0.32); m4.compose(p, q, sc); seedl.setMatrixAt(di++, m4);
   }
   seedl.castShadow = true; scene.add(seedl);
@@ -817,184 +840,129 @@ function addGate(name, x, z, yaw, w = 0.8) {
   gates.push({ name, x, z, yaw, w, ax, az, bx, bz, fx, fz, flagMat, meshes });
 }
 
-/* The club's redesigned course (fall 2026), at real size: about 10 m along the fence and 5.5 m deep.
-   No set route. West: the entrance off the dirt path from the parking lot. Middle: the hydroseed bed,
-   log stairs and boards. East: the rock mound by the fence corner, which starts at the signpost. */
-
-/* --- entrance: corduroy bridge, "RC TRACK" cookies, trail sign on the spruce, pole log, river rocks --- */
+/* The club blueprint course: a boulder mound with The Summit on top, bridges, a creek bed,
+   Avalanche Alley and Switchbacks, ringed with boulders, with easy, moderate and hard lines.
+   The rules sign stays on its spruce by the entrance, and the RC TRACK cookies stand raised up on a log. */
+function addBridge(cx, cz, len, wid, b) {
+  const Lx = Math.cos(b), Lz = Math.sin(b), Wx = -Lz, Wz = Lx, r = 0.28, hl = len / 2;
+  let top = -1e9, low = 1e9;
+  for (let i = 0; i <= 10; i++) { const t = i / 10 - 0.5; for (const w of [-wid / 2, 0, wid / 2]) { const g = groundH(cx + Lx * len * t + Wx * w, cz + Lz * len * t + Wz * w); top = Math.max(top, g); low = Math.min(low, g); } }
+  top += 0.05;
+  const eA = groundH(cx - Lx * hl, cz - Lz * hl) + 0.004, eB = groundH(cx + Lx * hl, cz + Lz * hl) + 0.004;
+  addSlab(cx - Lx * (hl - r / 2), cz - Lz * (hl - r / 2), r, wid, b, eA, top, { mat: M.plank, thick: 0.025 });
+  addSlab(cx + Lx * (hl - r / 2), cz + Lz * (hl - r / 2), r, wid, b, top, eB, { mat: M.plank, thick: 0.025 });
+  addSlab(cx, cz, len - 2 * r, wid, b, top, top, { mat: M.plank, bottom: low - 0.02 });
+  // slats and side stringers
+  const n = Math.floor((len - 2 * r) / 0.045);
+  for (let i = 0; i <= n; i++) { const t = -(len - 2 * r) / 2 + i * 0.045; const m = new THREE.Mesh(new THREE.BoxGeometry(0.006, 0.004, wid), M.darkWood); m.position.set(cx + Lx * t, top + 0.001, cz + Lz * t); m.rotation.y = -b; scene.add(m); }
+  [-1, 1].forEach(sd => {
+    const m = new THREE.Mesh(new THREE.BoxGeometry(len - 2 * r, 0.03, 0.02), M.darkWood);
+    m.position.set(cx + Wx * sd * (wid / 2 + 0.01), top - 0.012, cz + Wz * sd * (wid / 2 + 0.01)); m.rotation.y = -b; m.castShadow = true; scene.add(m);
+    addSegBlocker(cx - Lx * (hl - r) + Wx * sd * (wid / 2 + 0.03), cz - Lz * (hl - r) + Wz * sd * (wid / 2 + 0.03), cx + Lx * (hl - r) + Wx * sd * (wid / 2 + 0.03), cz + Lz * (hl - r) + Wz * sd * (wid / 2 + 0.03), 0.012);
+  });
+  return top;
+}
+const BRIDGES = [];
 {
-  // corduroy bridge running along the entrance, small peeled logs laid across, a stake at each end
-  for (let x = -4.75; x <= -3.75; x += 0.056) addLog(x, 0.02, x + rr(-0.008, 0.008), -0.5, rr(0.02, 0.025), { sink: 0.9, mat: M.peeled });
-  [[-4.8, 0.08], [-4.8, -0.56], [-3.7, 0.08], [-3.7, -0.56]].forEach(([x, z]) => {
-    const b = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.24, 0.06), M.plank);
-    b.position.set(x, groundH(x, z) + 0.09, z); shadowy(b); addBlocker(x, z, 0.04);
-  });
-  addGate('Corduroy Bridge', -3.55, -0.24, 0, 0.75);
-  // RC TRACK cookies standing up in a curved row in front of big river rocks
-  const letters = ['R', 'C', '', 'T', 'R', 'A', 'C', 'K'];
-  const x0 = -3.35, z0 = 0.35, x1 = -2.25, z1 = -0.05;
-  for (let i = 0; i < 5; i++) addRock(lerp(-3.25, -2.3, i / 4) + rr(-0.04, 0.04), lerp(0.16, -0.22, i / 4), rr(0.1, 0.14), rr(0.08, 0.1), rr(0.09, 0.12), rnd() * 3, { color: riverTint() });
-  letters.forEach((ch, i) => {
-    if (!ch) return;
-    const t = i / (letters.length - 1), x = lerp(x0, x1, t), z = lerp(z0, z1, t) + Math.sin(t * Math.PI) * 0.05;
-    const r = 0.075, gy = groundH(x, z);
-    const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, 0.05, 18), [M.bark, MSM({ map: letterTex(ch) }), M.cookie]);
-    m.rotation.set(Math.PI / 2, 0, 0);
-    const holder = new THREE.Group(); holder.add(m); m.position.set(0, gy + r - 0.012, 0);
-    holder.position.set(x, 0, z); holder.rotation.y = -Math.atan2(z1 - z0, x1 - x0);
-    shadowy(holder);
-  });
-  addSegBlocker(x0 - 0.08, z0, x1 + 0.08, z1, 0.05);
-  addSegBlocker(-3.25, 0.16, -2.3, -0.22, 0.13);
-  // trail sign on the big spruce by the cookies
+  // the rules sign on its spruce by the entrance (same tree as the real course)
   const board = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.62, 0.025), [M.darkWood, M.darkWood, M.darkWood, M.darkWood, MSM({ map: signTex() }), M.darkWood]);
   board.position.set(-3.7, 1.35, -1.0 + 0.25); board.castShadow = true; scene.add(board);
-  // the long thin pole log on the ground
-  addLog(-2.6, -1.05, -1.2, -0.05, 0.02, { mat: M.peeled, sink: 0.9 });
-  addGate('Pole Log', -1.9, -0.55, Math.atan2(0.814, 0.581), 0.9);
-  // big river rocks to crawl over
-  [[-4.6, -1.2], [-4.35, -1.45], [-4.1, -1.15], [-3.9, -1.6], [-4.65, -1.7], [-3.65, -1.85], [-4.3, -1.95]].forEach(([x, z]) =>
-    addRock(x + rr(-0.03, 0.03), z + rr(-0.03, 0.03), rr(0.09, 0.14), rr(0.07, 0.11), rr(0.03, 0.05), rnd() * 3, { color: riverTint() }));
-  addGate('River Rocks', -3.3, -1.55, 0, 0.7);
-  // back row along the trees: cut log rounds, a line of cookies, and a fallen log
-  for (let x = -4.6; x < -2.6; x += 0.32) addLog(x, -2.55, x + 0.22, -2.55 + rr(-0.03, 0.03), rr(0.06, 0.08), { mat: rnd() < 0.5 ? M.peeled : M.bark });
-  addSegBlocker(-4.7, -2.55, -2.5, -2.55, 0.1);
-  for (let x = -4.5; x < -2.6; x += 0.17) addDisc(x + rr(-0.02, 0.02), -2.25 + rr(-0.03, 0.03), rr(0.06, 0.075), 0.018, { y: groundH(x, -2.25) });
-  addLog(-4.3, -3.15, -2.6, -3.25, 0.11, { mat: M.bark });
-}
 
-/* --- from the walk-around video: the plywood square by the corduroy bridge, the board laid on
-   river stones behind the long logs, and the plank bridge on a log back by the fence --- */
-{
-  { const x = -4.3, z = 0.42, gy = groundH(x, z); addSlab(x, z, 0.42, 0.4, 0.25, gy + 0.01, gy + 0.01, { mat: M.plank, thick: 0.015 }); }
-  { const z = -3.0, gy = groundH(-1.8, z);
-    for (let x = -2.3; x <= -1.3; x += 0.2) addRock(x, z + rr(-0.02, 0.02), 0.07, 0.06, 0.05, rnd() * 3, { color: riverTint(), visualOnly: true, base: gy - 0.01 });
-    addSlab(-1.8, z, 1.1, 0.16, 0, gy + 0.045, gy + 0.045, { mat: M.peeled, thick: 0.025 }); }
-  { const z = -3.95, gy = groundH(-2.0, z);
-    addLog(-2.6, z, -1.45, z, 0.05, { mat: M.bark, y: gy + 0.02 });
-    addSlab(-2.95, z, 0.4, 0.26, 0, gy + 0.005, gy + 0.075, { mat: M.plank, thick: 0.025 });
-    addSlab(-2.02, z, 1.46, 0.26, 0, gy + 0.075, gy + 0.075, { mat: M.plank, thick: 0.025 });
-    addSlab(-1.12, z, 0.34, 0.26, 0, gy + 0.075, gy + 0.005, { mat: M.plank, thick: 0.025 });
-    [-1, 1].forEach(sd => addSegBlocker(-2.7, z + sd * 0.15, -1.35, z + sd * 0.15, 0.012)); }
-}
+  // RC TRACK cookies, raised up on a peeled log so they stand tall
+  const letters = ['R', 'C', '', 'T', 'R', 'A', 'C', 'K'];
+  const x0 = -1.95, x1 = -0.75, zc = 0.05, gyL = groundH(-1.35, zc);
+  addLog(x0 - 0.12, zc, x1 + 0.12, zc, 0.06, { y: gyL + 0.05, mat: M.peeled, noBlock: true });
+  addSegBlocker(x0 - 0.12, zc, x1 + 0.12, zc, 0.1);
+  letters.forEach((ch, i) => {
+    if (!ch) return;
+    const x = lerp(x0, x1, i / (letters.length - 1)), r = 0.09;
+    const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, 0.05, 20), [M.bark, MSM({ map: letterTex(ch) }), M.cookie]);
+    m.rotation.set(Math.PI / 2, 0, 0); m.position.set(x, gyL + 0.105 + r, zc + 0.02); shadowy(m);
+  });
 
-/* --- log hop: two thin logs between the entrance and the hydroseed bed --- */
-{
-  addLog(-2.55, -1.95, -2.4, -1.05, 0.03, { mat: M.peeled, sink: 0.95 });
-  addLog(-2.15, -2.0, -1.95, -1.15, 0.027, { mat: M.bark, sink: 0.95 });
-  addGate('Log Hop', -1.75, -1.55, 0, 0.7);
-}
-
-/* --- hydroseed bed ringed with river rocks, with two big boulders --- */
-const BED = { x: -0.35, z: -0.95, rx: 1.0, rz: 0.8 };
-{
-  const n = 26;
-  for (let i = 0; i < n; i++) {
-    const a = i / n * TAU, x = BED.x + Math.cos(a) * BED.rx, z = BED.z + Math.sin(a) * BED.rz;
-    if (nearTreeXZ(x, z, 0.12)) continue;
-    addRock(x + rr(-0.03, 0.03), z + rr(-0.03, 0.03), rr(0.07, 0.1), rr(0.06, 0.08), rr(0.05, 0.07), a, { color: riverTint() });
+  // the mound: a ring of big boulders around it, open at Cedar Crossing and the left entry
+  const C = MOUND, gaps = [[1.42, 0.13], [2.85, 0.2]];
+  for (let a = -0.25; a <= Math.PI + 0.25; a += 0.072) {
+    if (gaps.some(([g, w]) => Math.abs(a - g) < w)) continue;
+    const x = C.x + C.rx * 1.05 * Math.cos(a), z = C.z + C.rz * 1.05 * Math.sin(a);
+    addRock(x, z, rr(0.15, 0.2), rr(0.12, 0.16), rr(0.2, 0.26), a, { color: rnd() < 0.5 ? [0.46, 0.43, 0.39] : [0.4, 0.38, 0.35], sink: 0.1, seg: 9 });
   }
-  addRock(0.15, 0.25, 0.24, 0.2, 0.24, 0.4, { color: [0.72, 0.69, 0.62], sink: 0.1 });
-  addRock(-1.7, 0.3, 0.2, 0.18, 0.2, 1.1, { color: [0.64, 0.62, 0.58], sink: 0.1 });
-}
-
-/* --- log stairs in a wooden frame, facing the path, climbing toward the fence --- */
-{
-  const O = { x: 1.25, z: 0.1 }, W = (f, sd) => [O.x + sd, O.z - f], Y = -Math.PI / 2;
-  const gy = groundH(O.x, O.z - 0.5);
-  [-0.07, 0.07].forEach(sd => { const [x, z] = W(0, sd); addSlab(x, z, 0.6, 0.11, Y, gy + 0.012, gy + 0.03, { mat: M.blueBoard, thick: 0.02 }); });
-  const r = 0.03, steps = [0.4, 0.49, 0.58, 0.67, 0.76];
-  steps.forEach((f, i) => {
-    const cy = gy + r * 0.8 + i * 0.026;
-    if (i > 0) { const [x, z] = W(f, 0); addSlab(x, z, 0.09, 0.44, Y, cy, cy, { mat: M.darkWood, bottom: gy - 0.05 }); }
-    const [ax, az] = W(f, -0.22), [bx, bz] = W(f, 0.22);
-    addLog(ax, az, bx, bz, r, { y: cy, mat: M.peeled });
-  });
-  const topY = gy + r * 0.8 + 4 * 0.026 + r * 0.9;
-  { const [x, z] = W(0.95, 0); addSlab(x, z, 0.3, 0.44, Y, topY, topY, { mat: M.plank, bottom: gy - 0.05 }); }
-  { const [x, z] = W(1.35, 0); addSlab(x, z, 0.5, 0.44, Y, topY, groundH(x, z - 0.25) + 0.01, { mat: M.plank, thick: 0.03 }); }
-  [-0.25, 0.25].forEach(o => {
-    const [cx, cz] = W(0.75, o);
-    addSlab(cx, cz, 0.82, 0.03, Y, gy + 0.3, gy + 0.3, { mat: M.plank, bottom: gy - 0.03, visualOnly: true });
-    const [ax, az] = W(0.34, o), [bx, bz] = W(1.16, o); addSegBlocker(ax, az, bx, bz, 0.018);
-    const [s1x, s1z] = W(0.31, o + Math.sign(o) * 0.04), [s2x, s2z] = W(1.17, o + Math.sign(o) * 0.04);
-    addStake(s1x, s1z, 0.38, 0.025, M.plank); addStake(s2x, s2z, 0.38, 0.025, M.plank);
-  });
-  const [gx, gz] = W(1.8, 0);
-  addGate('Log Stairs', gx, gz, Math.PI / 2, 0.8);
-}
-
-/* --- plywood board ramp, cookies, and the long stick lying beside it --- */
-{
-  const x = 2.2, z = 0.05, gy = groundH(x, z);
-  addSlab(x, z, 0.5, 0.45, -Math.PI / 2 + 0.3, gy + 0.006, gy + 0.04, { mat: M.plank, thick: 0.02 });
-  addDisc(1.9, -0.45, 0.07, 0.02, { y: groundH(1.9, -0.45) });
-  addDisc(2.1, -0.65, 0.06, 0.02, { y: groundH(2.1, -0.65) });
-  addLog(2.6, 0.45, 3.9, -0.3, 0.018, { mat: M.peeled, sink: 0.9 });
-  addGate('Board Ramp', x - 0.12, z - 0.4, Math.PI / 2 + 0.3, 0.7);
-}
-
-/* --- curved row of firewood rounds from behind the stairs out toward the path --- */
-{
-  const pts = []; for (let i = 0; i <= 8; i++) { const a = lerp(Math.PI, Math.PI * 0.55, i / 8); pts.push([3.45 + Math.cos(a) * 1.25, -1.85 + Math.sin(a) * 1.25 * -1 * -1]); }
-  pts.forEach(([x, z], i) => {
-    const nx = x - 3.45, nz = z + 1.85, l = Math.hypot(nx, nz), ux = nx / l * 0.12, uz = nz / l * 0.12;
-    addLog(x - ux, z - uz, x + ux, z + uz, rr(0.06, 0.08), { mat: M.bark });
-    if (i) addSegBlocker(pts[i - 1][0], pts[i - 1][1], x, z, 0.15);
-  });
-}
-
-/* --- the rock mound by the fence corner: limestone, cookie paths, crest log, plank ramp, signpost --- */
-{
-  const slabs = [[2.9, -2.95], [3.1, -3.35], [2.85, -3.65], [3.2, -3.8], [3.35, -2.9], [3.05, -2.55], [3.5, -4.15],
-    [4.6, -4.05], [4.9, -3.75], [4.25, -4.15], [3.7, -4.4], [2.7, -3.25], [4.7, -3.15], [3.25, -4.15]];
-  slabs.forEach(([x, z]) => addRock(x, z, rr(0.16, 0.26), rr(0.12, 0.2), rr(0.05, 0.09), rnd() * 3, { p: 4, seg: 7, amp: 0.2, color: LIMESTONE, sink: 0.55 }));
-  addRock(3.45, -4.25, 0.32, 0.28, 0.36, 0.3, { color: [0.62, 0.6, 0.56], sink: 0.2, seg: 9 });
-  for (let i = 0; i < 9; i++) {
-    const t = i / 8, x = lerp(3.57, 4.07, t), z = lerp(-2.38, -3.35, t);
-    const xa = x - 0.09 + rr(-0.02, 0.02), xb = x + 0.09 + rr(-0.02, 0.02);
-    addDisc(xa, z, rr(0.055, 0.07), 0.02, { y: groundH(xa, z) });
-    addDisc(xb, z + 0.05, rr(0.055, 0.07), 0.02, { y: groundH(xb, z + 0.05) });
+  // bridges
+  BRIDGES.push([0.97, -1.33], [-1.66, -2.45], [1.45, -2.8]);
+  { // Cedar Crossing over a little stony creek where the lines enter the mound
+    for (let x = 0.55; x <= 1.4; x += 0.09) addRock(x, -1.33 + rr(-0.04, 0.04), 0.05, 0.04, 0.03, rnd() * 3, { color: [0.46, 0.5, 0.53], visualOnly: true });
+    addBridge(0.97, -1.33, 0.95, 0.3, Math.PI / 2);
+    addGate('Cedar Crossing', 0.97, -1.33, -Math.PI / 2, 0.45);
   }
-  for (let i = 0; i < 8; i++) { const t = i / 7, x = lerp(4.75, 4.35, t) + rr(-0.03, 0.03), z = lerp(-2.5, -3.55, t); addDisc(x, z, rr(0.06, 0.075), 0.02, { y: groundH(x, z) }); }
-  for (let i = 0; i < 10; i++) { const cx = rr(4.2, 4.65), cz = rr(-3.8, -3.45); addDisc(cx, cz, rr(0.06, 0.085), 0.02, { y: groundH(cx, cz) }); }
-  const logTop = addLog(2.9, -4.2, 5.5, -4.2, 0.12, { mat: M.bark, sink: 0.7, noBlock: true });
-  addSegBlocker(2.9, -4.2, 4.91, -4.2, 0.11);
-  const rx = 5.17, zA = -2.15, zB = -4.2, h0 = groundH(rx, zA) + 0.012, h1 = logTop + 0.006;
-  addSlab(rx, (zA + zB) / 2, zA - zB, 0.34, -Math.PI / 2, h0, h1, { mat: M.plank, thick: 0.03 });
-  [[rx - 0.15, -3.35], [rx + 0.15, -3.35], [rx - 0.15, -2.8], [rx + 0.15, -2.8]].forEach(([x, z]) => {
-    const t = (zA - z) / (zA - zB), top = lerp(h0, h1, t) + 0.04, gy = groundH(x, z);
-    const b = new THREE.Mesh(new THREE.BoxGeometry(0.035, top - gy + 0.05, 0.06), M.plank);
-    b.position.set(x, (top + gy) / 2, z); shadowy(b);
+  addBridge(-1.66, -2.45, 0.9, 0.3, 0.38);
+  addGate('Timber Pass Bridge', -1.66, -2.45, -0.38, 0.45);
+  addBridge(1.45, -2.8, 0.8, 0.3, 1.39);
+  // The Summit: a flat-topped boulder on the peak
+  addRock(0.5, -3.1, 0.24, 0.2, 0.04, 0.3, { p: 4, seg: 9, amp: 0.12, color: [0.55, 0.52, 0.47], sink: 0.4 });
+  addGate('The Summit', 0.5, -3.1, 0, 0.8);
+  // Rocky Creek Bed: river stones down the back-left flank
+  for (let i = 0; i < 46; i++) {
+    const t = rnd(), seg = Math.min(CREEK.length - 2, (t * (CREEK.length - 1)) | 0), f = t * (CREEK.length - 1) - seg;
+    const x = lerp(CREEK[seg][0], CREEK[seg + 1][0], f) + rr(-0.16, 0.16), z = lerp(CREEK[seg][1], CREEK[seg + 1][1], f) + rr(-0.16, 0.16);
+    addRock(x, z, rr(0.05, 0.08), rr(0.04, 0.06), rr(0.02, 0.035), rnd() * 3, { color: riverTint(), sink: 0.3 });
+  }
+  addGate('Rocky Creek Bed', -1.4, -3.82, 0, 0.7);
+  // Avalanche Alley: a spill of loose limestone down the back-right
+  for (let i = 0; i < 40; i++) {
+    const a = rnd() * TAU, d = Math.sqrt(rnd()) * 0.6, x = 2.6 + Math.cos(a) * d * 1.2, z = -3.8 + Math.sin(a) * d * 0.6;
+    addRock(x, z, rr(0.05, 0.1), rr(0.04, 0.07), rr(0.02, 0.045), rnd() * 3, { p: 3, seg: 7, color: [0.6, 0.58, 0.53], sink: 0.35 });
+  }
+  addGate('Avalanche Alley', 2.6, -3.8, 0, 0.8);
+  // Switchbacks: log rails zig-zag down the right side
+  [[2.9, -1.9, 4.85], [4.2, -2.55, 5.6], [3.55, -3.2, 4.4]].forEach(([xa, z, xb]) => {
+    addLog(xa, z, xb, z + rr(-0.02, 0.02), 0.05, { mat: rnd() < 0.5 ? M.bark : M.peeled, noBlock: true });
+    addSegBlocker(xa, z, xb, z, 0.07);
   });
-  // the signpost marks the start of this side of the course
-  const px = 2.7, pz = -2.75, gy = groundH(px, pz);
+  addGate('Switchbacks', 4.0, -2.88, 0, 0.6);
+  // big boulders on the mound, kept off the painted lines and bridges
+  for (let k = 0, placed = 0; k < 400 && placed < 26; k++) {
+    const u = rr(-1, 1), v = rr(-1, 1); if (u * u + v * v > 0.82) continue;
+    const x = C.x + u * C.rx, z = C.z + v * C.rz;
+    if (Object.values(LINES).some(L => distToLine(L, x, z) < 0.36)) continue;
+    if (BRIDGES.some(([bx, bz]) => Math.hypot(bx - x, bz - z) < 0.6) || Math.hypot(x - 0.5, z + 3.1) < 0.4 || distToLine(CREEK, x, z) < 0.3) continue;
+    addRock(x, z, rr(0.13, 0.22), rr(0.11, 0.18), rr(0.18, 0.28), rnd() * 3, { color: [0.45 + rr(-0.05, 0.05), 0.42, 0.38], sink: 0.12, seg: 9 }); placed++;
+  }
+  // smaller climbable rocks on the moderate and hard lines
+  for (let k = 0; k < 60; k++) {
+    const L = rnd() < 0.6 ? LINES.hard : LINES.moderate, i = (rnd() * (L.length - 1)) | 0, f = rnd();
+    const x = lerp(L[i][0], L[i + 1][0], f) + rr(-0.1, 0.1), z = lerp(L[i][1], L[i + 1][1], f) + rr(-0.1, 0.1);
+    if (!insideEdge(x, z, 0.3) || BRIDGES.some(([bx, bz]) => Math.hypot(bx - x, bz - z) < 0.55)) continue;
+    addRock(x, z, rr(0.06, 0.1), rr(0.05, 0.08), rr(0.02, 0.035), rnd() * 3, { p: 3, seg: 8, color: [0.5, 0.47, 0.42], sink: 0.3 });
+  }
+  // signpost at the start of the other side
+  const px = 2.5, pz = -1.15, gy = groundH(px, pz);
   const post = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.06, 1.5, 8), M.darkWood);
   post.position.set(px, gy + 0.72, pz); shadowy(post); addBlocker(px, pz, 0.07);
   const tip = new THREE.Mesh(new THREE.ConeGeometry(0.06, 0.16, 4), M.darkWood); tip.position.set(px, gy + 1.55, pz); scene.add(tip);
   const ps = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.15, 0.02), [M.darkWood, M.darkWood, M.darkWood, M.darkWood, MSM({ map: postSignTex() }), M.darkWood]);
   ps.position.set(px, gy + 1.28, pz + 0.06); ps.castShadow = true; scene.add(ps);
-  // two big peeled logs lying side by side in front of the mound
-  addLog(1.85, -2.35, 3.05, -2.4, 0.065, { mat: M.peeled }); addLog(1.85, -2.1, 3.05, -2.15, 0.06, { mat: M.peeled });
-  addSegBlocker(1.85, -2.25, 3.05, -2.28, 0.23);
-  addGate('Summit', 4.12, -3.42, Math.PI / 2, 0.7);
-  addGate('Plank Ramp', rx, -3.75, Math.PI / 2, 0.56);
+  // Pit / Viewing Area: a log bench for parents by the entrance
+  const bench = new THREE.Group();
+  const bseat = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.08, 0.32), M.plank); bseat.position.y = 0.42; bench.add(bseat);
+  [-0.45, 0.45].forEach(o => { const l = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.13, 0.38, 12), [M.bark, M.cookie, M.cookie]); l.position.set(o, 0.19, 0); bench.add(l); });
+  bench.traverse(o => { o.castShadow = true; }); bench.position.set(-3.4, groundH(-3.4, 1.0), 1.0); bench.rotation.y = 0.15; scene.add(bench);
+  // painted line markers
+  const COLORS = { easy: 0x7cc242, moderate: 0x2f80ed, hard: 0x141414 };
+  const dashG = new THREE.BoxGeometry(0.065, 0.004, 0.026), dashes = [];
+  for (const [k, L] of Object.entries(LINES)) for (let i = 0; i < L.length - 1; i++) {
+    const [ax, az] = L[i], [bx, bz] = L[i + 1], len = Math.hypot(bx - ax, bz - az), n = Math.floor(len / 0.1);
+    for (let j = 0; j < n; j++) { const t = (j + 0.5) / n, x = lerp(ax, bx, t), z = lerp(az, bz, t); dashes.push([x, z, Math.atan2(bz - az, bx - ax), COLORS[k]]); }
+  }
+  const dm = new THREE.InstancedMesh(dashG, new THREE.MeshBasicMaterial({ color: 0xffffff }), dashes.length);
+  const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), col = new THREE.Color(), one = new V3(1, 1, 1), p = new V3();
+  dashes.forEach(([x, z, a, c], i) => { e.set(0, -a, 0); q.setFromEuler(e); p.set(x, H(x, z) + 0.006, z); m4.compose(p, q, one); dm.setMatrixAt(i, m4); dm.setColorAt(i, col.setHex(c)); });
+  scene.add(dm);
 }
 
 /* =========================================================
    SCENERY — fill the course like the photos (visual only, kept off the driving line)
    ========================================================= */
-const ROUTE = [[-5.15, -0.24], [-3.4, -0.25], [-1.9, -0.55], [-3.3, -1.55], [-1.75, -1.55], [-0.7, -2.4], [1.25, -1.8], [1.25, 0.4], [2.1, -0.4], [3.0, -0.9],
-  [3.6, -2.2], [4.12, -3.4], [4.6, -2.0], [5.17, -1.8], [5.17, -4.0]];
-function distToRoute(x, z) {
-  let best = 1e9;
-  for (let i = 0; i < ROUTE.length - 1; i++) {
-    const [ax, az] = ROUTE[i], [bx, bz] = ROUTE[i + 1], dx = bx - ax, dz = bz - az;
-    const t = clamp(((x - ax) * dx + (z - az) * dz) / (dx * dx + dz * dz), 0, 1);
-    best = Math.min(best, Math.hypot(ax + dx * t - x, az + dz * t - z));
-  }
-  return best;
-}
+function distToRoute(x, z) { return Math.min(...Object.values(LINES).map(L => distToLine(L, x, z))); }
 const nearTree = (x, z, d) => treeList.some(t => Math.hypot(t.x - x, t.z - z) < t.r + d);
 function scatterPoint(minRoute, tries = 30) {
   for (let t = 0; t < tries; t++) {
@@ -1139,19 +1107,15 @@ function scatterPoint(minRoute, tries = 30) {
   }
 }
 
-/* --- black metal edging along the inside of the gravel path, open at the west entrance --- */
+/* --- the black edging board wraps all the way around the course, open at the entrance --- */
 {
-  const edge = [];
-  for (let i = 0; i < PATH.length - 1; i++) {
-    const [ax, az] = PATH[i], [bx, bz] = PATH[i + 1], len = Math.hypot(bx - ax, bz - az), n = Math.ceil(len / 0.3);
-    const nx = (bz - az) / len, nz = -(bx - ax) / len, off = PATH_HALF + 0.05;
-    for (let k = 0; k < n; k++) { const t = k / n; edge.push([lerp(ax, bx, t) + nx * off, lerp(az, bz, t) + nz * off]); }
-  }
-  for (let i = 0; i < edge.length - 1; i++) {
-    const [ax, az] = edge[i], [bx, bz] = edge[i + 1], mx = (ax + bx) / 2, mz = (az + bz) / 2;
-    if (mx < -4.4 || mz < -4.6) continue;
-    const yaw = Math.atan2(bz - az, bx - ax), gy = groundH(mx, mz);
-    addSlab(mx, mz, Math.hypot(bx - ax, bz - az) + 0.01, 0.012, yaw, gy + 0.11, gy + 0.11, { mat: M.metal, bottom: gy - 0.04, visualOnly: true });
+  const N = 120, pts = [];
+  for (let i = 0; i <= N; i++) { const a = i / N * TAU; pts.push([a, EDGE.x + EDGE.rx * Math.cos(a), EDGE.z + EDGE.rz * Math.sin(a)]); }
+  for (let i = 0; i < N; i++) {
+    const [a, ax, az] = pts[i], [, bx, bz] = pts[i + 1], am = a + Math.PI / N;
+    if (am > EDGE.gap[0] && am < EDGE.gap[1]) continue;
+    const mx = (ax + bx) / 2, mz = (az + bz) / 2, gy = groundH(mx, mz);
+    addSlab(mx, mz, Math.hypot(bx - ax, bz - az) + 0.01, 0.012, Math.atan2(bz - az, bx - ax), gy + 0.11, gy + 0.11, { mat: M.metal, bottom: gy - 0.04, visualOnly: true });
     addSegBlocker(ax, az, bx, bz, 0.008);
   }
 }
