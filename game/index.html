@@ -317,7 +317,7 @@ function pathZ(x) { // z of path centreline at x
   return PATH[PATH.length - 1][1];
 }
 // the hill: rises from Cedar Crossing at the front up to The Summit by the fence
-const MOUND = { x: 0.6, z: -2.65, rx: 2.6, rz: 1.8, h: 0.65 };
+const MOUND = { x: 0.6, z: -2.55, rx: 3.3, rz: 2.15, h: 1.0 };
 const hillW = v => 0.75 + 0.25 * clamp((1 + v) / 2, 0, 1); // teardrop width
 function moundH(x, z) {
   // the whole course space tilts gently up toward the fence
@@ -909,7 +909,7 @@ const BRIDGES = [];
   for (let a = 0; a < TAU; a += 0.06) {
     if (gaps.some(([g, w]) => Math.abs(a - g) < w)) continue;
     const vv = 1.04 * Math.sin(a), x = C.x + C.rx * 1.04 * Math.cos(a) * hillW(vv), z = C.z + C.rz * vv;
-    addRock(x, z, rr(0.13, 0.19), rr(0.11, 0.16), rr(0.06, 0.09), a, { color: BOULDER(), sink: 0.2, seg: 10, p: 1.6 });
+    addRock(x, z, rr(0.15, 0.21), rr(0.12, 0.17), rr(0.08, 0.11), a, { color: BOULDER(), sink: 0.2, seg: 10, p: 1.6 });
   }
   BRIDGES.push([0.76, -0.8], [-0.8, -3.2], [1.6, -2.56]);
   { // Cedar Crossing: the way in at the bottom, over a little stony creek
@@ -926,7 +926,7 @@ const BRIDGES = [];
   for (let k = 0, n = 0; k < 120 && n < 12; k++) {
     const a = rnd() * TAU, d = rr(0.35, 0.75), x = 0.6 + Math.cos(a) * d, z = -3.7 + Math.sin(a) * d * 0.7;
     if (distToLine(LINES.hard, x, z) < 0.33 || distToLine(LINES.moderate, x, z) < 0.33) continue;
-    addRock(x, z, rr(0.15, 0.22), rr(0.13, 0.19), rr(0.07, 0.1), rnd() * 3, { color: BOULDER(), sink: 0.2, seg: 10, p: 1.6 }); n++;
+    addRock(x, z, rr(0.17, 0.25), rr(0.15, 0.21), rr(0.09, 0.13), rnd() * 3, { color: BOULDER(), sink: 0.2, seg: 10, p: 1.6 }); n++;
   }
   addRock(0.6, -3.7, 0.24, 0.2, 0.04, 0.3, { p: 4, seg: 9, amp: 0.12, color: [0.55, 0.52, 0.47], sink: 0.4 });
   addGate('The Summit', 0.6, -3.7, 0, 0.55);
@@ -949,13 +949,13 @@ const BRIDGES = [];
   addGate('Switchbacks', 4.4, -2.2, Math.PI / 2, 0.6);
   const C2G = (x, z) => gates.some(g => Math.hypot(g.x - x, g.z - z) < 0.3);
   // boulders packed all over the hill, every one drivable; the painted lines stay a bit smoother
-  for (let k = 0, placed = 0; k < 3000 && placed < 140; k++) {
+  for (let k = 0, placed = 0; k < 4000 && placed < 190; k++) {
     const u = rr(-1, 1), v = rr(-1, 1); if (u * u + v * v > 0.9) continue;
     const x = C.x + u * C.rx * hillW(v), z = C.z + v * C.rz;
     const onLine = Object.values(LINES).some(L => distToLine(L, x, z) < 0.14);
     if (BRIDGES.some(([bx, bz]) => Math.hypot(bx - x, bz - z) < 0.5) || C2G(x, z) || Math.hypot(x - 0.6, z + 3.7) < 0.3 || distToLine(CREEK, x, z) < 0.22) continue;
     const big = !onLine && rnd() < 0.6;
-    addRock(x, z, big ? rr(0.12, 0.2) : rr(0.07, 0.12), big ? rr(0.1, 0.16) : rr(0.06, 0.1), big ? rr(0.06, 0.1) : rr(0.03, 0.05), rnd() * 3,
+    addRock(x, z, big ? rr(0.12, 0.2) : rr(0.07, 0.12), big ? rr(0.1, 0.16) : rr(0.06, 0.1), big ? rr(0.08, 0.13) : rr(0.035, 0.06), rnd() * 3,
       { color: BOULDER(), sink: 0.2, seg: big ? 10 : 8, p: big ? 1.6 : 2.5 }); placed++;
   }
   // stepping logs and cookie paths between the boulders
