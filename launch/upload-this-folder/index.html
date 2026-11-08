@@ -85,6 +85,11 @@ button:focus-visible { outline: 2px solid var(--gate); outline-offset: 2px; }
   opacity: 0; transition: opacity 0.25s; pointer-events: none;
 }
 #toast.show { opacity: 1; }
+#alert {
+  position: fixed; z-index: 6; left: 50%; transform: translateX(-50%); top: calc(env(safe-area-inset-top, 0px) + 74px);
+  background: #b3261e; color: #fff; font-family: var(--font-label); font-weight: 700; font-size: 20px; letter-spacing: 0.06em;
+  text-transform: uppercase; padding: 8px 16px; border-radius: 6px; box-shadow: 0 6px 20px rgba(0,0,0,.35); white-space: nowrap;
+}
 .keys {
   position: fixed; z-index: 4; left: 50%; transform: translateX(-50%);
   bottom: calc(env(safe-area-inset-bottom, 0px) + 12px);
@@ -201,6 +206,7 @@ body.touch .keys { display: none; }
     <button class="hbtn" id="bMenu" title="Back to the menu (Esc)">Menu</button>
   </div>
   <div id="toast" role="status" aria-live="polite"></div>
+  <div id="alert" hidden></div>
   <div class="keys"><kbd>W</kbd><kbd>S</kbd> throttle &nbsp;·&nbsp; <kbd>A</kbd><kbd>D</kbd> steer &nbsp;·&nbsp; <kbd>G</kbd> gear &nbsp;·&nbsp; <kbd>C</kbd> camera / course view &nbsp;·&nbsp; <kbd>R</kbd> reset</div>
   <div id="touch">
     <div class="pad left">
@@ -243,6 +249,23 @@ body.touch .keys { display: none; }
       <div class="fine"><span>Best course time</span><strong id="bestTxt">No run yet</strong></div>
     </div>
     <div class="sign-foot"><span>RC vehicles only</span><span>Tread lightly</span></div>
+  </div>
+</div>
+
+<div class="overlay" id="wrecked" hidden>
+  <div class="sign">
+    <div class="sign-inner">
+      <div>
+        <div class="eyebrow">The Trashers got you</div>
+        <h1>Truck Wrecked</h1>
+      </div>
+      <p>They stomped your crawler and ripped the body apart. The course stays trashed until you restart.</p>
+      <div class="actions">
+        <button class="btn primary" id="bRebuild">Rebuild truck</button>
+        <button class="btn" id="bRestart">Restart course</button>
+      </div>
+    </div>
+    <div class="sign-foot"><span>Bragg Creek RC Club</span><span>Keep crawling</span></div>
   </div>
 </div>
 
@@ -375,6 +398,7 @@ function H(x, z) {
   const cell = grid[j * GW + i];
   for (let k = 0; k < cell.length; k++) {
     const o = cell[k];
+    if (o.off) continue;
     if (x < o.x0 || x > o.x1 || z < o.z0 || z > o.z1) continue;
     const v = o.h(x, z);
     if (v > h) h = v;
@@ -609,7 +633,8 @@ function addLog(ax, az, bx, bz, r, opt = {}) {
 function addSlab(cx, cz, len, wid, yaw, h0, h1, opt = {}) {
   const Lx = Math.cos(yaw), Lz = Math.sin(yaw), Wx = -Lz, Wz = Lx, hl = len / 2, hw = wid / 2;
   const ext = hl * Math.abs(Lx) + hw * Math.abs(Wx), extz = hl * Math.abs(Lz) + hw * Math.abs(Wz);
-  if (!opt.visualOnly) addObs({
+  let obsRef = null;
+  if (!opt.visualOnly) addObs(obsRef = {
     x0: cx - ext, x1: cx + ext, z0: cz - extz, z1: cz + extz,
     h(x, z) {
       const px = x - cx, pz = z - cz, v = px * Lx + pz * Lz, u = px * Wx + pz * Wz;
@@ -628,6 +653,7 @@ function addSlab(cx, cz, len, wid, yaw, h0, h1, opt = {}) {
   const mesh = new THREE.Mesh(geo, opt.mat || M.plank);
   mesh.rotation.y = -yaw;
   mesh.position.set(cx, 0, cz);
+  mesh.userData.obs = obsRef;
   return shadowy(mesh);
 }
 
@@ -865,6 +891,8 @@ for (let i = 0; i < 260; i++) {
    THE COURSE — modelled on the club photos
    ========================================================= */
 const gates = [];
+// pieces the Trashers can wreck; restarting puts them all back
+const TRASH = { signs: [], bridges: [], tree: null };
 const nearTreeXZ = (x, z, d) => treeList.some(t => Math.hypot(t.x - x, t.z - z) < t.r + d);
 function addGate(name, x, z, yaw, w = 0.8) {
   // yaw: travel direction in truck convention: forward = (cos yaw, -sin yaw)
@@ -889,6 +917,11 @@ function addGate(name, x, z, yaw, w = 0.8) {
    Avalanche Alley and Switchbacks, ringed with boulders, with easy, moderate and hard lines.
    The rules sign stays on its spruce by the entrance, and the RC TRACK cookies stand raised up on a log. */
 function addBridge(cx, cz, len, wid, b) {
+  const n0 = scene.children.length, top = addBridgeRaw(cx, cz, len, wid, b);
+  TRASH.bridges.push({ x: cx, z: cz, parts: scene.children.slice(n0) });
+  return top;
+}
+function addBridgeRaw(cx, cz, len, wid, b) {
   // the deck follows the slope of the hill, a few cm up, with gentle ramps at both ends
   const Lx = Math.cos(b), Lz = Math.sin(b), Wx = -Lz, Wz = Lx, r = 0.22, hl = len / 2, dl = len - 2 * r;
   const gA = groundH(cx - Lx * hl, cz - Lz * hl), gB = groundH(cx + Lx * hl, cz + Lz * hl);
@@ -911,17 +944,20 @@ const BRIDGES = [];
   // the rules sign on its spruce by the entrance (same tree as the real course)
   const board = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.68, 0.02), [M.darkWood, M.darkWood, M.darkWood, M.darkWood, MSM({ map: signTex(), roughness: 0.5 }), M.darkWood]);
   board.position.set(-3.7, 1.25, -1.0 + 0.25); board.castShadow = true; scene.add(board);
+  TRASH.signs.push({ kind: 'board', x: -3.7, z: -0.75, parts: [board] });
 
   // RC TRACK cookies, raised up on a peeled log so they stand tall
+  const cookieParts = [];
   const letters = ['R', 'C', '', 'T', 'R', 'A', 'C', 'K'];
   const x0 = -1.95, x1 = -0.75, zc = 0.05, gyL = groundH(-1.35, zc);
   addLog(x0 - 0.12, zc, x1 + 0.12, zc, 0.06, { y: gyL + 0.05, mat: M.peeled, noBlock: true });
   addSegBlocker(x0 - 0.12, zc, x1 + 0.12, zc, 0.1);
+  TRASH.signs.push({ kind: 'cookies', x: -1.35, z: 0.25, parts: cookieParts });
   letters.forEach((ch, i) => {
     if (!ch) return;
     const x = lerp(x0, x1, i / (letters.length - 1)), r = 0.09;
     const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, 0.05, 20), [M.bark, MSM({ map: letterTex(ch) }), M.cookie]);
-    m.rotation.set(Math.PI / 2, 0, 0); m.position.set(x, gyL + 0.105 + r, zc + 0.02); shadowy(m);
+    m.rotation.set(Math.PI / 2, 0, 0); m.position.set(x, gyL + 0.105 + r, zc + 0.02); shadowy(m); cookieParts.push(m);
   });
 
   // the hill: big boulders ring it all the way round, open at Cedar Crossing, the pit side and up by Avalanche Alley
@@ -969,12 +1005,55 @@ const BRIDGES = [];
   // Switchbacks: the hard line's dirt trail curving round the outside right of the ring
   addGate('Switchbacks', 4.4, -2.2, Math.PI / 2, 0.6);
   const C2G = (x, z) => gates.some(g => Math.hypot(g.x - x, g.z - z) < 0.3);
+  // a big spruce in the middle of the hill, cracked down the middle with its roots torn up, swaying and about to go
+  const TREE = (() => {
+    let best = null, bs = -1;
+    for (let x = -1.2; x <= 2.2; x += 0.05) for (let z = -3.1; z <= -1.7; z += 0.05) {
+      const d = Math.min(...Object.values(LINES).map(L => distToLine(L, x, z)), ...BRIDGES.map(([bx, bz]) => Math.hypot(bx - x, bz - z) - 0.35), ...gates.map(g => Math.hypot(g.x - x, g.z - z) - 0.2), distToLine(CREEK, x, z));
+      const sc = d - 0.12 * Math.hypot(x - 0.5, z + 2.4);
+      if (sc > bs) { bs = sc; best = { x, z }; }
+    }
+    return best;
+  })();
+  {
+    const gy = groundH(TREE.x, TREE.z), lean = 0.32, dir = -0.9; // leans back toward the fence
+    const pivot = new THREE.Group(); pivot.position.set(TREE.x, gy - 0.02, TREE.z); pivot.rotation.y = dir; scene.add(pivot);
+    const tilt = new THREE.Group(); tilt.rotation.z = -lean; pivot.add(tilt);
+    const halves = [];
+    const barkM = MSM({ map: barkTex, color: 0xb59a86 }), woodM = MSM({ color: 0xc9a46c, roughness: 0.9 }), crackM = MSM({ color: 0x1e140c, side: THREE.DoubleSide });
+    [0, Math.PI].forEach((t0, k) => {
+      const g = new THREE.Group(); tilt.add(g);
+      const half = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.24, 7.5, 12, 1, false, t0, Math.PI), [barkM, woodM, woodM]);
+      half.position.y = 3.75; half.castShadow = true; g.add(half);
+      const inner = new THREE.Mesh(new THREE.PlaneGeometry(0.4, 3.2), crackM); inner.position.set(0, 1.6, 0); inner.rotation.y = Math.PI / 2 + t0; g.add(inner);
+      halves.push({ g, s: k ? 1 : -1 });
+    });
+    const crown = [];
+    for (let k = 0; k < 5; k++) {
+      const c = new THREE.Mesh(new THREE.ConeGeometry(1.5 - k * 0.25, 1.6, 9), MSM({ color: 0x2f4a2c, flatShading: true }));
+      c.position.y = 4.2 + k * 0.85; c.castShadow = true; tilt.add(c); crown.push(c);
+    }
+    canopy.push(tilt);
+    // the torn-up root plate standing on edge behind the trunk, roots sticking out
+    const plate = new THREE.Group(); plate.position.set(-0.12, 0.28, 0); plate.rotation.z = -lean * 0.6; pivot.add(plate);
+    const soil = new THREE.Mesh(new THREE.CylinderGeometry(0.48, 0.42, 0.16, 16), MSM({ color: 0x3d2c1e, roughness: 1, flatShading: true }));
+    soil.rotation.z = Math.PI / 2; soil.castShadow = true; plate.add(soil);
+    for (let k = 0; k < 16; k++) {
+      const a = k / 16 * TAU, len = rr(0.25, 0.55), root = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.025, len, 5), MSM({ color: 0x5a4130 }));
+      root.position.set(-0.1 - rr(0, 0.1), Math.sin(a) * (0.38 + len / 2), Math.cos(a) * (0.38 + len / 2)); root.rotation.x = -a; root.rotation.z = rr(-0.4, 0.4); root.castShadow = true; plate.add(root);
+    }
+    // a hole where the roots ripped out
+    const hole = new THREE.Mesh(new THREE.CircleGeometry(0.42, 16), MSM({ color: 0x24190f }));
+    hole.rotation.x = -Math.PI / 2; hole.position.set(TREE.x + Math.cos(dir) * 0.18, groundH(TREE.x, TREE.z) + 0.006, TREE.z - Math.sin(dir) * 0.18); scene.add(hole);
+    addBlocker(TREE.x, TREE.z, 0.27);
+    TRASH.tree = { pivot, tilt, halves, lean };
+  }
   // boulders packed all over the hill, every one drivable; the painted lines stay a bit smoother
   for (let k = 0, placed = 0; k < 4000 && placed < 190; k++) {
     const u = rr(-1, 1), v = rr(-1, 1); if (u * u + v * v > 0.9) continue;
     const x = C.x + u * C.rx * hillW(v), z = C.z + v * C.rz;
     const onLine = Object.values(LINES).some(L => distToLine(L, x, z) < 0.14);
-    if (BRIDGES.some(([bx, bz]) => Math.hypot(bx - x, bz - z) < 0.5) || C2G(x, z) || Math.hypot(x - 0.6, z + 3.7) < 0.3 || distToLine(CREEK, x, z) < 0.22) continue;
+    if (BRIDGES.some(([bx, bz]) => Math.hypot(bx - x, bz - z) < 0.5) || C2G(x, z) || Math.hypot(x - TREE.x, z - TREE.z) < 0.6 || Math.hypot(x - 0.6, z + 3.7) < 0.3 || distToLine(CREEK, x, z) < 0.22) continue;
     const big = !onLine && rnd() < 0.6;
     addRock(x, z, big ? rr(0.12, 0.2) : rr(0.07, 0.12), big ? rr(0.1, 0.16) : rr(0.06, 0.1), big ? rr(0.08, 0.13) : rr(0.035, 0.06), rnd() * 3,
       { color: BOULDER(), sink: 0.2, seg: big ? 10 : 8, p: big ? 1.6 : 2.5 }); placed++;
@@ -1000,6 +1079,7 @@ const BRIDGES = [];
   const tip = new THREE.Mesh(new THREE.ConeGeometry(0.06, 0.16, 4), M.darkWood); tip.position.set(px, gy + 1.55, pz); scene.add(tip);
   const ps = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.15, 0.02), [M.darkWood, M.darkWood, M.darkWood, M.darkWood, MSM({ map: postSignTex() }), M.darkWood]);
   ps.position.set(px, gy + 1.28, pz + 0.06); ps.castShadow = true; scene.add(ps);
+  TRASH.signs.push({ kind: 'post', x: px, z: pz, parts: [post, tip, ps] });
   // Pit / Viewing Area: a log bench for parents by the entrance
   const bench = new THREE.Group();
   const bseat = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.08, 0.32), M.plank); bseat.position.y = 0.42; bench.add(bseat);
@@ -1546,6 +1626,7 @@ const _p = new V3();
 function syncCar() {
   car.position.set(S.x, S.y, S.z);
   car.rotation.set(S.vr, S.yaw, S.vp);
+  if (G.wreck) return; // the wreck animation owns the parts
   const tp = Math.tan(S.vp), tr = Math.tan(S.vr);
   const off = S.wc.map((w, i) => S.flipped ? 0 : clamp(w - (S.y + WOFF[i][0] * tp - WOFF[i][1] * tr), -0.024, 0.024) / K);
   RIG.axles.forEach((A, ai) => {
@@ -1668,6 +1749,8 @@ let flipTimer = 0;
 function onRollover() { toast(G.mode === 'run' && G.running ? 'Rolled it! Back to your last flag · +' + PENALTY + ' s' : 'Rolled it! Putting it back on its wheels'); flipTimer = 1.5; }
 
 function startMode(mode) {
+  if (G.wreck) rebuildTruck();
+  resetTrashers();
   G.mode = mode; G.got = new Set(); G.running = false; G.t = 0; G.resets = 0; G.lastGate = -1; G.lastDir = 1; G.finished = false;
   $('#menu').hidden = true; $('#finish').hidden = true; $('#hud').hidden = false;
   $('#pGate').hidden = mode === 'free';
@@ -1690,6 +1773,8 @@ function finishRun() {
   setTimeout(() => { if (G.finished && G.mode === 'run') { $('#finish').hidden = false; } }, 1400);
 }
 function toMenu() {
+  if (G.wreck) rebuildTruck();
+  resetTrashers();
   G.mode = 'menu'; $('#menu').hidden = false; $('#finish').hidden = true; $('#hud').hidden = true; input.thr = input.steer = 0;
   label.visible = guide.visible = false; gates.forEach(g => g.meshes.forEach(m => { m.visible = true; }));
 }
@@ -1822,6 +1907,239 @@ function updateCamera(dt) {
   if (window.__camOverride) { const o = window.__camOverride; camera.position.set(S.x + o[0], S.y + o[1], S.z + o[2]); camera.lookAt(S.x, S.y + 0.04, S.z); }
 }
 
+/* =========================================================
+   THE TRASHERS: every 5 minutes of driving a dirt-bike gang rides in and wrecks the course.
+   Get away from them for 30 seconds. If they catch the truck they stomp it apart.
+   The course stays wrecked until you restart.
+   ========================================================= */
+const TR = { next: 300, phase: 'idle', t: 0, chaseT: 0, gang: [], debris: [], broken: false, warned: false };
+const TRASH_EVERY = 300, ESCAPE_TIME = 30;
+function makePerson(color) {
+  const g = new THREE.Group(), cloth = MSM({ color, roughness: 0.8 }), dark = MSM({ color: 0x1b1d22, roughness: 0.7 });
+  const helmet = MSM({ color: [0xe8402a, 0xf2f2f2, 0x2b2f36, 0x3a7bd5][(rnd() * 4) | 0], roughness: 0.3, metalness: 0.2 });
+  const visor = MSM({ color: 0x0a0d10, roughness: 0.05, metalness: 0.6 });
+  const legs = [-0.1, 0.1].map(z => { const l = new THREE.Group(); l.position.set(0, 0.85, z); const m = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.85, 0.14), dark); m.position.y = -0.42; l.add(m); g.add(l); return l; });
+  const body = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.62, 0.42), cloth); body.position.y = 1.16; g.add(body);
+  const arms = [-0.27, 0.27].map(z => { const a = new THREE.Group(); a.position.set(0, 1.42, z); const m = new THREE.Mesh(new THREE.BoxGeometry(0.11, 0.6, 0.11), cloth); m.position.y = -0.3; a.add(m); g.add(a); return a; });
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.16, 14, 10), helmet); head.position.y = 1.62; g.add(head);
+  const vis = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.1, 0.22), visor); vis.position.set(0.14, 1.62, 0); g.add(vis);
+  g.traverse(o => { o.castShadow = true; }); scene.add(g);
+  return { g, legs, arms };
+}
+function makeBike() {
+  const g = new THREE.Group(), frame = MSM({ color: [0xf07f1e, 0x2bb24c, 0x1c1c1c, 0x2c66d4][(rnd() * 4) | 0], roughness: 0.4, metalness: 0.3 }), blk = MSM({ color: 0x141414, roughness: 0.8 });
+  const wheel = () => { const w = new THREE.Mesh(new THREE.TorusGeometry(0.27, 0.07, 8, 18), blk); w.castShadow = true; return w; };
+  const wf = wheel(); wf.position.set(0.62, 0.34, 0); g.add(wf); const wr = wheel(); wr.position.set(-0.6, 0.34, 0); g.add(wr);
+  const f = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.24, 0.16), frame); f.position.set(0, 0.62, 0); f.rotation.z = 0.08; g.add(f);
+  const seat = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.08, 0.2), blk); seat.position.set(-0.15, 0.78, 0); g.add(seat);
+  const fork = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.6, 0.06), blk); fork.position.set(0.56, 0.62, 0); fork.rotation.z = -0.35; g.add(fork);
+  const bar = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.6, 6), blk); bar.rotation.x = Math.PI / 2; bar.position.set(0.48, 0.96, 0); g.add(bar);
+  g.traverse(o => { o.castShadow = true; }); scene.add(g);
+  return { g, wf, wr };
+}
+// each rider wrecks a list of targets: signs and bridges
+function trashPlan() {
+  const S0 = TRASH.signs, B0 = TRASH.bridges;
+  return [[S0[0], S0[1]], [B0[0], S0[2]], [B0[1]], [B0[2]]];
+}
+const _q = new THREE.Quaternion(), _e = new THREE.Euler();
+function saveXf(o) { if (!o.userData.xf) o.userData.xf = { p: o.position.clone(), q: o.quaternion.clone(), s: o.scale.clone(), v: o.visible }; }
+function placeBroken(target) {
+  // decide where each piece ends up when it's smashed or kicked down
+  target.parts.forEach(o => {
+    saveXf(o);
+    const xf = o.userData.xf;
+    let p, q;
+    if (target.kind === 'board') { p = new V3(target.x + rr(-0.3, 0.3), 0, target.z + rr(0.3, 0.7)); _e.set(-Math.PI / 2, rr(-0.6, 0.6), 0); }
+    else if (target.kind === 'post') { const a = rr(0, TAU), d = o.geometry.type === 'CylinderGeometry' ? 0.75 : rr(0.9, 1.6); p = new V3(target.x + Math.cos(a) * d, 0, target.z + Math.sin(a) * d); _e.set(0, -a, Math.PI / 2); }
+    else if (target.kind === 'cookies') { p = new V3(xf.p.x + rr(-0.4, 0.4), 0, xf.p.z + rr(0.15, 0.8)); _e.set(0, rnd() * TAU, 0); }
+    else { p = new V3(xf.p.x + rr(-0.35, 0.35), 0, xf.p.z + rr(-0.35, 0.35)); _e.set(rr(-0.25, 0.25), rnd() * TAU, rr(-0.25, 0.25)); }
+    p.y = groundH(p.x, p.z) + (target.kind === 'cookies' ? 0.03 : target.kind === 'board' ? 0.015 : 0.02);
+    if (target.kind === 'bridge') p.y = xf.p.y + (groundH(p.x, p.z) - groundH(xf.p.x, xf.p.z)) - 0.04 + (o.userData.obs ? -0.03 : 0.0);
+    q = new THREE.Quaternion().setFromEuler(_e);
+    if (target.kind === 'bridge') q.multiply(xf.q);
+    if (target.kind === 'post' && o === target.parts[2]) q.multiply(new THREE.Quaternion().setFromEuler(new THREE.Euler(0, 0, 0)));
+    o.userData.to = { p, q }; o.userData.k = 0;
+  });
+  // a torn half of the rules sign
+  if (target.kind === 'board' && !target.torn) {
+    const half = target.parts[0].clone(); half.scale.set(1, 0.5, 1); scene.add(half); target.torn = half;
+  }
+  if (target.torn) { const t = target.torn; t.visible = true; t.position.set(target.x + rr(-0.6, 0.6), groundH(target.x, target.z + 0.9) + 0.012, target.z + rr(0.6, 1.0)); t.rotation.set(-Math.PI / 2, rr(-1, 1), 0); }
+  if (target.kind === 'bridge') target.parts.forEach(o => { if (o.userData.obs) o.userData.obs.off = true; });
+  for (let i = 0; i < 6; i++) puff(target.x + rr(-0.2, 0.2), groundH(target.x, target.z), target.z + rr(-0.2, 0.2), 2.5);
+  target.broken = true; TR.broken = true;
+}
+function repairCourse() {
+  [...TRASH.signs, ...TRASH.bridges].forEach(t => {
+    t.parts.forEach(o => { const xf = o.userData.xf; if (xf) { o.position.copy(xf.p); o.quaternion.copy(xf.q); o.scale.copy(xf.s); } o.userData.to = null; if (o.userData.obs) o.userData.obs.off = false; });
+    if (t.torn) t.torn.visible = false; t.broken = false;
+  });
+  TR.debris.forEach(d => { d.visible = false; });
+  TR.broken = false;
+}
+TRASH.bridges.forEach(b => { b.kind = 'bridge'; });
+function animateBroken(dt) {
+  [...TRASH.signs, ...TRASH.bridges].forEach(t => t.parts.forEach(o => {
+    const to = o.userData.to; if (!to || o.userData.k >= 1) return;
+    o.userData.k = Math.min(1, o.userData.k + dt * 2.2);
+    const k = smooth(0, 1, o.userData.k), xf = o.userData.xf;
+    o.position.lerpVectors(xf.p, to.p, k); o.position.y += Math.sin(k * Math.PI) * 0.25;
+    o.quaternion.copy(xf.q).slerp(to.q, k);
+  }));
+}
+function gangStart() {
+  const plan = trashPlan();
+  if (!TR.gang.length) for (let i = 0; i < 4; i++) TR.gang.push({ ...makePerson([0x2d2d34, 0x5b2a86, 0x3b5b2a, 0x8a2c2c][i]), bike: makeBike() });
+  TR.gang.forEach((m, i) => {
+    m.plan = plan[i].slice(); m.state = 'ride'; m.sx = -11 - i * 1.2; m.sz = -0.9 + (i - 1.5) * 0.5;
+    const first = m.plan[0]; m.dx = first.x + rr(-0.7, -0.4); m.dz = first.z + rr(-0.3, 0.3);
+    m.x = m.sx; m.z = m.sz; m.yaw = 0; m.walk = 0; m.g.visible = m.bike.g.visible = true; m.lost = 0;
+  });
+  TR.phase = 'raid'; TR.t = 0; TR.chaseT = 0; TR.caught = false;
+  $('#alert').hidden = false; $('#alert').textContent = 'The Trashers are here! Get away from them';
+  beep(220); beep(180);
+}
+function gangLeave() {
+  TR.phase = 'leave';
+  TR.gang.forEach(m => { m.state = m.state === 'ride' ? 'rideOut' : 'toBike'; });
+  $('#alert').hidden = true;
+}
+function moveTo(m, tx, tz, speed, dt) {
+  const dx = tx - m.x, dz = tz - m.z, d = Math.hypot(dx, dz);
+  if (d < 0.05) return true;
+  const st = Math.min(d, speed * dt); m.x += dx / d * st; m.z += dz / d * st;
+  m.yaw = lerpAngle(m.yaw, Math.atan2(-dz, dx), Math.min(1, dt * 8));
+  m.walk += st * 6; return false;
+}
+function lerpAngle(a, b, t) { let d = b - a; while (d > Math.PI) d -= TAU; while (d < -Math.PI) d += TAU; return a + d * t; }
+function poseGang(dt) {
+  TR.gang.forEach(m => {
+    if (!m.g.visible) return;
+    const riding = m.state === 'ride' || m.state === 'rideOut';
+    const gy = H(m.x, m.z);
+    if (riding) {
+      m.bike.g.position.set(m.x, gy, m.z); m.bike.g.rotation.set(0, m.yaw, 0);
+      m.bike.wf.rotation.z -= dt * 20; m.bike.wr.rotation.z -= dt * 20;
+      m.g.position.set(m.x - Math.cos(m.yaw) * 0.12, gy + 0.32, m.z + Math.sin(m.yaw) * 0.12); m.g.rotation.set(0, m.yaw, 0);
+      m.legs.forEach(l => { l.rotation.z = 1.2; }); m.arms.forEach(a => { a.rotation.z = 1.1; });
+    } else {
+      m.g.position.set(m.x, gy, m.z); m.g.rotation.set(0, m.yaw, 0);
+      const sw = Math.sin(m.walk) * 0.6, stomp = m.state === 'stomp' ? Math.abs(Math.sin(TR.t * 9)) * 1.1 : 0;
+      m.legs[0].rotation.z = sw + stomp; m.legs[1].rotation.z = -sw; m.arms[0].rotation.z = -sw * 0.8; m.arms[1].rotation.z = sw * 0.8 + (m.state === 'smash' ? Math.sin(TR.t * 12) * 1.4 : 0);
+      if (!m.bikeDown) { m.bikeDown = true; m.bike.g.rotation.set(Math.PI / 2 - 0.15, m.yaw, 0); m.bike.g.position.set(m.bx, H(m.bx, m.bz) + 0.12, m.bz); }
+    }
+  });
+}
+function updateTrashers(dt) {
+  animateBroken(dt);
+  if (TR.phase === 'idle') {
+    if (G.mode === 'menu' || G.finished || G.wreck) return;
+    TR.next -= dt;
+    if (TR.next < 8 && !TR.warned) { TR.warned = true; toast('You hear electric dirt bikes coming…'); }
+    if (TR.next <= 0) gangStart();
+    return;
+  }
+  TR.t += dt;
+  let anyChasing = false;
+  TR.gang.forEach(m => {
+    const dTruck = Math.hypot(S.x - m.x, S.z - m.z);
+    switch (m.state) {
+      case 'ride':
+        if (moveTo(m, m.dx, m.dz, 2.4, dt)) { m.state = 'walk'; m.bx = m.x; m.bz = m.z; m.bikeDown = false; }
+        break;
+      case 'walk': case 'smash': {
+        if (!G.wreck && dTruck < 1.8 && TR.phase === 'raid') { m.state = 'chase'; m.lost = 0; break; }
+        const t = m.plan[0];
+        if (!t) { m.state = 'toBike'; break; }
+        if (m.state === 'walk') { if (moveTo(m, t.x + (t.kind === 'board' ? 0 : -0.25), t.z + (t.kind === 'board' ? 0.45 : 0.25), 1.1, dt)) { m.state = 'smash'; m.smashT = 0; } }
+        else { m.smashT += dt; if (m.smashT > 1.0) { if (!t.broken) placeBroken(t); m.plan.shift(); m.state = 'walk'; } }
+        break; }
+      case 'chase': {
+        anyChasing = true;
+        // humans are slower climbing the hill and over rocks, so a crawler can get away
+        const slope = H(m.x + Math.cos(m.yaw) * 0.2, m.z - Math.sin(m.yaw) * 0.2) - H(m.x, m.z);
+        const sp = 0.62 * (slope > 0.03 ? 0.55 : 1);
+        moveTo(m, S.x, S.z, sp, dt);
+        if (dTruck < 0.24 && !G.wreck) { m.state = 'stomp'; TR.caught = true; wreckTruck(); }
+        if (dTruck > 3.0) { m.lost += dt; if (m.lost > 3) m.state = 'walk'; } else m.lost = 0;
+        break; }
+      case 'stomp': m.walk += dt * 4; break;
+      case 'toBike': if (moveTo(m, m.bx, m.bz, 1.2, dt)) { m.state = 'rideOut'; } break;
+      case 'rideOut': if (moveTo(m, -13, m.sz, 2.6, dt)) { m.g.visible = m.bike.g.visible = false; m.state = 'gone'; } break;
+    }
+  });
+  if (anyChasing && TR.phase === 'raid' && !G.wreck) {
+    TR.chaseT += dt;
+    const left = Math.max(0, Math.ceil(ESCAPE_TIME - TR.chaseT));
+    $('#alert').hidden = false; $('#alert').textContent = 'Get away! Survive ' + left + 's';
+    if (TR.chaseT >= ESCAPE_TIME) { toast('You got away! The Trashers gave up.'); gangLeave(); }
+  }
+  if (TR.phase === 'raid' && TR.gang.every(m => m.state === 'toBike' || m.state === 'rideOut' || m.state === 'gone' || (m.state === 'walk' && !m.plan.length))) gangLeave();
+  if (TR.caught && TR.phase === 'raid' && TR.t > 0 && G.wreck && G.wreck.t > 2) gangLeave();
+  if (TR.phase === 'leave' && TR.gang.every(m => m.state === 'gone')) {
+    TR.phase = 'idle'; TR.next = TRASH_EVERY; TR.warned = false;
+    if (TR.broken) toast('The Trashers rode off. The course stays wrecked until you restart.');
+  }
+  poseGang(dt);
+}
+function resetTrashers() {
+  TR.phase = 'idle'; TR.next = TRASH_EVERY; TR.warned = false; TR.caught = false;
+  TR.gang.forEach(m => { m.g.visible = m.bike.g.visible = false; m.state = 'gone'; });
+  $('#alert').hidden = true;
+  repairCourse();
+}
+
+/* the truck gets stomped and ripped apart */
+const WRECK_PARTS = [];
+function wreckTruck() {
+  if (G.wreck) return;
+  const shell = model.children[1];
+  if (!WRECK_PARTS.length) {
+    shell.children.forEach(o => WRECK_PARTS.push({ o, floor: -0.06 }));
+    model.children.forEach(o => { if (o !== shell && o.isGroup) WRECK_PARTS.push({ o, floor: 0.02 }); });
+  }
+  WRECK_PARTS.forEach(p => { saveXf(p.o); p.vx = rr(-1.2, 1.2); p.vy = rr(1.0, 2.6); p.vz = rr(-1.2, 1.2); p.sx = rr(-9, 9); p.sy = rr(-9, 9); p.sz = rr(-9, 9); });
+  [...RIG.shocks.flatMap(s => [s.body, s.spring, s.shaft]), ...RIG.links.map(l => l.mesh), RIG.steerLink].forEach(m => { m.visible = false; });
+  G.wreck = { t: 0 }; S.v = 0; input.thr = input.steer = 0; $('#alert').hidden = true;
+  for (let i = 0; i < 10; i++) puff(S.x + rr(-0.1, 0.1), S.y, S.z + rr(-0.1, 0.1), 3);
+  toast('They stomped your truck!');
+}
+function updateWreck(dt) {
+  if (!G.wreck) return;
+  G.wreck.t += dt;
+  WRECK_PARTS.forEach(p => {
+    const o = p.o;
+    if (o.position.y > p.floor || p.vy > 0) {
+      p.vy -= 9.8 * dt * 2.2; o.position.x += p.vx * dt; o.position.y = Math.max(p.floor, o.position.y + p.vy * dt); o.position.z += p.vz * dt;
+      o.rotation.x += p.sx * dt; o.rotation.y += p.sy * dt; o.rotation.z += p.sz * dt;
+      if (o.position.y === p.floor) { p.vy = 0; p.vx *= 0.3; p.vz *= 0.3; p.sx = p.sy = p.sz = 0; }
+    }
+  });
+  if (G.wreck.t > 2.2 && $('#wrecked').hidden && !G.wreck.shown) { G.wreck.shown = true; $('#wrecked').hidden = false; }
+}
+function updateWreckPose() {
+  // keep the flying parts where the wreck put them (syncCar would snap them back)
+  WRECK_PARTS.forEach(p => { p.o.updateMatrix(); });
+}
+function swayTree(now) {
+  const T = TRASH.tree; if (!T) return;
+  const t = now / 1000, sw = Math.sin(t * 1.1) * 0.045 + Math.sin(t * 2.7) * 0.012;
+  T.tilt.rotation.z = -T.lean + sw;
+  T.halves.forEach(h => { h.g.position.z = h.s * (0.012 + Math.max(0, sw) * 0.25); h.g.rotation.x = h.s * sw * 0.15; });
+}
+function rebuildTruck() {
+  WRECK_PARTS.forEach(p => { const xf = p.o.userData.xf; if (xf) { p.o.position.copy(xf.p); p.o.quaternion.copy(xf.q); } });
+  [...RIG.shocks.flatMap(s => [s.body, s.spring, s.shaft]), ...RIG.links.map(l => l.mesh), RIG.steerLink].forEach(m => { m.visible = true; });
+  G.wreck = null; $('#wrecked').hidden = true;
+}
+$('#bRebuild').onclick = () => {
+  rebuildTruck();
+  if (G.mode === 'run') { if (G.running) { G.resets += 3; $('#pen').textContent = G.resets + ' resets · +' + G.resets * PENALTY + 's'; } resetPose(); toast('Truck rebuilt · +30 s'); }
+  else { resetFree(); toast('Truck rebuilt. The course is still trashed.'); }
+};
+$('#bRestart').onclick = () => { rebuildTruck(); startMode(G.mode === 'run' ? 'run' : 'free'); };
+
 /* course-view controls and the marker that shows where the truck is */
 const OV = { az: 0.15, el: 1.05, dist: 9 };
 const marker = new THREE.Mesh(new THREE.ConeGeometry(0.5, 1.1, 4), new THREE.MeshBasicMaterial({ color: 0xf39a2b }));
@@ -1862,6 +2180,8 @@ addEventListener('resize', resize); resize();
 
 function simulate(dt) {
   if (G.mode === 'menu') return;
+  updateTrashers(dt);
+  if (G.wreck) { updateWreck(dt); return; }
   const px = S.x, pz = S.z;
   physStep(dt);
   checkGates(px, pz);
@@ -1874,6 +2194,8 @@ function frame(now) {
   if (G.mode !== 'menu') readInput();
   simulate(dt);
   syncCar();
+  if (G.wreck) updateWreckPose();
+  swayTree(now);
   updateDust(dt);
   updateCamera(dt);
   updateMarker(now);
@@ -1895,7 +2217,7 @@ label.visible = guide.visible = false;
 requestAnimationFrame(frame);
 
 // test hook: run physics without rendering
-window.__crawler = { S, G, gates, H, obstacles, input, wheelCenter, blockerPen, bodyPen, tooSteep, tryMove, blockers, startMode, sim(sec, fn) { const dt = 1 / 60; for (let t = 0; t < sec; t += dt) { if (fn) fn(); simulate(dt); } return { x: S.x, z: S.z, next: G.got.size, flipped: S.flipped }; }, placeCar, toggleGear };
+window.__crawler = { TR, TRASH, gangStart, wreckTruck, S, G, gates, H, obstacles, input, wheelCenter, blockerPen, bodyPen, tooSteep, tryMove, blockers, startMode, sim(sec, fn) { const dt = 1 / 60; for (let t = 0; t < sec; t += dt) { if (fn) fn(); simulate(dt); } return { x: S.x, z: S.z, next: G.got.size, flipped: S.flipped }; }, placeCar, toggleGear };
 })();
 </script>
 </body>
