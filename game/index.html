@@ -203,7 +203,7 @@ body.touch .keys { display: none; }
         </div>
         <img class="club-logo" alt="RCEV, the Bragg Creek RC Club logo">
       </div>
-      <p>The club's blueprint course: a boulder mound with The Summit on top, Timber Pass Bridge, Cedar Crossing, Rocky Creek Bed, Avalanche Alley and the Switchbacks. Follow the painted lines: green is easy, blue is moderate, black is hard. Course Run times you collecting every flag in any order.</p>
+      <p>The club's blueprint course: a boulder hill with The Summit on top, Timber Pass Bridge, Cedar Crossing, Rocky Creek Bed, Avalanche Alley and the Switchbacks. Follow the painted lines: green is easy, blue is moderate, black is hard. Course Run times you collecting every flag in any order.</p>
       <div>
         <div class="rig-label"><span class="lbl" style="color:#5b5346">Your rig</span><span>More rigs coming soon</span></div>
         <div class="rig">
@@ -283,11 +283,11 @@ const EDGE = { x: 0.3, z: -2.0, rx: 5.3, rz: 2.6, gap: [2.35, 2.85] };
 const insideEdge = (x, z, m = 0) => ((x - EDGE.x) / (EDGE.rx - m)) ** 2 + ((z - EDGE.z) / (EDGE.rz - m)) ** 2 < 1;
 // suggested lines painted on the course, like the club blueprint
 const LINES = {
-  easy: [[0.97, -0.9], [0.97, -1.75], [0.2, -2.0], [-0.8, -2.1], [-1.66, -2.45], [-2.52, -2.45], [-3.0, -1.6], [-1.5, -0.9], [0.97, -0.9]],
-  moderate: [[0.97, -0.9], [0.97, -1.8], [1.4, -2.3], [1.55, -2.82], [1.2, -3.4], [0.3, -3.75], [-0.6, -3.5], [-1.2, -2.9], [-1.66, -2.45], [-2.52, -2.45], [-3.0, -2.2], [-2.8, -1.2], [-1.0, -0.9], [0.97, -0.9]],
-  hard: [[2.6, -1.0], [5.2, -1.6], [5.2, -2.2], [3.85, -2.25], [3.85, -2.88], [4.65, -2.88], [4.6, -3.4], [3.6, -3.65], [3.2, -3.8], [2.6, -3.8], [0.5, -3.1], [-0.3, -4.0], [-1.0, -3.95], [-1.7, -3.7], [-2.5, -3.4], [-3.0, -2.5], [-3.2, -1.2], [-1.0, -1.0], [2.6, -1.0]],
+  easy: [[0.76, -0.4], [0.76, -1.3], [1.4, -1.7], [1.5, -2.2], [0.6, -2.4], [-0.4, -2.1], [-0.6, -1.6], [-1.71, -1.69], [-2.4, -1.3], [-1.0, -0.4], [0.76, -0.4]],
+  moderate: [[0.76, -0.4], [0.76, -1.3], [1.3, -1.9], [1.6, -2.56], [1.2, -3.2], [0.45, -3.3], [-0.45, -3.05], [-0.8, -3.2], [-1.35, -2.75], [-1.71, -1.69], [-2.4, -1.3], [-1.0, -0.4], [0.76, -0.4]],
+  hard: [[2.4, -0.6], [3.9, -1.2], [4.4, -2.2], [4.2, -3.2], [3.3, -3.85], [2.35, -4.0], [1.7, -3.65], [0.6, -3.7], [-0.1, -4.1], [-0.8, -3.7], [-1.3, -3.0], [-1.55, -2.3], [-1.71, -1.69], [-2.6, -1.0], [-1.0, -0.5], [2.4, -0.6]],
 };
-const CREEK = [[-0.3, -4.05], [-1.0, -3.95], [-1.7, -3.72], [-2.5, -3.4]];
+const CREEK = [[-0.1, -4.1], [-0.8, -3.7], [-1.3, -3.0], [-1.55, -2.3]];
 function distToLine(pts, x, z) {
   let best = 1e9;
   for (let i = 0; i < pts.length - 1; i++) {
@@ -316,10 +316,19 @@ function pathZ(x) { // z of path centreline at x
   }
   return PATH[PATH.length - 1][1];
 }
-const MOUND = { x: 0.5, z: -2.9, rx: 3.0, rz: 1.5, h: 0.4 };
+// the hill: rises from Cedar Crossing at the front up to The Summit by the fence
+const MOUND = { x: 0.6, z: -2.65, rx: 2.6, rz: 1.8, h: 0.8 };
+const hillW = v => 0.75 + 0.25 * clamp((1 + v) / 2, 0, 1); // teardrop width
 function moundH(x, z) {
-  const u = (x - MOUND.x) / MOUND.rx, v = (z - MOUND.z) / MOUND.rz, q = u * u + v * v;
-  return q < 1 ? MOUND.h * (1 - q) * (1 - q) : 0;
+  // the whole course space tilts gently up toward the fence
+  const e = Math.sqrt(((x - EDGE.x) / EDGE.rx) ** 2 + ((z - EDGE.z) / EDGE.rz) ** 2);
+  let h = 0.1 * smooth(0.4, -4.4, z) * smooth(1.0, 0.85, e);
+  const v = (z - MOUND.z) / MOUND.rz, u = (x - MOUND.x) / (MOUND.rx * hillW(v)), q = Math.sqrt(u * u + v * v);
+  if (q < 1) {
+    h += MOUND.h * smooth(1.0, -0.8, v) * smooth(1.0, 0.55, q);
+    h -= 0.045 * smooth(0.22, 0.05, distToLine(CREEK, x, z)); // Rocky Creek Bed gully
+  }
+  return h;
 }
 function groundH(x, z) {
   let h = 0.011 * (Math.sin(x * 3.4 + Math.sin(z * 2.6)) * 0.6 + Math.sin(z * 4.6 + x * 1.4) * 0.4)
@@ -614,7 +623,7 @@ function addRock(cx, cz, a, b, h, yaw, opt = {}) {
     }
   });
   const RINGS = 6, SEG = opt.seg ?? 11, posA = [], col = [], idx = [];
-  const tint = opt.color || [0.7, 0.68, 0.63];
+  const tint = (opt.color || [0.7, 0.68, 0.63]).map(c => c * 0.55); // vertex colours are linear: keep rocks a natural grey
   const vert = (q, th, y) => {
     const fq = q * f(th), u = fq * Math.cos(th) * a, v = fq * Math.sin(th) * b;
     posA.push(cx + u * c - v * s, y, cz + u * s + v * c);
@@ -655,7 +664,7 @@ const riverTint = () => [RIVER, RIVER2, RIVER3][(rnd() * 3) | 0];
 const hydro = [[-5.4, -3.4, 1.1], [-4.6, -4.5, 0.9], [5.9, -2.4, 0.7], [3.6, -4.8, 0.8], [-1.8, -4.9, 0.8], [0.9, -4.9, 0.6]];
 function groundColor(x, z) {
   const dp = distToPath(x, z);
-  let c = [0.3, 0.235, 0.18]; // dark brown course soil
+  let c = [0.58, 0.42, 0.27]; // brown dirt with pine needles
   const n1 = Math.sin(x * 2.3 + Math.sin(z * 1.7) * 2) * Math.sin(z * 2.9 - x * 0.6);
   c = c.map((v, i) => v * (1 + n1 * 0.12) + [0.03, 0.02, 0][i] * n1);
   const gravel = [0.7, 0.64, 0.55];
@@ -666,7 +675,7 @@ function groundColor(x, z) {
   hy *= 1 - t;
   c = c.map((v, i) => lerp(v, [0.24, 0.62, 0.6][i], hy * 0.9));
   const md = moundH(x, z) / MOUND.h;
-  c = c.map((v, i) => lerp(v, [0.4, 0.33, 0.27][i], smooth(0.0, 0.25, md) * 0.7));
+  c = c.map((v, i) => lerp(v, [0.55, 0.41, 0.28][i], smooth(0.0, 0.25, md) * 0.7));
   const cr = smooth(0.3, 0.12, distToLine(CREEK, x, z)) * (1 - t);
   c = c.map((v, i) => lerp(v, [0.46, 0.5, 0.53][i], cr * 0.75));
   const grass = smooth(-4.25, -4.75, z) * (1 - t) * (insideEdge(x, z) ? 0.2 : 1);
@@ -858,7 +867,7 @@ function addBridge(cx, cz, len, wid, b) {
   [-1, 1].forEach(sd => {
     const m = new THREE.Mesh(new THREE.BoxGeometry(len - 2 * r, 0.03, 0.02), M.darkWood);
     m.position.set(cx + Wx * sd * (wid / 2 + 0.01), top - 0.012, cz + Wz * sd * (wid / 2 + 0.01)); m.rotation.y = -b; m.castShadow = true; scene.add(m);
-    addSegBlocker(cx - Lx * (hl - r) + Wx * sd * (wid / 2 + 0.03), cz - Lz * (hl - r) + Wz * sd * (wid / 2 + 0.03), cx + Lx * (hl - r) + Wx * sd * (wid / 2 + 0.03), cz + Lz * (hl - r) + Wz * sd * (wid / 2 + 0.03), 0.012);
+    // no invisible side walls: a truck that slips off just drops to the ground
   });
   return top;
 }
@@ -880,53 +889,59 @@ const BRIDGES = [];
     m.rotation.set(Math.PI / 2, 0, 0); m.position.set(x, gyL + 0.105 + r, zc + 0.02); shadowy(m);
   });
 
-  // the mound: a ring of big boulders around it, open at Cedar Crossing and the left entry
-  const C = MOUND, gaps = [[1.42, 0.13], [2.85, 0.2]];
-  for (let a = -0.25; a <= Math.PI + 0.25; a += 0.072) {
+  // the hill: big boulders ring it all the way round, open at Cedar Crossing, the pit side and up by Avalanche Alley
+  const C = MOUND, gaps = [[1.51, 0.13], [2.6, 0.17], [5.5, 0.25]];
+  const BOULDER = () => [0.5 + rr(-0.05, 0.05), 0.45 + rr(-0.03, 0.03), 0.4];
+  for (let a = 0; a < TAU; a += 0.06) {
     if (gaps.some(([g, w]) => Math.abs(a - g) < w)) continue;
-    const x = C.x + C.rx * 1.05 * Math.cos(a), z = C.z + C.rz * 1.05 * Math.sin(a);
-    addRock(x, z, rr(0.15, 0.2), rr(0.12, 0.16), rr(0.2, 0.26), a, { color: rnd() < 0.5 ? [0.46, 0.43, 0.39] : [0.4, 0.38, 0.35], sink: 0.1, seg: 9 });
+    const vv = 1.04 * Math.sin(a), x = C.x + C.rx * 1.04 * Math.cos(a) * hillW(vv), z = C.z + C.rz * vv;
+    addRock(x, z, rr(0.15, 0.21), rr(0.12, 0.17), rr(0.2, 0.27), a, { color: BOULDER(), sink: 0.1, seg: 10 });
   }
-  // bridges
-  BRIDGES.push([0.97, -1.33], [-1.66, -2.45], [1.45, -2.8]);
-  { // Cedar Crossing over a little stony creek where the lines enter the mound
-    for (let x = 0.55; x <= 1.4; x += 0.09) addRock(x, -1.33 + rr(-0.04, 0.04), 0.05, 0.04, 0.03, rnd() * 3, { color: [0.46, 0.5, 0.53], visualOnly: true });
-    addBridge(0.97, -1.33, 0.95, 0.3, Math.PI / 2);
-    addGate('Cedar Crossing', 0.97, -1.33, -Math.PI / 2, 0.45);
+  BRIDGES.push([0.76, -0.8], [-0.8, -3.2], [1.6, -2.56]);
+  { // Cedar Crossing: the way in at the bottom, over a little stony creek
+    for (let x = 0.35; x <= 1.2; x += 0.09) addRock(x, -0.8 + rr(-0.04, 0.04), 0.05, 0.04, 0.03, rnd() * 3, { color: [0.46, 0.5, 0.53], visualOnly: true });
+    addBridge(0.76, -0.8, 0.95, 0.3, Math.PI / 2);
+    addGate('Cedar Crossing', 0.76, -0.8, -Math.PI / 2, 0.45);
   }
-  addBridge(-1.66, -2.45, 0.9, 0.3, 0.38);
-  addGate('Timber Pass Bridge', -1.66, -2.45, -0.38, 0.45);
-  addBridge(1.45, -2.8, 0.8, 0.3, 1.39);
-  // The Summit: a flat-topped boulder on the peak
-  addRock(0.5, -3.1, 0.24, 0.2, 0.04, 0.3, { p: 4, seg: 9, amp: 0.12, color: [0.55, 0.52, 0.47], sink: 0.4 });
-  addGate('The Summit', 0.5, -3.1, 0, 0.8);
-  // Rocky Creek Bed: river stones down the back-left flank
+  // Timber Pass Bridge up on the left, just below Rocky Creek Bed
+  addBridge(-0.8, -3.2, 0.75, 0.3, 0.32);
+  addGate('Timber Pass Bridge', -0.8, -3.2, -0.32, 0.45);
+  // the middle bridge on the moderate line
+  addBridge(1.6, -2.56, 0.8, 0.3, 1.77);
+  // The Summit boulder climb: a pile of big boulders at the top, a flat rock to park on
+  for (let k = 0, n = 0; k < 120 && n < 12; k++) {
+    const a = rnd() * TAU, d = rr(0.35, 0.75), x = 0.6 + Math.cos(a) * d, z = -3.7 + Math.sin(a) * d * 0.7;
+    if (distToLine(LINES.hard, x, z) < 0.33 || distToLine(LINES.moderate, x, z) < 0.33) continue;
+    addRock(x, z, rr(0.16, 0.24), rr(0.14, 0.2), rr(0.24, 0.32), rnd() * 3, { color: BOULDER(), sink: 0.1, seg: 10 }); n++;
+  }
+  addRock(0.6, -3.7, 0.24, 0.2, 0.04, 0.3, { p: 4, seg: 9, amp: 0.12, color: [0.55, 0.52, 0.47], sink: 0.4 });
+  addGate('The Summit', 0.6, -3.7, 0, 0.55);
+  // Rocky Creek Bed: river stones down the gully on the left
   for (let i = 0; i < 46; i++) {
     const t = rnd(), seg = Math.min(CREEK.length - 2, (t * (CREEK.length - 1)) | 0), f = t * (CREEK.length - 1) - seg;
-    const x = lerp(CREEK[seg][0], CREEK[seg + 1][0], f) + rr(-0.16, 0.16), z = lerp(CREEK[seg][1], CREEK[seg + 1][1], f) + rr(-0.16, 0.16);
+    const x = lerp(CREEK[seg][0], CREEK[seg + 1][0], f) + rr(-0.14, 0.14), z = lerp(CREEK[seg][1], CREEK[seg + 1][1], f) + rr(-0.14, 0.14);
+    if (Math.hypot(x + 0.8, z + 3.2) < 0.5) continue;
     addRock(x, z, rr(0.05, 0.08), rr(0.04, 0.06), rr(0.02, 0.035), rnd() * 3, { color: riverTint(), sink: 0.3 });
   }
-  addGate('Rocky Creek Bed', -1.4, -3.82, 0, 0.7);
-  // Avalanche Alley: a spill of loose limestone down the back-right
-  for (let i = 0; i < 40; i++) {
-    const a = rnd() * TAU, d = Math.sqrt(rnd()) * 0.6, x = 2.6 + Math.cos(a) * d * 1.2, z = -3.8 + Math.sin(a) * d * 0.6;
-    addRock(x, z, rr(0.05, 0.1), rr(0.04, 0.07), rr(0.02, 0.045), rnd() * 3, { p: 3, seg: 7, color: [0.6, 0.58, 0.53], sink: 0.35 });
+  addGate('Rocky Creek Bed', -0.5, -3.9, -2.62, 0.5);
+  // Avalanche Alley: the dirt trail and loose rock spilling down the top right
+  for (let i = 0; i < 34; i++) {
+    const t = rnd(), x = lerp(3.3, 1.7, t) + rr(-0.15, 0.15), z = lerp(-3.85, -3.65, t) + rr(-0.15, 0.15);
+    addRock(x, z, rr(0.04, 0.08), rr(0.03, 0.06), rr(0.015, 0.03), rnd() * 3, { p: 3, seg: 7, color: [0.6, 0.58, 0.53], sink: 0.35 });
   }
-  addGate('Avalanche Alley', 2.6, -3.8, 0, 0.8);
-  // Switchbacks: log rails zig-zag down the right side
-  [[2.9, -1.9, 4.85], [4.2, -2.55, 5.6], [3.55, -3.2, 4.4]].forEach(([xa, z, xb]) => {
-    addLog(xa, z, xb, z + rr(-0.02, 0.02), 0.05, { mat: rnd() < 0.5 ? M.bark : M.peeled, noBlock: true });
-    addSegBlocker(xa, z, xb, z, 0.07);
-  });
-  addGate('Switchbacks', 4.0, -2.88, 0, 0.6);
-  // big boulders on the mound, kept off the painted lines and bridges
-  for (let k = 0, placed = 0; k < 400 && placed < 26; k++) {
+  addGate('Avalanche Alley', 1.95, -3.75, -2.65, 0.5);
+  // Switchbacks: the hard line's dirt trail curving round the outside right of the ring
+  addGate('Switchbacks', 4.4, -2.2, Math.PI / 2, 0.6);
+  // big boulders packed all over the hill, trails winding between them
+  for (let k = 0, placed = 0; k < 900 && placed < 46; k++) {
     const u = rr(-1, 1), v = rr(-1, 1); if (u * u + v * v > 0.82) continue;
-    const x = C.x + u * C.rx, z = C.z + v * C.rz;
-    if (Object.values(LINES).some(L => distToLine(L, x, z) < 0.36)) continue;
-    if (BRIDGES.some(([bx, bz]) => Math.hypot(bx - x, bz - z) < 0.6) || Math.hypot(x - 0.5, z + 3.1) < 0.4 || distToLine(CREEK, x, z) < 0.3) continue;
-    addRock(x, z, rr(0.13, 0.22), rr(0.11, 0.18), rr(0.18, 0.28), rnd() * 3, { color: [0.45 + rr(-0.05, 0.05), 0.42, 0.38], sink: 0.12, seg: 9 }); placed++;
+    const x = C.x + u * C.rx * hillW(v), z = C.z + v * C.rz;
+    if (Object.values(LINES).some(L => distToLine(L, x, z) < 0.33)) continue;
+    if (BRIDGES.some(([bx, bz]) => Math.hypot(bx - x, bz - z) < 0.6) || Math.hypot(x - 0.6, z + 3.7) < 0.4 || distToLine(CREEK, x, z) < 0.28) continue;
+    addRock(x, z, rr(0.13, 0.22), rr(0.11, 0.18), rr(0.18, 0.28), rnd() * 3, { color: BOULDER(), sink: 0.12, seg: 10 }); placed++;
   }
+  // the big boulder by the pit
+  addRock(-2.55, -0.25, 0.22, 0.19, 0.26, 0.5, { color: BOULDER(), sink: 0.1, seg: 10 });
   // smaller climbable rocks on the moderate and hard lines
   for (let k = 0; k < 60; k++) {
     const L = rnd() < 0.6 ? LINES.hard : LINES.moderate, i = (rnd() * (L.length - 1)) | 0, f = rnd();
