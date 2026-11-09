@@ -1810,8 +1810,8 @@ function checkGates(px, pz) {
 }
 function resetPose() {
   const g = gates[G.lastGate];
-  if (G.lastGate < 0 || !g) { placeCar(SPAWN[0], SPAWN[1] + (CUR === P2 ? 0.4 : 0), SPAWN[2]); return; }
-  const o = CUR === P2 ? 0.3 : 0;
+  if (G.lastGate < 0 || !g) { resetFree(); return; }
+  const o = NET.role === 'guest' ? 0.3 : 0;
   placeCar(g.x + g.fx * (0.22 + o) * G.lastDir, g.z + g.fz * (0.22 + o) * G.lastDir, G.lastDir > 0 ? g.yaw : g.yaw + Math.PI);
 }
 function eachTruck(fn) { const was = CUR; activeTrucks().forEach(T => { useTruck(T); fn(T); }); useTruck(was); }
@@ -1823,7 +1823,7 @@ function doReset(manual) {
   TR.chaseCool = Math.max(TR.chaseCool || 0, 6);
   if (manual) toast(G.mode === 'run' && G.running ? 'Reset · +' + PENALTY + ' s' : G.mode === 'free' ? 'Back at the start' : 'Back on the trail');
 }
-function resetFree() { placeCar(SPAWN[0], SPAWN[1] + (CUR === P2 ? 0.4 : 0), SPAWN[2]); }
+function resetFree() { placeCar(SPAWN[0] - (NET.role === 'guest' ? 0.45 : 0), SPAWN[1] + (NET.role === 'guest' ? 0.45 : 0), SPAWN[2]); }
 function onRollover() { toast(G.mode === 'run' && G.running ? 'Rolled it! Back to your last flag · +' + PENALTY + ' s' : 'Rolled it! Putting it back on its wheels'); S.flipTimer = 1.5; }
 
 function startMode(mode) {
@@ -2647,12 +2647,9 @@ function resize() {
 addEventListener('resize', resize); resize();
 
 function stepTruck(dt) {
-  // the other truck is solid, so you bump instead of driving through each other
-  const others = presentTrucks().filter(T => T !== CUR);
-  others.forEach(T => blockers.push({ x: T.S.x, z: T.S.z, r: 0.1 }));
+  // your friend's truck is shown where their device says it is; it never blocks you, so internet lag can't get you stuck
   const px = S.x, pz = S.z;
   physStep(dt);
-  blockers.length -= others.length;
   checkGates(px, pz);
   if (S.flipped > 0) { S.flipTimer -= dt; if (S.flipTimer <= 0) { if (G.mode === 'run') { if (G.running) { G.resets++; $('#pen').textContent = G.resets + (G.resets === 1 ? ' reset' : ' resets') + ' · +' + G.resets * PENALTY + 's'; } resetPose(); } else { placeCar(S.x, S.z, S.yaw); if (Math.abs(S.roll) > 0.6) resetFree(); } } }
 }
