@@ -2459,7 +2459,7 @@ function loadPeer() {
     sc.onload = res; sc.onerror = () => rej(new Error('load')); document.head.appendChild(sc);
   });
 }
-const NET_FAIL = 'Couldn\'t reach the online service. Check your internet connection. Online play works on the club\'s website (braggcreekrc.netlify.app), not inside the Claude preview.';
+const NET_FAIL = 'Couldn\'t reach the online service. Check your internet connection. Online play works on the club\'s website (everettaberle12-sudo.github.io/Claude-Project), not inside the Claude preview.';
 function netConnected(conn) {
   NET.conn = conn; G.online = true;
   conn.on('data', netRecv);
