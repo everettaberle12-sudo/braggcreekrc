@@ -3,21 +3,21 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<meta name="description" content="Drive the Bragg Creek RC Club crawler course in your browser. Drive solo or 2-player co-op: take the club TRX-4M Broncos up The Summit, across Timber Pass Bridge and down Avalanche Alley. Free, no download.">
+<meta name="description" content="Drive the Bragg Creek RC Club crawler course in your browser. Drive solo or online with a friend: take the club TRX-4M Broncos up The Summit, across Timber Pass Bridge and down Avalanche Alley. Free, no download.">
 <meta name="theme-color" content="#2d4a22">
 <link rel="icon" type="image/png" href="/favicon.png">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Bragg Creek RC Club">
 <meta property="og:title" content="Bragg Creek RC Crawler Course: Play Online">
-<meta property="og:description" content="Drive the Bragg Creek RC Club crawler course in your browser. Drive solo or 2-player co-op: take the club TRX-4M Broncos up The Summit, across Timber Pass Bridge and down Avalanche Alley. Free, no download.">
+<meta property="og:description" content="Drive the Bragg Creek RC Club crawler course in your browser. Drive solo or online with a friend: take the club TRX-4M Broncos up The Summit, across Timber Pass Bridge and down Avalanche Alley. Free, no download.">
 <meta property="og:url" content="https://braggcreekrc.netlify.app/">
 <meta property="og:image" content="https://braggcreekrc.netlify.app/preview.jpg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Bragg Creek RC Crawler Course: Play Online">
-<meta name="twitter:description" content="Drive the Bragg Creek RC Club crawler course in your browser. Drive solo or 2-player co-op: take the club TRX-4M Broncos up The Summit, across Timber Pass Bridge and down Avalanche Alley. Free, no download.">
+<meta name="twitter:description" content="Drive the Bragg Creek RC Club crawler course in your browser. Drive solo or online with a friend: take the club TRX-4M Broncos up The Summit, across Timber Pass Bridge and down Avalanche Alley. Free, no download.">
 <meta name="twitter:image" content="https://braggcreekrc.netlify.app/preview.jpg">
 <title>Bragg Creek RC Crawler Course</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -103,14 +103,7 @@ button:focus-visible { outline: 2px solid var(--gate); outline-offset: 2px; }
 .keys kbd { font-family: var(--font-mono); font-size: 12px; border: 1px solid var(--field-line); border-radius: 3px; padding: 0 4px; }
 
 /* touch controls */
-#touch, #touch2 { display: none; }
-body.touch.coop #touch2 { display: block; }
-#touch2 .pad { bottom: auto; top: calc(env(safe-area-inset-top, 0px) + 18px); }
-#touch2 .pad.left { left: auto; right: calc(env(safe-area-inset-right, 0px) + 16px); }
-#touch2 .pad.right { right: auto; left: calc(env(safe-area-inset-left, 0px) + 16px); }
-#touch2 .tbtn { transform: rotate(180deg); border-color: #e0611a; }
-body.touch.coop .hud-tr { top: auto; right: calc(env(safe-area-inset-right, 0px) + 112px); bottom: calc(env(safe-area-inset-bottom, 0px) + 18px); max-width: calc(100vw - 340px); }
-body.touch.coop .hud-tl { left: calc(env(safe-area-inset-left, 0px) + 112px); }
+#touch { display: none; }
 body.touch #touch { display: block; }
 body.touch .keys { display: none; }
 .pad {
@@ -163,6 +156,10 @@ body.touch .keys { display: none; }
   font-family: var(--font-label); font-weight: 700; font-size: 18px; letter-spacing: 0.08em; text-transform: uppercase;
 }
 .btn.primary { background: var(--ink); color: var(--paper); }
+.netcode { font-family: var(--font-mono); font-weight: 600; font-size: 46px; letter-spacing: 0.3em; text-align: center; border: 2px dashed var(--ink); border-radius: 6px; padding: 6px 0 6px 0.3em; }
+.joinrow { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; }
+.joinrow label { grid-column: 1 / -1; }
+.joinrow input { font-family: var(--font-mono); font-size: 22px; letter-spacing: 0.25em; text-transform: uppercase; padding: 10px 12px; border: 2px solid var(--ink); border-radius: 6px; background: #fff; color: var(--ink); min-width: 0; user-select: text; -webkit-user-select: text; }
 .btn.wide { grid-column: 1 / -1; font-size: 16px; padding: 10px; }
 .btn.primary:hover { background: #2c261d; }
 .btn:not(.primary):hover { background: rgba(23, 20, 15, 0.07); }
@@ -219,7 +216,7 @@ body.touch .keys { display: none; }
   </div>
   <div id="toast" role="status" aria-live="polite"></div>
   <div id="alert" hidden></div>
-  <div class="keys"><span id="p2keys" hidden>P1 <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> · P2 arrows &nbsp;·&nbsp; </span><kbd>W</kbd><kbd>S</kbd> throttle &nbsp;·&nbsp; <kbd>A</kbd><kbd>D</kbd> steer &nbsp;·&nbsp; <kbd>G</kbd> gear &nbsp;·&nbsp; <kbd>C</kbd> camera / course view &nbsp;·&nbsp; <kbd>R</kbd> reset &nbsp;·&nbsp; <kbd>X</kbd> chaos</div>
+  <div class="keys"><kbd>W</kbd><kbd>S</kbd> throttle &nbsp;·&nbsp; <kbd>A</kbd><kbd>D</kbd> steer &nbsp;·&nbsp; <kbd>G</kbd> gear &nbsp;·&nbsp; <kbd>C</kbd> camera / course view &nbsp;·&nbsp; <kbd>R</kbd> reset &nbsp;·&nbsp; <kbd>X</kbd> chaos</div>
   <div id="touch">
     <div class="pad left">
       <button class="tbtn" data-k="left" aria-label="Steer left"><svg viewBox="0 0 24 24"><path d="M15.5 4 7 12l8.5 8z"/></svg></button>
@@ -228,16 +225,6 @@ body.touch .keys { display: none; }
     <div class="pad right">
       <button class="tbtn" data-k="rev" aria-label="Reverse">REV</button>
       <button class="tbtn" data-k="gas" aria-label="Throttle">GAS</button>
-    </div>
-  </div>
-  <div id="touch2" class="p2">
-    <div class="pad left">
-      <button class="tbtn" data-k="left" aria-label="Player 2 steer left"><svg viewBox="0 0 24 24"><path d="M15.5 4 7 12l8.5 8z"/></svg></button>
-      <button class="tbtn" data-k="right" aria-label="Player 2 steer right"><svg viewBox="0 0 24 24"><path d="M8.5 4 17 12l-8.5 8z"/></svg></button>
-    </div>
-    <div class="pad right">
-      <button class="tbtn" data-k="rev" aria-label="Player 2 reverse">REV</button>
-      <button class="tbtn" data-k="gas" aria-label="Player 2 throttle">GAS</button>
     </div>
   </div>
 </div>
@@ -266,12 +253,35 @@ body.touch .keys { display: none; }
       <div class="actions">
         <button class="btn primary" id="bRun">Course run</button>
         <button class="btn" id="bFree">Free drive</button>
-        <button class="btn" id="bCoop">Players: 1</button>
+        <button class="btn" id="bOnline">Play online</button>
         <button class="btn" id="bView">Course view</button>
       </div>
       <div class="fine"><span>Best course time</span><strong id="bestTxt">No run yet</strong></div>
     </div>
     <div class="sign-foot"><span>RC vehicles only</span><span>Tread lightly</span></div>
+  </div>
+</div>
+
+<div class="overlay" id="online" hidden>
+  <div class="sign">
+    <div class="sign-inner">
+      <div>
+        <div class="eyebrow">Two devices, one course</div>
+        <h1>Play Online</h1>
+      </div>
+      <p id="netStatus">Drive the course together, each on your own phone, tablet or computer. One of you hosts and shares the code, the other joins with it.</p>
+      <div class="netcode" id="netCode" hidden></div>
+      <div class="actions">
+        <button class="btn primary" id="bHost">Host a game</button>
+        <button class="btn" id="bNetBack">Back</button>
+      </div>
+      <div class="joinrow">
+        <label for="joinCode" class="lbl" style="color:#5b5346">Have a code?</label>
+        <input id="joinCode" maxlength="4" placeholder="CODE" autocomplete="off" autocapitalize="characters" spellcheck="false">
+        <button class="btn" id="bJoin">Join</button>
+      </div>
+    </div>
+    <div class="sign-foot"><span>Bragg Creek RC Club</span><span>Crawl together</span></div>
   </div>
 </div>
 
@@ -1482,7 +1492,8 @@ function useTruck(T) { CUR = T; car = T.car; model = T.model; wheels = T.wheels;
 const P1 = makeTruck(0x0a3fc4), P2 = makeTruck(0xe0611a); // player 2 drives an orange Bronco
 P2.car.visible = false;
 const TRUCKS = [P1, P2];
-const activeTrucks = () => G.coop ? TRUCKS : [P1];
+const activeTrucks = () => [P1]; // trucks this device drives
+const presentTrucks = () => G.online && P2.car.visible ? [P1, P2] : [P1];
 useTruck(P1);
 const _ya = new V3(0, 1, 0), _d = new V3(), _m = new V3(), _a = new V3(), _b = new V3();
 function stretch(mesh, a, b) {
@@ -1723,7 +1734,7 @@ function syncCar() {
    ========================================================= */
 const G = { mode: 'menu', got: new Set(), running: false, t: 0, resets: 0, lastGate: -1, lastDir: 1, camMode: 0, attract: 0, finished: false, labelFor: -1 };
 const CAMS = ['Chase', 'Driver', 'Bumper', 'Course'];
-const camName = i => (G.coop && i === 0 ? 'Co-op' : CAMS[i]);
+const camName = i => CAMS[i];
 const PENALTY = 10;
 let best = null;
 try { const b = parseFloat(localStorage.getItem('bcrc-best')); if (b > 0) best = b; } catch (e) {}
@@ -1788,7 +1799,7 @@ function checkGates(px, pz) {
   if (!G.running && Math.hypot(S.x - SPAWN[0], S.z - SPAWN[1]) > 0.05) { G.running = true; G.t = 0; }
   gates.forEach((g, i) => {
     if (G.got.has(i) || !segCross(px, pz, S.x, S.z, g)) return;
-    G.got.add(i); G.lastGate = i;
+    G.got.add(i); G.lastGate = i; netSend({ t: 'flag', i });
     G.lastDir = ((S.x - px) * g.fx + (S.z - pz) * g.fz) >= 0 ? 1 : -1;
     const left = gates.length - G.got.size;
     beep(left ? 660 : 880);
@@ -1823,10 +1834,10 @@ function startMode(mode) {
   $('#pGate').hidden = mode === 'free';
   $('#timeLbl').textContent = mode === 'free' ? 'Speed' : 'Time';
   $('#pen').textContent = mode === 'free' ? 'Free drive' : '0 resets';
-  P2.car.visible = G.coop; $('#p2keys').hidden = !G.coop;
+  netSend({ t: 'reset' });
   eachTruck(() => resetFree());
   refreshGates();
-  toast(G.coop ? (isTouch ? 'Co-op! Player 2 uses the controls at the top.' : 'Co-op! Player 1: W A S D · Player 2: arrow keys.') : mode === 'free' ? 'Free drive. Explore the whole course.' : 'Collect all ' + gates.length + ' flags in any order. The clock starts when you move.');
+  toast(mode === 'free' ? 'Free drive. Explore the whole course.' : 'Collect all ' + gates.length + ' flags in any order. The clock starts when you move.');
   $('#camTxt').textContent = camName(G.camMode);
   audioStart();
 }
@@ -1854,7 +1865,7 @@ function toast(t) { const el = $('#toast'); el.textContent = t; el.classList.add
    INPUT: keyboard, touch buttons, gamepad
    ========================================================= */
 const keys = {};
-const touchK = { left: 0, right: 0, gas: 0, rev: 0 }, touchK2 = { left: 0, right: 0, gas: 0, rev: 0 };
+const touchK = { left: 0, right: 0, gas: 0, rev: 0 };
 addEventListener('keydown', e => {
   if (e.repeat) return;
   const k = e.key.toLowerCase(); keys[k] = true;
@@ -1868,39 +1879,35 @@ addEventListener('keydown', e => {
   if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', ' '].includes(k)) e.preventDefault();
 });
 addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false; });
-addEventListener('blur', () => { for (const k in keys) keys[k] = false; for (const k in touchK) touchK[k] = touchK2[k] = 0; });
+addEventListener('blur', () => { for (const k in keys) keys[k] = false; for (const k in touchK) touchK[k] = 0; });
 document.querySelectorAll('.tbtn').forEach(b => {
-  const k = b.dataset.k, TK = b.closest('.p2') ? touchK2 : touchK;
+  const k = b.dataset.k, TK = touchK;
   const on = e => { e.preventDefault(); TK[k] = 1; b.classList.add('on'); try { b.setPointerCapture(e.pointerId); } catch (_) {} audioStart(); };
   const off = e => { TK[k] = 0; b.classList.remove('on'); };
   b.addEventListener('pointerdown', on); b.addEventListener('pointerup', off); b.addEventListener('pointercancel', off); b.addEventListener('lostpointercapture', off);
   b.addEventListener('contextmenu', e => e.preventDefault());
 });
 function readInput() {
-  const coop = G.coop;
-  let t1 = 0, s1 = 0, t2 = 0, s2 = 0;
-  if (keys['w'] || touchK.gas) t1 += 1; if (keys['s'] || touchK.rev) t1 -= 1;
-  if (keys['a'] || touchK.left) s1 += 1; if (keys['d'] || touchK.right) s1 -= 1;
-  const up = keys['arrowup'] ? 1 : 0, dn = keys['arrowdown'] ? 1 : 0, lf = keys['arrowleft'] ? 1 : 0, rt = keys['arrowright'] ? 1 : 0;
-  if (coop) { t2 += up - dn + touchK2.gas - touchK2.rev; s2 += lf - rt + touchK2.left - touchK2.right; }
-  else { t1 += up - dn; s1 += lf - rt; }
-  const pads = (navigator.getGamepads ? [...navigator.getGamepads()] : []).filter(Boolean);
-  pads.slice(0, coop ? 2 : 1).forEach((p, i) => {
-    let th = 0, st = 0;
+  let thr = 0, st = 0;
+  if (keys['w'] || keys['arrowup'] || touchK.gas) thr += 1;
+  if (keys['s'] || keys['arrowdown'] || touchK.rev) thr -= 1;
+  if (keys['a'] || keys['arrowleft'] || touchK.left) st += 1;
+  if (keys['d'] || keys['arrowright'] || touchK.right) st -= 1;
+  const pads = navigator.getGamepads ? navigator.getGamepads() : [];
+  for (const p of pads) {
+    if (!p) continue;
     const ax = p.axes[0] || 0; if (Math.abs(ax) > 0.12) st = -ax;
-    const r = p.buttons[7] ? p.buttons[7].value : 0, l = p.buttons[6] ? p.buttons[6].value : 0, ry = p.axes[1] || 0;
-    if (r > 0.05 || l > 0.05) th = r - l; else if (Math.abs(ry) > 0.15) th = -ry;
-    if (i === 0) { if (th) t1 = th; if (st) s1 = st; } else { if (th) t2 = th; if (st) s2 = st; }
-    const k = 'p' + i;
-    if (p.buttons[3] && p.buttons[3].pressed && !readInput[k + 'y']) cycleCam(); readInput[k + 'y'] = p.buttons[3] && p.buttons[3].pressed;
-    if (p.buttons[2] && p.buttons[2].pressed && !readInput[k + 'x']) toggleGear(); readInput[k + 'x'] = p.buttons[2] && p.buttons[2].pressed;
-    if (p.buttons[1] && p.buttons[1].pressed && !readInput[k + 'b']) doReset(true); readInput[k + 'b'] = p.buttons[1] && p.buttons[1].pressed;
-  });
-  P1.input.thr = clamp(t1, -1, 1); P1.input.steer = clamp(s1, -1, 1);
-  P2.input.thr = clamp(t2, -1, 1); P2.input.steer = clamp(s2, -1, 1);
+    const rt = p.buttons[7] ? p.buttons[7].value : 0, lt = p.buttons[6] ? p.buttons[6].value : 0, ry = p.axes[1] || 0;
+    if (rt > 0.05 || lt > 0.05) thr = rt - lt; else if (Math.abs(ry) > 0.15) thr = -ry;
+    if (p.buttons[3] && p.buttons[3].pressed && !readInput.yHeld) cycleCam(); readInput.yHeld = p.buttons[3] && p.buttons[3].pressed;
+    if (p.buttons[2] && p.buttons[2].pressed && !readInput.xHeld) toggleGear(); readInput.xHeld = p.buttons[2] && p.buttons[2].pressed;
+    if (p.buttons[1] && p.buttons[1].pressed && !readInput.bHeld) doReset(true); readInput.bHeld = p.buttons[1] && p.buttons[1].pressed;
+    break;
+  }
+  P1.input.thr = clamp(thr, -1, 1); P1.input.steer = clamp(st, -1, 1);
 }
 function cycleCam() {
-  if (G.wreck) { // during a wreck: Wreck view, then Chase, Driver, Bumper, Course
+  if (G.wreck && G.wreck.T === P1) { // during a wreck: Wreck view, then Chase, Driver, Bumper, Course
     if (G.wreckCam) { G.wreckCam = false; G.camMode = 0; }
     else if (G.camMode === CAMS.length - 1) G.wreckCam = true;
     else G.camMode++;
@@ -1912,7 +1919,6 @@ function toggleGear() { const g = P1.S.gear === 'low' ? 'high' : 'low'; P1.S.gea
 $('#bCam').onclick = cycleCam; $('#bGear').onclick = toggleGear; $('#bReset').onclick = () => doReset(true);
 $('#bMenu').onclick = toMenu; $('#bSound').onclick = toggleSound;
 $('#bRun').onclick = () => startMode('run'); $('#bFree').onclick = () => startMode('free');
-$('#bCoop').onclick = () => { G.coop = !G.coop; $('#bCoop').textContent = 'Players: ' + (G.coop ? 2 : 1); document.body.classList.toggle('coop', G.coop); };
 $('#bView').onclick = () => { startMode('free'); G.camMode = 3; $('#camTxt').textContent = CAMS[3]; camPos.set(0.5 + Math.sin(OV.az) * 5, 8, 3); toast(isTouch ? 'Course view: drag to spin, pinch to zoom' : 'Course view: drag to spin, scroll to zoom. Press C to drive up close'); };
 $('#bAgain').onclick = () => startMode('run'); $('#bFinFree').onclick = () => startMode('free');
 
@@ -1957,7 +1963,7 @@ function updateCamera(dt) {
   if (G.wreck && G.wreckCam && G.mode !== 'menu') {
     // the wreck camera stands back so you can watch the whole thing
     camPos.lerp(G.wreck.cam, 1 - Math.exp(-dt * 3));
-    camLook.lerp(new V3(S.x, S.y + 0.15, S.z), 1 - Math.exp(-dt * 6));
+    const VS = G.wreck.T.S; camLook.lerp(new V3(VS.x, VS.y + 0.15, VS.z), 1 - Math.exp(-dt * 6));
     camera.position.copy(camPos); camera.lookAt(camLook); return;
   }
   const fx = Math.cos(S.yaw), fz = -Math.sin(S.yaw);
@@ -1969,7 +1975,7 @@ function updateCamera(dt) {
     camera.lookAt(0.6 + a * 1.8, 0.1, -2.0); return;
   }
   const k = 1 - Math.exp(-dt * 5);
-  if (G.coop && G.camMode === 0) {
+  if (false) {
     const a = P1.S, b = P2.S, mx = (a.x + b.x) / 2, mz = (a.z + b.z) / 2, my = Math.max(a.y, b.y), sep = Math.hypot(a.x - b.x, a.z - b.z);
     const want = new V3(mx, my + 0.75 + sep * 0.6, mz + 0.85 + sep * 0.75);
     want.y = Math.max(want.y, H(want.x, want.z) + 0.2);
@@ -2084,7 +2090,7 @@ function ripSign(target) {
     h.userData.to = { p: new V3(nx, groundH(nx, nz) + 0.015, nz), q: new THREE.Quaternion().setFromEuler(_e) }; h.userData.k = 0; ANIM.add(h);
   });
   for (let i = 0; i < 6; i++) puff(bp.x + rr(-0.2, 0.2), groundH(bp.x, bp.z), bp.z + rr(-0.2, 0.2), 2);
-  toast('They kicked the sign down and ripped it in half!');
+  tToast('They kicked the sign down and ripped it in half!');
 }
 function dropFlagsNear(x, z, r) {
   gates.forEach(g => g.meshes.forEach(m => { if (Math.hypot(m.position.x - x, m.position.z - z) < r) { saveXf(m); m.position.y = groundH(m.position.x, m.position.z) - 0.02; } }));
@@ -2206,6 +2212,7 @@ function dropItem(m) {
   if (m.state === 'tear' && !m.item.wrecked) throwItem(m.item, m.x, m.z);
   m.item.claimed = null; m.item = null;
 }
+const whose = T => !G.online ? 'your' : T === P1 ? 'Player 1\'s' : 'Player 2\'s';
 function pickLoot(m) {
   let best = null, bd = 1e9;
   for (const it of WRECKABLE) {
@@ -2222,7 +2229,7 @@ function updateTrashers(dt) {
   if (TR.phase === 'idle') {
     if (G.mode === 'menu' || G.finished || G.wreck) return;
     TR.next -= dt;
-    if (TR.next < 8 && !TR.warned) { TR.warned = true; toast('You hear electric dirt bikes coming…'); }
+    if (TR.next < 8 && !TR.warned) { TR.warned = true; tToast('You hear electric dirt bikes coming…'); }
     if (TR.next <= 0) gangStart();
     return;
   }
@@ -2255,7 +2262,7 @@ function updateTrashers(dt) {
           // kicking the rules sign off its tree
           const b = t.parts[0]; saveXf(b);
           if (!t.broken) { const k = Math.min(1, m.smashT / 4); b.rotation.set(0, 0, Math.sin(m.smashT * 20) * 0.08 * k); b.position.x = b.userData.xf.p.x + Math.sin(m.smashT * 29) * 0.025 * k; }
-          if (!TR.cineDone) { TR.cineDone = true; TR.cine = { t: 9, x: t.x, z: t.z }; toast('One of them is kicking the rules sign!'); }
+          if (!TR.cineDone) { TR.cineDone = true; TR.cine = { t: 9, x: t.x, z: t.z }; tToast('One of them is kicking the rules sign!'); }
           if (m.smashT > 4 && !t.broken) { b.rotation.set(0, 0, 0); placeBroken(t); m.state = 'rip'; m.ripT = 0; }
         } else if (m.smashT > 2.2) { if (!t.broken) placeBroken(t); m.plan.shift(); m.state = 'walk'; }
         break; }
@@ -2311,15 +2318,15 @@ function updateTrashers(dt) {
   });
   if (raid) {
     $('#alert').hidden = false;
-    if (G.wreck) $('#alert').textContent = 'They\'re wrecking your truck!';
+    if (G.wreck) $('#alert').textContent = 'They\'re wrecking ' + whose(G.wreck.T) + ' truck!';
     else if (TR.t < WRECK_COURSE_TIME) $('#alert').textContent = 'Trashers wrecking the course · 0:' + String(Math.ceil(WRECK_COURSE_TIME - TR.t)).padStart(2, '0');
-    else $('#alert').textContent = 'They\'re coming for your truck!';
+    else $('#alert').textContent = 'They\'re coming for ' + whose(CUR) + ' truck!';
     if (G.wreck && G.wreck.t > TRUCK_WRECK_TIME) gangLeave();
     if (!G.wreck && TR.t > 150) gangLeave(); // safety: never stay forever
   }
   if (TR.phase === 'leave' && TR.gang.every(m => m.state === 'gone')) {
     TR.phase = 'idle'; TR.next = TRASH_EVERY; TR.warned = false;
-    if (TR.broken) toast('The Trashers rode off. The course stays wrecked until you restart.');
+    if (TR.broken) tToast('The Trashers rode off. The course stays wrecked until you restart.');
   }
   poseGang(dt);
 }
@@ -2355,11 +2362,11 @@ function wreckTruck() {
   const mx = (S.x + aim.x) / 2, mz = (S.z + aim.z) / 2;
   const cam = new V3(mx + 0.6, 0, mz + 1.7); cam.y = H(cam.x, cam.z) + 2.6; // in front of the course, looking up the hill
   G.wreck = { t: 0, stage: 'stomp', st: 0, crush: 0, aim, nextPop: 0.4, cam, T: CUR };
-  G.wreckCam = true; $('#camTxt').textContent = 'Wreck';
+  G.wreckCam = CUR === P1; if (G.wreckCam) $('#camTxt').textContent = 'Wreck';
   S.v = 0; input.thr = input.steer = 0; $('#alert').hidden = true;
   rigLinks().forEach(m => { m.visible = false; });
   TR.gang.forEach(m => { if (m.g.visible && m.state !== 'ride' && m.state !== 'rideOut' && m.state !== 'gone' && m.state !== 'toBike') { dropItem(m); m.state = 'stomp'; } });
-  toast('They caught you! They\'re stomping your truck!');
+  toast(CUR === P1 ? 'They caught you! They\'re stomping your truck!' : 'They caught your friend\'s truck!');
 }
 function updateWreck(dt) {
   const W = G.wreck; if (!W) return;
@@ -2399,7 +2406,7 @@ function updateWreck(dt) {
     const g = H(S.x, S.z) + 0.03;
     if (S.y <= g) { S.y = g; S.vr = Math.PI * 0.85; S.vp = 0.2; W.stage = 'burn'; W.st = 0; toast('The motor\'s on fire!'); }
   } else if (W.stage === 'burn') {
-    if (TR.phase === 'idle' && !W.shown) { W.shown = true; $('#wrecked').hidden = false; }
+    if (TR.phase === 'idle' && !W.shown && W.T === P1) { W.shown = true; $('#wrecked').hidden = false; }
   }
   // flying parts land on the ground in the world
   WRECK_PARTS.forEach(p => {
@@ -2432,6 +2439,7 @@ function swayTree(now) {
 
 }
 function rebuildTruck() {
+  if (G.wreck && G.wreck.T === P1) netSend({ t: 'rebuilt' });
   const was = CUR; if (G.wreck && G.wreck.T) useTruck(G.wreck.T);
   rebuildTruckNow();
   useTruck(was);
@@ -2453,8 +2461,152 @@ function chaosNow() {
   if (G.mode === 'menu' || G.wreck || TR.phase !== 'idle') return;
   toast('Chaos! Here come the Trashers…'); gangStart();
 }
-$('#bChaos').onclick = chaosNow;
+$('#bChaos').onclick = () => chaosNow();
 $('#bRestart').onclick = () => { rebuildTruck(); startMode(G.mode === 'run' ? 'run' : 'free'); };
+
+/* =========================================================
+   ONLINE CO-OP: two devices, connected peer to peer (PeerJS's free public relay finds the other device)
+   The host runs the Trashers; both devices send their truck's position about 20 times a second.
+   ========================================================= */
+const NET = { role: null, conn: null, peer: null, code: '', target: null, sendT: 0, gangT: 0 };
+G.online = false;
+function netSend(m) { try { if (NET.conn && NET.conn.open) NET.conn.send(m); } catch (e) {} }
+function tToast(t) { toast(t); if (NET.role === 'host') netSend({ t: 'toast', s: t }); }
+function netStatus(t) { $('#netStatus').textContent = t; }
+function loadPeer() {
+  return new Promise((res, rej) => {
+    if (window.Peer) return res();
+    const sc = document.createElement('script'); sc.src = 'https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js';
+    sc.onload = res; sc.onerror = () => rej(new Error('load')); document.head.appendChild(sc);
+  });
+}
+const NET_FAIL = 'Couldn\'t reach the online service. Check your internet connection. Online play works on the club\'s website (braggcreekrc.netlify.app), not inside the Claude preview.';
+function netConnected(conn) {
+  NET.conn = conn; G.online = true;
+  conn.on('data', netRecv);
+  conn.on('close', netLost); conn.on('error', netLost);
+  $('#online').hidden = true; $('#menu').hidden = G.mode !== 'menu';
+  $('#bOnline').textContent = 'Online · ' + NET.code + ' ✓';
+  toast(NET.role === 'host' ? 'Your friend joined! You\'re Player 1 (blue). Pick Course run or Free drive.' : 'Connected! You\'re Player 2 (blue on your screen). Pick Course run or Free drive.');
+}
+function netLost() {
+  if (!G.online) return;
+  G.online = false; NET.conn = null; NET.role = null; P2.car.visible = false;
+  if (G.wreck && G.wreck.T === P2) rebuildTruck();
+  $('#bOnline').textContent = 'Play online';
+  toast('Your friend disconnected.');
+}
+async function netHost() {
+  netStatus('Starting…');
+  try { await loadPeer(); } catch (e) { netStatus(NET_FAIL); return; }
+  const L = 'ABCDEFGHJKLMNPQRSTUVWXYZ'; NET.code = Array.from({ length: 4 }, () => L[(Math.random() * L.length) | 0]).join('');
+  if (NET.peer) try { NET.peer.destroy(); } catch (e) {}
+  const peer = NET.peer = new Peer('bcrc-crawler-' + NET.code);
+  peer.on('open', () => { NET.role = 'host'; $('#netCode').hidden = false; $('#netCode').textContent = NET.code; netStatus('Tell your friend this code. They tap Play online, type it in and tap Join. Waiting for them…'); });
+  peer.on('connection', c => { if (NET.conn) { c.close(); return; } c.on('open', () => netConnected(c)); });
+  peer.on('error', e => netStatus(e && e.type === 'unavailable-id' ? 'That code was taken. Tap Host a game again.' : NET_FAIL));
+}
+async function netJoin() {
+  const code = ($('#joinCode').value || '').toUpperCase().replace(/[^A-Z]/g, '');
+  if (code.length !== 4) { netStatus('Type the 4-letter code from your friend\'s screen.'); return; }
+  netStatus('Connecting…');
+  try { await loadPeer(); } catch (e) { netStatus(NET_FAIL); return; }
+  if (NET.peer) try { NET.peer.destroy(); } catch (e) {}
+  const peer = NET.peer = new Peer();
+  peer.on('open', () => {
+    NET.code = code; NET.role = 'guest';
+    const c = peer.connect('bcrc-crawler-' + code, { reliable: true });
+    c.on('open', () => netConnected(c));
+    setTimeout(() => { if (!G.online) netStatus('Couldn\'t find a game with code ' + code + '. Check the code and that your friend is still on the Host screen.'); }, 9000);
+  });
+  peer.on('error', e => netStatus(e && e.type === 'peer-unavailable' ? 'Couldn\'t find a game with code ' + code + '. Check the code and try again.' : NET_FAIL));
+}
+$('#bOnline').onclick = () => { if (G.online) { toast('You\'re connected. Pick Course run or Free drive.'); return; } $('#menu').hidden = true; $('#online').hidden = false; };
+$('#bNetBack').onclick = () => { $('#online').hidden = true; $('#menu').hidden = false; };
+$('#bHost').onclick = netHost; $('#bJoin').onclick = netJoin;
+$('#joinCode').addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Enter') netJoin(); });
+
+// tell the other device about every bit of wreckage, so the course looks the same on both
+{
+  const pb = placeBroken; placeBroken = t => { pb(t); if (NET.role === 'host') { const b = TRASH.bridges.indexOf(t); netSend({ t: 'brk', k: b >= 0 ? 'b' : 's', i: b >= 0 ? b : TRASH.signs.indexOf(t) }); } };
+  const rs = ripSign; ripSign = t => { rs(t); if (NET.role === 'host') netSend({ t: 'rip', i: TRASH.signs.indexOf(t) }); };
+  const ti = throwItem; throwItem = (it, fx, fz) => { ti(it, fx, fz); if (NET.role === 'host') { const to = it.mesh.userData.to; netSend({ t: 'throw', i: WRECKABLE.indexOf(it), p: to.p.toArray(), q: to.q.toArray() }); } };
+  const dh = digHole; digHole = (x, z) => { dh(x, z); if (NET.role === 'host') netSend({ t: 'hole', x, z }); };
+  const kf = knockFlags; knockFlags = () => { kf(); if (NET.role === 'host') netSend({ t: 'flags' }); };
+  const wt = wreckTruck; wreckTruck = () => { const T = CUR; wt(); if (NET.role === 'host') netSend({ t: 'wreck', who: T === P1 ? 'host' : 'guest' }); };
+  const cn = chaosNow; chaosNow = () => { if (NET.role === 'guest') { netSend({ t: 'chaos' }); toast('Asked Player 1\'s game to send in the Trashers…'); } else cn(); };
+}
+function netRecv(m) {
+  switch (m.t) {
+    case 'pose': NET.target = m; P2.car.visible = !!m.on; break;
+    case 'toast': toast(m.s); break;
+    case 'gang': applyGang(m); break;
+    case 'brk': { const t = (m.k === 'b' ? TRASH.bridges : TRASH.signs)[m.i]; if (t && !t.broken) placeBroken(t); break; }
+    case 'rip': { const t = TRASH.signs[m.i]; if (t) ripSign(t); break; }
+    case 'throw': {
+      const it = WRECKABLE[m.i]; if (!it || it.wrecked) break;
+      const o = it.mesh; saveXf(o); o.userData.from = o.position.clone(); o.userData.fromQ = o.quaternion.clone();
+      o.userData.to = { p: new V3().fromArray(m.p), q: new THREE.Quaternion().fromArray(m.q) }; o.userData.k = 0; ANIM.add(o);
+      if (it.obs) it.obs.off = true; it.wrecked = true; TR.broken = true; dropFlagsNear(it.x, it.z, 0.3);
+      for (let i = 0; i < 3; i++) puff(it.x + rr(-0.08, 0.08), groundH(it.x, it.z), it.z + rr(-0.08, 0.08), 1.6);
+      break; }
+    case 'hole': digHole(m.x, m.z); break;
+    case 'flags': knockFlags(); break;
+    case 'wreck': { const T = m.who === 'guest' ? P1 : P2; if (G.wreck) break; const was = CUR; useTruck(T); wreckTruck(); useTruck(was); break; }
+    case 'rebuilt': if (G.wreck && G.wreck.T === P2) rebuildTruck(); break;
+    case 'reset': if (TR.phase !== 'idle' || TR.broken) { resetTrashers(); toast('Your friend restarted. The course is fixed.'); } break;
+    case 'chaos': if (NET.role === 'host') { if (G.mode === 'menu') toast('Player 2 hit Chaos. Start driving to let the Trashers in!'); else chaosNow(); } break;
+    case 'flag': if (G.mode === 'run' && !G.finished && !G.got.has(m.i)) { G.got.add(m.i); if (G.got.size >= gates.length) finishRun(); else toast('Player ' + (NET.role === 'host' ? 2 : 1) + ' got ' + gates[m.i].name); refreshGates(); } break;
+  }
+}
+// the guest shows the host's Trashers
+function applyGang(m) {
+  if (!TR.gang.length) for (let i = 0; i < 4; i++) TR.gang.push({ ...makePerson([0x2d2d34, 0x5b2a86, 0x3b5b2a, 0x8a2c2c][i]), bike: makeBike(), plan: [], walk: 0, slot: i / 4 * TAU + 0.4 });
+  if (TR.phase === 'idle' && m.ph !== 'idle') { TR.cineSeen = false; }
+  TR.phase = m.ph; TR.t = m.tt;
+  m.g.forEach((d, i) => {
+    const r = TR.gang[i]; if (!r) return;
+    const [x, z, yaw, st, vis, bx, bz, tearT] = d;
+    if (r.state !== st && (st === 'ride' || st === 'rideOut')) r.bikeDown = false;
+    if (!r.g.visible && vis) { r.x = x; r.z = z; }
+    r.tx = x; r.tz = z; r.tyaw = yaw; r.state = st; r.g.visible = r.bike.g.visible = !!vis; r.bx = bx; r.bz = bz; r.tearT = tearT;
+  });
+  $('#alert').hidden = m.ah; if (!m.ah) $('#alert').textContent = m.al;
+  if (m.cine && !TR.cineSeen) { TR.cineSeen = true; TR.cine = { x: m.cine[0], z: m.cine[1], t: m.cine[2] }; }
+}
+function updateGuestTrashers(dt) {
+  animateBroken(dt);
+  TR.gang.forEach(r => {
+    if (r.tx === undefined) return;
+    const k = Math.min(1, dt * 10), ox = r.x, oz = r.z;
+    r.x += (r.tx - r.x) * k; r.z += (r.tz - r.z) * k; r.yaw = lerpAngle(r.yaw || 0, r.tyaw, k);
+    r.walk += Math.hypot(r.x - ox, r.z - oz) * 6;
+  });
+  TR.t += dt;
+  if (TR.gang.length) poseGang(dt);
+}
+function netTick(dt) {
+  if (!G.online) return;
+  NET.sendT -= dt; NET.gangT -= dt;
+  if (NET.sendT <= 0) {
+    NET.sendT = 0.05;
+    const s = P1.S, on = G.mode !== 'menu';
+    if (!(G.wreck && G.wreck.T === P1)) netSend({ t: 'pose', on, x: s.x, y: s.y, z: s.z, yaw: s.yaw, vp: s.vp, vr: s.vr, steer: s.steer, spin: s.spin, wc: s.wc, lean: s.lean, squat: s.squat, bob: s.bob, fl: s.flipped });
+  }
+  if (NET.role === 'host' && NET.gangT <= 0) {
+    NET.gangT = 0.1;
+    netSend({ t: 'gang', ph: TR.phase, tt: TR.t, ah: $('#alert').hidden, al: $('#alert').textContent,
+      cine: TR.cine && TR.cine.t > 0 ? [TR.cine.x, TR.cine.z, TR.cine.t] : null,
+      g: TR.gang.map(r => [+r.x.toFixed(3), +r.z.toFixed(3), +(r.yaw || 0).toFixed(3), r.state, r.g.visible ? 1 : 0, r.bx || 0, r.bz || 0, r.tearT || 0]) });
+  }
+  // move the friend's truck smoothly toward where their device says it is
+  const T = NET.target;
+  if (T && !(G.wreck && G.wreck.T === P2)) {
+    const s = P2.S, k = Math.min(1, dt * 12);
+    s.x += (T.x - s.x) * k; s.y += (T.y - s.y) * k; s.z += (T.z - s.z) * k; s.yaw = lerpAngle(s.yaw, T.yaw, k);
+    s.vp = T.vp; s.vr = T.vr; s.steer = T.steer; s.spin = T.spin; s.wc = T.wc.map(w => w - T.y + s.y); s.lean = T.lean; s.squat = T.squat; s.bob = T.bob; s.flipped = T.fl;
+  }
+}
 
 /* course-view controls and the marker that shows where the truck is */
 const OV = { az: 0.15, el: 1.05, dist: 9 };
@@ -2496,7 +2648,7 @@ addEventListener('resize', resize); resize();
 
 function stepTruck(dt) {
   // the other truck is solid, so you bump instead of driving through each other
-  const others = activeTrucks().filter(T => T !== CUR);
+  const others = presentTrucks().filter(T => T !== CUR);
   others.forEach(T => blockers.push({ x: T.S.x, z: T.S.z, r: 0.1 }));
   const px = S.x, pz = S.z;
   physStep(dt);
@@ -2509,13 +2661,11 @@ function simulate(dt) {
   if (TR.phase === 'raid' && !G.wreck) {
     // when they come for a truck, they go after whichever is closest
     const cx = TR.gang.reduce((a, m) => a + m.x, 0) / 4, cz = TR.gang.reduce((a, m) => a + m.z, 0) / 4;
-    TR.target = activeTrucks().slice().sort((a, b) => Math.hypot(a.S.x - cx, a.S.z - cz) - Math.hypot(b.S.x - cx, b.S.z - cz))[0];
+    TR.target = presentTrucks().slice().sort((a, b) => Math.hypot(a.S.x - cx, a.S.z - cz) - Math.hypot(b.S.x - cx, b.S.z - cz))[0];
   }
-  useTruck(G.wreck ? G.wreck.T : (TR.target && activeTrucks().includes(TR.target) ? TR.target : P1));
-  const huntWas = TR.hunted;
-  updateTrashers(dt);
-  if (G.wreck) updateWreck(dt);
-  if (G.coop && TR.phase === 'raid' && TR.t >= WRECK_COURSE_TIME && !G.wreck && !huntWas) { TR.hunted = true; toast('They\'re going after Player ' + (CUR === P1 ? 1 : 2) + '\'s truck!'); }
+  useTruck(G.wreck ? G.wreck.T : (TR.target && presentTrucks().includes(TR.target) ? TR.target : P1));
+  if (NET.role === 'guest') updateGuestTrashers(dt); else updateTrashers(dt);
+  if (G.wreck) { useTruck(G.wreck.T); updateWreck(dt); }
   activeTrucks().forEach(T => { if (G.wreck && G.wreck.T === T) return; useTruck(T); stepTruck(dt); });
   if (G.running) G.t += dt;
   useTruck(G.wreck ? G.wreck.T : P1);
@@ -2525,10 +2675,12 @@ function frame(now) {
   const dt = Math.min(0.05, (now - last) / 1000); last = now;
   if (G.mode !== 'menu') readInput();
   simulate(dt);
+  netTick(dt);
   TRUCKS.forEach(T => { if (T.car.visible) { useTruck(T); syncCar(); } });
   useTruck(G.wreck ? G.wreck.T : P1);
   if (G.wreck) updateWreckPose();
   updateFire(dt);
+  useTruck(P1);
   swayTree(now);
   updateDust(dt);
   updateCamera(dt);
@@ -2553,7 +2705,7 @@ label.visible = guide.visible = false;
 requestAnimationFrame(frame);
 
 // test hook: run physics without rendering
-window.__crawler = { P1, P2, TR, TRASH, gangStart, wreckTruck, S, G, gates, H, obstacles, input, wheelCenter, blockerPen, bodyPen, tooSteep, tryMove, blockers, startMode, sim(sec, fn) { const dt = 1 / 60; for (let t = 0; t < sec; t += dt) { if (fn) fn(); simulate(dt); } return { x: S.x, z: S.z, next: G.got.size, flipped: S.flipped }; }, placeCar, toggleGear };
+window.__crawler = { netFake(role, out) { NET.role = role; NET.code = 'TEST'; netConnected({ open: true, send: m => out(JSON.stringify(m)), on() {} }); return m => netRecv(JSON.parse(m)); }, P1, P2, TR, TRASH, gangStart, wreckTruck, S, G, gates, H, obstacles, input, wheelCenter, blockerPen, bodyPen, tooSteep, tryMove, blockers, startMode, sim(sec, fn) { const dt = 1 / 60; for (let t = 0; t < sec; t += dt) { if (fn) fn(); simulate(dt); } return { x: S.x, z: S.z, next: G.got.size, flipped: S.flipped }; }, placeCar, toggleGear };
 })();
 </script>
 </body>

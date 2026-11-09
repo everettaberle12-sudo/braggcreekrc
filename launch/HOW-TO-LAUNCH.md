@@ -22,6 +22,10 @@ Your link will be **https://braggcreekrc.netlify.app** (free).
 6. Post `promo-post.jpg` with the text from `launch-post.txt`.
 
 ## Good to know
+- **Online co-op:** works on the Netlify site. One player taps **Play online → Host a game** and reads out the
+  4-letter code; the other taps **Play online**, types it and taps **Join**. It connects the two devices directly
+  through PeerJS's free public service. Some school or work Wi-Fi blocks this; phone data or home Wi-Fi works best.
+  It does not work inside the Claude preview link.
 - **Link preview:** the nice picture that appears when you paste the link (preview.jpg) is set up for the
   name **braggcreekrc**. If that name is taken and you pick another, tell Claude and it will update the files.
   Facebook sometimes caches the first preview; if it looks wrong, paste the link into
